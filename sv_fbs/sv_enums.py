@@ -13,8 +13,9 @@ class StarLevel(IntEnum):
 
 class Game(IntEnum):
     """Enum for the game version"""
-    SCARLET = 0
-    VIOLET = 1
+    BOTH = 0
+    SCARLET = 1
+    VIOLET = 2
 
 class Move(IntEnum):
     """Enum for pokemon moves"""
