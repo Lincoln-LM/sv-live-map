@@ -13,8 +13,13 @@ def raid_binary_ptr(star_level: StarLevel) -> tuple[str, int]:
         RAID_BINARY_SIZES[star_level]
     )
 
-reader = NXReader("192.168.0.19")
+def main():
+    """Main function of the appliation"""
+    reader = NXReader("192.168.0.19")
 
-reta = RaidEnemyTableArray(reader.read_pointer(*raid_binary_ptr(StarLevel.ONE_STAR)))
-for table in reta.raid_enemy_tables:
-    print(f"{table.raid_enemy_info.rate} {table.raid_enemy_info.boss_poke_para.dev_id!r}")
+    reta = RaidEnemyTableArray(reader.read_pointer(*raid_binary_ptr(StarLevel.ONE_STAR)))
+    for table in reta.raid_enemy_tables:
+        print(f"{table.raid_enemy_info.rate} {table.raid_enemy_info.boss_poke_para.dev_id!r}")
+
+if __name__ == "__main__":
+    main()
