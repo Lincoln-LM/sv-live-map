@@ -14,7 +14,9 @@ from .sv_enums import (
     IVGeneration,
     ShinyGeneration,
     SizeGeneration,
-    MovesetType
+    MovesetType,
+    ExtraActType,
+    ExtraTimingType
 )
 from .flatbuffer_object import (
     U8,
@@ -139,8 +141,8 @@ class RaidBossExtraData(FlatBufferObject):
     """Data describing special actions a raid boss can do during a raid"""
     def __init__(self, buf: bytearray, offset: int):
         FlatBufferObject.__init__(self, buf, offset)
-        self.timming: int = self.read_init_int(I16)
-        self.action: int = self.read_init_int(I16)
+        self.timming: ExtraTimingType = self.read_init_int_enum(I16, ExtraTimingType)
+        self.action: ExtraActType = self.read_init_int_enum(I16, ExtraActType)
         self.value: int = self.read_init_int(I16)
         self.waza_no: Move = self.read_init_int_enum(U16, Move)
 
