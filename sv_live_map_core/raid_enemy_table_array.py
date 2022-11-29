@@ -47,7 +47,13 @@ class RaidEnemyInfo(FlatBufferObject):
         self.rom_ver: Game = self.read_init_int_enum(I16, Game)
         self.no: int = self.read_init_int(I32)
         self.delivery_group_id: int = self.read_init_int(I8)
-        self.difficulty: StarLevel = self.read_init_int_enum(I32, StarLevel)
+
+        # TODO: make this more elegant
+        temp_difficulty = self.read_init_int(I32)
+        if temp_difficulty:
+            temp_difficulty = StarLevel(temp_difficulty - 1)
+        self.difficulty: StarLevel = temp_difficulty
+
         self.rate: int = self.read_init_int(I8)
         self.drop_table_fix: int = self.read_init_int(U64)
         self.drop_table_random: int = self.read_init_int(U64)

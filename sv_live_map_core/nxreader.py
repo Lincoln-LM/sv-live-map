@@ -80,6 +80,17 @@ class NXReader:
         """Read integer from heap"""
         return int.from_bytes(self.read(address, size), 'little')
 
+    def read_absolute(self, address, size):
+        """Read bytes from absolute address"""
+        self.send_command(f'peekAbsolute 0x{address:X} 0x{size:X}')
+        sleep(size / 0x8000)
+        buf = self.recv(size)
+        return buf
+
+    def read_absolute_int(self, address, size):
+        """Read integer from absolute address"""
+        return int.from_bytes(self.read_absolute(address, size), 'little')
+
     def write(self, address, data):
         """Write data to heap"""
         self.send_command(f'poke 0x{address:X} 0x{data}')

@@ -2,6 +2,14 @@
 
 from enum import IntEnum
 
+class StoryProgress(IntEnum):
+    """Enum for story progress"""
+    DEFAULT = 0
+    THREE_STAR_UNLOCKED = 1
+    FOUR_STAR_UNLOCKED = 2
+    FIVE_STAR_UNLOCKED = 3
+    SIX_STAR_UNLOCKED = 4
+
 class StarLevel(IntEnum):
     """Enum for the basic star levels"""
     ONE_STAR = 0
@@ -1969,6 +1977,34 @@ class NatureGeneration(IntEnum):
     SASSY = 23
     CAREFUL = 24
     QUIRKY = 25
+
+class Nature(IntEnum):
+    """Pokemon Nature"""
+    HARDY = 0
+    LONELY = 1
+    BRAVE = 2
+    ADAMANT = 3
+    NAUGHTY = 4
+    BOLD = 5
+    DOCILE = 6
+    RELAXED = 7
+    IMPISH = 8
+    LAX = 9
+    TIMID = 10
+    HASTY = 11
+    SERIOUS = 12
+    JOLLY = 13
+    NAIVE = 14
+    MODEST = 15
+    MILD = 16
+    QUIET = 17
+    BASHFUL = 18
+    RASH = 19
+    CALM = 20
+    GENTLE = 21
+    SASSY = 22
+    CAREFUL = 23
+    QUIRKY = 24
 
 class Item(IntEnum):
     """Enum for pokemon items"""
@@ -4182,6 +4218,27 @@ class TeraTypeGeneration(IntEnum):
     DRAGON = 17
     DARK = 18
     FAIRY = 19
+
+class TeraType(IntEnum):
+    """Enum for pokemon tera type"""
+    NORMAL = 0
+    FIGHTING = 1
+    FLYING = 2
+    POISON = 3
+    GROUND = 4
+    ROCK = 5
+    BUG = 6
+    GHOST = 7
+    STEEL = 8
+    FIRE = 9
+    WATER = 10
+    GRASS = 11
+    ELECTRIC = 12
+    PSYCHIC = 13
+    ICE = 14
+    DRAGON = 15
+    DARK = 16
+    FAIRY = 17
 
 class AbilityGeneration(IntEnum):
     """Enum for pokemon ability generation"""
