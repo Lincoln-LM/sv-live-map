@@ -160,3 +160,4 @@ cython_debug/
 #.idea/
 
 misc_hidden/
+settings.json
