@@ -26,6 +26,7 @@ def is_shiny(pid: int, sidtid: int):
 @dataclass
 class TeraRaid:
     """Single Tera Raid Data"""
+    # information directly present in raid block
     is_enabled: U32
     area_id: U32
     display_type: U32
@@ -36,6 +37,7 @@ class TeraRaid:
     collected_league_points: U32
 
     def __post_init__(self) -> None:
+        # information that needs to be derived
         self.tera_type: TeraType = None
         self.difficulty: StarLevel = None
         self.raid_enemy_info: RaidEnemyInfo = None
@@ -46,10 +48,12 @@ class TeraRaid:
         self.sidtid: int = None
         self.is_shiny: bool = None
         self.ivs: tuple[int, 6] = None
+
         # TODO: check gender ratios and ability ids from personal info
         # to get better values for these (enum)
         self.ability: int = None
         self.gender: int = None
+
         self.nature: Nature = None
         self.size0: int = None
         self.size1: int = None
@@ -57,6 +61,7 @@ class TeraRaid:
 
     def generate_pokemon(self, raid_enemy_info: RaidEnemyInfo):
         """Derive pokemon data from seed and slot"""
+        # TODO: support default event settings if ever used
         self.raid_enemy_info = raid_enemy_info
         self.species = raid_enemy_info.boss_poke_para.dev_id
 
@@ -79,9 +84,9 @@ class TeraRaid:
         self.ivs = tuple(temp_ivs)
         match raid_enemy_info.boss_poke_para.tokusei:
             case AbilityGeneration.RANDOM_12 | None:
-                self.ability = rng.rand(2)
+                self.ability = rng.rand(2) + 1
             case AbilityGeneration.RANDOM_12HA:
-                self.ability = rng.rand(3)
+                self.ability = rng.rand(3) + 1
             case AbilityGeneration.ABILITY_1:
                 self.ability = 1
             case AbilityGeneration.ABILITY_2:
@@ -114,6 +119,7 @@ class TeraRaid:
         if self.content == 1:
             self.difficulty = StarLevel.SIX_STAR
         else:
+            # TODO: split into own function?
             difficulty_rand = rng_slot.rand(100)
             match story_progress:
                 case StoryProgress.DEFAULT:

@@ -1979,7 +1979,7 @@ class NatureGeneration(IntEnum):
     QUIRKY = 25
 
 class Nature(IntEnum):
-    """Pokemon Nature"""
+    """Enum for Pokemon nature"""
     HARDY = 0
     LONELY = 1
     BRAVE = 2
@@ -4306,7 +4306,7 @@ class MovesetType(IntEnum):
     SET = 1
 
 class ExtraActType(IntEnum):
-    """Raid boss extra act type"""
+    """Enum for raid boss extra act type"""
     NONE = 0
     BOSS_STATUS_RESET = 1
     PLAYER_STATUS_RESET = 2
@@ -4314,7 +4314,7 @@ class ExtraActType(IntEnum):
     GEM_COUNT = 4
 
 class ExtraTimingType(IntEnum):
-    """Raid boss extra timing type"""
+    """Enum for raid boss extra timing type"""
     NONE = 0
     TIME = 1
     HP = 2
