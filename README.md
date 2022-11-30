@@ -21,4 +21,7 @@ The main purpose of this project is to show off [elegant parsing of flatbuffer b
 ### Credits:
 * [Kaphotics/kwsch](https://github.com/kwsch) and the [PKHex](https://github.com/kwsch/PKHeX) dev contributors for their work on reverse-engineering and documentation
 * [EzPzStreamz/SteveCookTU](https://github.com/SteveCookTU) for help with map resources and direct aid in reverse engineering
-* [SkyLink98/Manu098vm](https://github.com/Manu098vm) for their early SV research along with documentation on memory pointers in [SVResearches](https://github.com/Manu098vm/SVResearches/)
+* [SkyLink98/Manu098vm](https://github.com/Manu098vm) for their early SV research along with documentation on memory pointers in [SVResearches](https://github.com/Manu098vm/SVResearches)
+
+### Icon Credits:
+* Icons in [icons8](./resources/icons8) folder provided by [icons8](https://icons8.com)

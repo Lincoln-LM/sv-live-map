@@ -4,6 +4,7 @@ import os.path
 from typing import Any
 import json
 import struct
+from PIL import Image, ImageTk
 import customtkinter
 from tkintermapview import osm_to_decimal
 from sv_live_map_core.nxreader import NXReader
@@ -19,6 +20,7 @@ class Application(customtkinter.CTk):
     HEIGHT = 512
     DEFAULT_IP = "192.168.0.0"
     PLAYER_POS_ADDRESS = 0x42D6110
+    ICON_PATH = "./resources/icons8/icon.png"
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -34,8 +36,9 @@ class Application(customtkinter.CTk):
 
         # window settings
         self.title(self.APP_NAME)
-        self.geometry(str(self.WIDTH) + "x" + str(self.HEIGHT))
+        self.geometry(f"{self.WIDTH}x{self.HEIGHT}")
         self.minsize(self.WIDTH, self.HEIGHT)
+        self.iconphoto(True, ImageTk.PhotoImage(Image.open(self.ICON_PATH)))
 
         # handle closing the application
         self.protocol("WM_DELETE_WINDOW", self.on_closing)
@@ -79,10 +82,15 @@ class Application(customtkinter.CTk):
         # background work
         self.background_workers: dict[str, dict] = {}
 
-    def connect(self):
-        """Connect to switch"""
-        # TODO: warning for when this casues an exception as well as timing out while running
-        self.reader = NXReader(self.ip_entry.get())
+    def connect(self) -> bool:
+        """Connect to switch and return True if success"""
+        try:
+            self.reader = NXReader(self.ip_entry.get())
+            return True
+        except TimeoutError:
+            self.reader = None
+            self.error_message_window("TimeoutError", "Connection timed out.")
+            return False
 
     def toggle_connection(self):
         """Toggle connection to switch"""
@@ -91,8 +99,8 @@ class Application(customtkinter.CTk):
             self.reader = None
             self.connect_button.configure(text = "Connect")
         else:
-            self.connect()
-            self.connect_button.configure(text = "Disconnect")
+            if self.connect():
+                self.connect_button.configure(text = "Disconnect")
 
     def toggle_position_work(self):
         """Toggle player tracking"""
@@ -100,20 +108,31 @@ class Application(customtkinter.CTk):
         if 'position' not in self.background_workers:
             self.background_workers['position'] = {'active': False}
         if self.background_workers['position']['active']:
+            self.background_workers['position']['marker'].delete()
             self.after_cancel(self.background_workers['position']['worker'])
             self.background_workers['position']['active'] = False
             self.position_button.configure(text = "Track Player")
         else:
-            self.position_button.configure(text = "Stop Tracking Player")
-            self.background_workers['position']['active'] = True
-            self.after(1000, self.position_work)
+            if self.reader:
+                self.position_button.configure(text = "Stop Tracking Player")
+                self.background_workers['position']['active'] = True
+                self.after(1000, self.position_work)
+            else:
+                self.error_message_window("Invalid", "Not connected to switch.")
 
     def position_work(self):
         """Work to be done to update the player's position"""
         if self.reader:
-            # omit Y (height) coordinate
-            game_x, _, game_z = \
-                struct.unpack("fff", self.reader.read_main(self.PLAYER_POS_ADDRESS, 12))
+            try:
+                # omit Y (height) coordinate
+                game_x, _, game_z = \
+                    struct.unpack("fff", self.reader.read_main(self.PLAYER_POS_ADDRESS, 12))
+            # struct.error when connection terminates before all 12 bytes are read
+            except (TimeoutError, struct.error):
+                self.toggle_connection()
+                self.toggle_position_work()
+                self.error_message_window("TimeoutError", "Connection timed out.")
+                return
             # TODO: more accurate conversion
             pos_x, pos_y = osm_to_decimal(
                 (game_x + 2.072021484) / 5000,
@@ -127,9 +146,18 @@ class Application(customtkinter.CTk):
                 self.background_workers['position']['marker'].set_position(pos_x, pos_y)
 
             self.background_workers['position']['worker'] = self.after(1000, self.position_work)
-        else:
-            # TODO: warning for when not connected
-            pass
+
+    def error_message_window(self, title, message):
+        """Open new window with error message"""
+        window = customtkinter.CTkToplevel(self)
+        window.geometry("325x100")
+        window.title(title)
+
+        label = customtkinter.CTkLabel(window, text = message)
+        label.pack(side = "top", pady = 10, padx = 10)
+
+        button = customtkinter.CTkButton(window, text = "OK", command = window.destroy)
+        button.pack(side = "bottom", pady = 10, padx = 10, fill = "x")
 
     def on_closing(self, _ = None):
         """Handle closing of the application"""
