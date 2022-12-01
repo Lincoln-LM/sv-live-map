@@ -194,7 +194,9 @@ class Application(customtkinter.CTk):
                 else:
                     return False
             else:
-                self.reader = RaidReader(self.ip_entry.get())
+                self.reader = RaidReader(self.ip_entry.get(), read_safety = True)
+                # disable after the tables are read
+                self.reader.read_safety = False
                 if len(self.reader.raid_enemy_table_arrays[0].raid_enemy_tables) == 0:
                     self.reader = None
                     self.error_message_window(
