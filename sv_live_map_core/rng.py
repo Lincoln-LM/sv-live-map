@@ -6,8 +6,8 @@ class Xoroshiro128Plus:
     """Xoroshiro128+ Implementation"""
     _XORO_CONST: np.uint64 = np.uint64(0x82A2B175229D6A5B)
     _ULONG_SIZE: np.uint64 = np.uint64(64)
-    _ROT_27: np.uint64 = np.uint64(27)
-    _ROT_40: np.uint64 = np.uint64(40)
+    _ROT_24: np.uint64 = np.uint64(24)
+    _ROT_37: np.uint64 = np.uint64(37)
     _SHIFT_16: np.uint64 = np.uint64(16)
     _ONE: np.uint64 = np.uint64(1)
     _ZERO: np.uint64 = np.uint64(0)
@@ -26,12 +26,13 @@ class Xoroshiro128Plus:
 
     def next(self) -> np.uint64:
         """Generate next pseudorandom number"""
-        self.seed1 = self._rotl(self.seed1, self._ROT_27)
-        self.seed0 = self.seed0 ^ self.seed1 ^ (self.seed1 << self._SHIFT_16)
-        self.seed0 = self._rotl(self.seed0, self._ROT_40)
+        rand = self.seed0 + self.seed1
         self.seed1 ^= self.seed0
+        self.seed0 = \
+            self._rotl(self.seed0, self._ROT_24) ^ self.seed1 ^ (self.seed1 << self._SHIFT_16)
+        self.seed1 = self._rotl(self.seed1, self._ROT_37)
         # integer overflow
-        return self.seed0 + self.seed1
+        return rand
 
     @staticmethod
     def get_mask(maximum: np.uint64) -> np.uint64:
