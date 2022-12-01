@@ -1,6 +1,10 @@
 # sv-live-map
 WIP GUI Map displaying information on Tera Raid Dens in Pokémon Scarlet and Violet
 
+Spiritual sequel to [PLA-Live-Map](https://github.com/Lincoln-LM/PLA-Live-Map)
+
+![](./program.png)
+
 For a non-map GUI and automation of rerolling dens, check out [LegoFigure11](https://github.com/LegoFigure11)'s [RaidCrawler](https://github.com/LegoFigure11/RaidCrawler)
 
 ### Details:
