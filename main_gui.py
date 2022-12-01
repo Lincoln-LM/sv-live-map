@@ -1,9 +1,11 @@
 """Live Map GUI"""
 
 import binascii
+from functools import partial
 import pickle
 import os
 import os.path
+import threading
 from typing import Any
 import json
 import struct
@@ -17,6 +19,7 @@ from sv_live_map_core.scrollable_frame import ScrollableFrame
 from sv_live_map_core.raid_info_widget import RaidInfoWidget
 from sv_live_map_core.sv_enums import StarLevel
 from sv_live_map_core.raid_enemy_table_array import RaidEnemyTableArray
+from sv_live_map_core.raid_block import RaidBlock
 
 customtkinter.set_default_color_theme("blue")
 customtkinter.set_appearance_mode("dark")
@@ -103,6 +106,13 @@ class Application(customtkinter.CTk):
             command=self.read_all_raids
         )
         self.read_raids_button.grid(row = 4, column = 0, columnspan = 2, padx = 10, pady = 5)
+
+        self.raid_progress = customtkinter.CTkProgressBar(
+            master = self.settings_frame,
+            width = 300
+        )
+        self.raid_progress.grid(row = 5, column = 0, columnspan = 2, padx = 10, pady = 5)
+        self.raid_progress.set(0)
 
         # middle frame
         self.map_frame = customtkinter.CTkFrame(master = self, width = 150)
@@ -233,42 +243,63 @@ class Application(customtkinter.CTk):
             # struct.error/binascii.Error when connection terminates before all 12 bytes are read
             try:
                 raid_block_data = self.reader.read_raid_block_data()
-                for raid in raid_block_data.raids:
-                    if raid.is_enabled:
-                        info_widget = RaidInfoWidget(
-                            master = self.info_frame.scrollable_frame,
-                            poke_sprite_handler = self.sprite_handler,
-                            raid_data = raid,
-                            fg_color = customtkinter.ThemeManager.theme["color"]["frame_low"],
-                        )
-                        self.raid_info_widgets.append(info_widget)
-                        if f"{raid.area_id}-{raid.den_id}" in self.den_locations:
-                            game_x,_,game_z = self.den_locations[f"{raid.area_id}-{raid.den_id}"]
-                            pos_x, pos_y = osm_to_decimal(
-                                (game_x + 2.072021484) / 5000,
-                                (game_z + 5505.240018) / 5000,
-                                0
-                            )
-                            # TODO: event/shiny icons
-                            tera_sprite: Image.Image = ImageTk.getimage(info_widget.tera_sprite)
-                            tera_sprite = tera_sprite.resize((tera_sprite.height // 2, tera_sprite.width // 2))
-                            tera_sprite = ImageTk.PhotoImage(tera_sprite)
-                            poke_sprite = ImageTk.getimage(info_widget.poke_sprite)
-                            poke_sprite = ImageTk.PhotoImage(poke_sprite)
-                            self.map_widget.set_marker(pos_x, pos_y, icon = tera_sprite, image = poke_sprite)
-                        else:
-                            # TODO: document all den locs, deal with dupe 19-5
-                            print(f"WARNING den {raid.area_id}-{raid.den_id} location not present")
-                        # TODO: thread + progress bar
-                        print(f"{len(self.raid_info_widgets)}/69")
-                        info_widget.grid(row = len(self.raid_info_widgets) + 1, column = 0)
+                self.connect_button.configure(state = "disabled")
+                work = partial(self.read_all_raids_work, raid_block_data)
+                work_thread = threading.Thread(target = work)
+                work_thread.start()
+                self.connect_button.configure(state = "enabled")
             except (TimeoutError, struct.error, binascii.Error):
                 self.toggle_connection()
-                self.toggle_position_work()
+                if 'position' in self.background_workers \
+                  and self.background_workers['position']['active']:
+                    self.toggle_position_work()
                 self.error_message_window("TimeoutError", "Connection timed out.")
                 return
         else:
             self.error_message_window("Invalid", "Not connected to switch.")
+
+    def read_all_raids_work(self, raid_block_data: RaidBlock):
+        """Threading wokr for read all raids"""
+        count = 0
+        for raid in raid_block_data.raids:
+            if raid.is_enabled:
+                info_widget = RaidInfoWidget(
+                    master = self.info_frame.scrollable_frame,
+                    poke_sprite_handler = self.sprite_handler,
+                    raid_data = raid,
+                    fg_color = customtkinter.ThemeManager.theme["color"]["frame_low"],
+                )
+                self.raid_info_widgets.append(info_widget)
+                count += 1
+                if f"{raid.area_id}-{raid.den_id}" in self.den_locations:
+                    game_x,_,game_z = self.den_locations[f"{raid.area_id}-{raid.den_id}"]
+                    pos_x, pos_y = osm_to_decimal(
+                        (game_x + 2.072021484) / 5000,
+                        (game_z + 5505.240018) / 5000,
+                        0
+                    )
+                    # TODO: event/shiny icons
+                    tera_sprite: Image.Image = ImageTk.getimage(info_widget.tera_sprite)
+                    tera_sprite = tera_sprite.resize(
+                        (
+                            tera_sprite.height // 2,
+                            tera_sprite.width // 2
+                        )
+                    )
+                    tera_sprite = ImageTk.PhotoImage(tera_sprite)
+                    poke_sprite = ImageTk.getimage(info_widget.poke_sprite)
+                    poke_sprite = ImageTk.PhotoImage(poke_sprite)
+                    self.map_widget.set_marker(
+                        pos_x,
+                        pos_y,
+                        icon = tera_sprite,
+                        image = poke_sprite
+                    )
+                else:
+                    # TODO: document all den locs, deal with dupe 19-5
+                    print(f"WARNING den {raid.area_id}-{raid.den_id} location not present")
+                self.raid_progress.set(count/69)
+                info_widget.grid(row = count + 1, column = 0)
 
     def toggle_position_work(self):
         """Toggle player tracking"""
