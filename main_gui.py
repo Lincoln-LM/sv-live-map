@@ -241,6 +241,7 @@ class Application(customtkinter.CTk):
                             raid_data = raid
                         )
                         self.raid_info_widgets.append(info_widget)
+                        # TODO: thread + progress bar
                         print(len(self.raid_info_widgets), "/", len(raid_block_data.raids))
                         info_widget.grid(row = len(self.raid_info_widgets) + 1, column = 0)
             except (TimeoutError, struct.error, binascii.Error):
