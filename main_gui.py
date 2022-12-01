@@ -223,6 +223,9 @@ class Application(customtkinter.CTk):
 
     def read_all_raids(self):
         """Read and display all raid information"""
+        for info_widget in self.raid_info_widgets:
+            info_widget.grid_forget()
+        self.raid_info_widgets.clear()
         if self.reader:
             # struct.error/binascii.Error when connection terminates before all 12 bytes are read
             try:

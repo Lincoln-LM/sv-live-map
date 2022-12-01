@@ -13,6 +13,7 @@ from .sv_enums import (
     Species,
     AbilityGeneration,
     Nature,
+    Game,
 )
 from .raid_enemy_table_array import RaidEnemyTableArray, RaidEnemyInfo
 
@@ -146,7 +147,8 @@ class TeraRaid:
     def initialize_data(
         self,
         raid_enemy_table_arrays: tuple[RaidEnemyTableArray],
-        story_progress: StoryProgress
+        story_progress: StoryProgress,
+        game: Game
     ):
         """Initialize raid with derived information"""
         # rng object used only for tera type
@@ -169,22 +171,28 @@ class TeraRaid:
             encounter_slot_total = sum(
                 (
                     table.raid_enemy_info.rate for table in raid_enemy_table_array.raid_enemy_tables
-                    if table.raid_enemy_info.difficulty == self.difficulty
+                    if table.raid_enemy_info.difficulty == self.difficulty and
+                       table.raid_enemy_info.rom_ver in (None, game, Game.BOTH)
                 )
             )
         else:
             raid_enemy_table_array = raid_enemy_table_arrays[self.difficulty]
             encounter_slot_total = sum(
-                (table.raid_enemy_info.rate for table in raid_enemy_table_array.raid_enemy_tables)
+                (
+                    table.raid_enemy_info.rate for table in raid_enemy_table_array.raid_enemy_tables
+                    if table.raid_enemy_info.rom_ver in (None, game, Game.BOTH)
+                )
             )
 
         encounter_slot_rand = rng_slot.rand(encounter_slot_total)
 
         for table in raid_enemy_table_array.raid_enemy_tables:
-            if encounter_slot_rand <= table.raid_enemy_info.rate:
-                self.generate_pokemon(table.raid_enemy_info)
-                break
-            encounter_slot_rand -= table.raid_enemy_info.rate
+            if table.raid_enemy_info.difficulty in (None, self.difficulty) \
+              and table.raid_enemy_info.rom_ver in (None, game, Game.BOTH):
+                if encounter_slot_rand <= table.raid_enemy_info.rate:
+                    self.generate_pokemon(table.raid_enemy_info)
+                    break
+                encounter_slot_rand -= table.raid_enemy_info.rate
 
     def __str__(self) -> str:
         if not self.is_enabled:
@@ -206,11 +214,12 @@ class RaidBlock:
     def initialize_data(
         self,
         raid_enemy_table_arrays: tuple[RaidEnemyTableArray],
-        story_progress: StoryProgress
+        story_progress: StoryProgress,
+        game: Game
     ) -> None:
         """Initialize each raid with derived information"""
         for raid in self.raids:
-            raid.initialize_data(raid_enemy_table_arrays, story_progress)
+            raid.initialize_data(raid_enemy_table_arrays, story_progress, game)
 
 def process_raid_block(raid_block: bytes) -> RaidBlock:
     """Process raid block with bytechomp"""
