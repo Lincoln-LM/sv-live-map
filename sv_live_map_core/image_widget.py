@@ -18,6 +18,7 @@ class ImageWidget(customtkinter.CTkFrame):
             master = master,
             width = image.width(),
             height = image.height(),
+            corner_radius = 0,
             **kwargs
         )
-        self.canvas.create_image(0, 0, anchor="nw", image=image)
+        self.canvas.create_image(0, 0, anchor = "nw", image = image)

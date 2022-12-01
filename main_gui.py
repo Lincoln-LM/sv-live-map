@@ -15,7 +15,6 @@ from sv_live_map_core.paldea_map_view import PaldeaMapView
 from sv_live_map_core.poke_sprite_handler import PokeSpriteHandler
 from sv_live_map_core.scrollable_frame import ScrollableFrame
 from sv_live_map_core.raid_info_widget import RaidInfoWidget
-from sv_live_map_core.raid_block import TeraRaid
 from sv_live_map_core.sv_enums import StarLevel
 from sv_live_map_core.raid_enemy_table_array import RaidEnemyTableArray
 
@@ -25,7 +24,7 @@ customtkinter.set_appearance_mode("dark")
 class Application(customtkinter.CTk):
     """Live Map GUI"""
     APP_NAME = "SV Live Map"
-    WIDTH = 1230
+    WIDTH = 1330
     HEIGHT = 512
     DEFAULT_IP = "192.168.0.0"
     PLAYER_POS_ADDRESS = 0x42D6110
@@ -61,6 +60,7 @@ class Application(customtkinter.CTk):
         # leftmost frame
         self.settings_frame = customtkinter.CTkFrame(master = self, width = 150)
         self.settings_frame.grid(row = 0, column = 0, columnspan = 2, sticky = "nsew")
+        self.grid_columnconfigure(0, minsize = 150)
 
         self.ip_label = customtkinter.CTkLabel(master = self.settings_frame, text = "IP Address:")
         self.ip_label.grid(row = 0, column = 0, pady = 5)
@@ -104,17 +104,19 @@ class Application(customtkinter.CTk):
         # middle frame
         self.map_frame = customtkinter.CTkFrame(master = self, width = 150)
         self.map_frame.grid(row = 0, column = 2, sticky = "nsew")
+        self.grid_columnconfigure(2, minsize = 150)
 
         self.map_widget = PaldeaMapView(self.map_frame)
         self.map_widget.grid(row = 1, column = 0, sticky = "nw")
 
         # rightmost frame
-        self.info_frame = ScrollableFrame(master = self, width = 150)
+        self.info_frame = ScrollableFrame(master = self, width = 500)
         self.info_frame.grid(row = 0, column = 3, sticky = "nsew")
+        self.grid_columnconfigure(3, minsize = 500)
 
         self.info_frame_label = customtkinter.CTkLabel(
             master = self.info_frame.scrollable_frame,
-            text = "Raid Info:"
+            text = "Raid Info:",
         )
         self.info_frame_label.grid(
             row = 0,
@@ -129,6 +131,8 @@ class Application(customtkinter.CTk):
             customtkinter.CTkFrame(
                 self.info_frame.scrollable_frame,
                 bg_color = self.SEPARATOR_COLOR,
+                fg_color = customtkinter.ThemeManager.theme["color"]["frame_low"],
+                width = 500,
                 height = 5,
                 bd = 0
             )
@@ -137,23 +141,11 @@ class Application(customtkinter.CTk):
             column = 0,
             columnspan = 4,
             sticky = "ew",
-            padx = 10,
-            pady = 5
         )
         self.raid_info_widgets: list[RaidInfoWidget] = []
 
         # background work
         self.background_workers: dict[str, dict] = {}
-
-    def insert_raid_data(self, raid_data: TeraRaid):
-        """Display raid data info"""
-        raid_info_widget = RaidInfoWidget(
-            self,
-            poke_sprite_handler = self.sprite_handler,
-            raid_data = raid_data
-        )
-        raid_info_widget.grid(row = len(self.raid_info_widgets) + 1, column = 0)
-        self.raid_info_widgets.append(raid_info_widget)
 
     def read_cached_tables(self) -> tuple[RaidEnemyTableArray]:
         """Read cached encounter tables"""
@@ -238,7 +230,8 @@ class Application(customtkinter.CTk):
                         info_widget = RaidInfoWidget(
                             master = self.info_frame.scrollable_frame,
                             poke_sprite_handler = self.sprite_handler,
-                            raid_data = raid
+                            raid_data = raid,
+                            fg_color = customtkinter.ThemeManager.theme["color"]["frame_low"],
                         )
                         self.raid_info_widgets.append(info_widget)
                         # TODO: thread + progress bar
