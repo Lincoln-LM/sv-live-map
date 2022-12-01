@@ -19,6 +19,9 @@ class StarLevel(IntEnum):
     FIVE_STAR = 4
     SIX_STAR = 5
 
+    # for easy compatability
+    EVENT = 255
+
 class Game(IntEnum):
     """Enum for the game version"""
     BOTH = 0

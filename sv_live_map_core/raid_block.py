@@ -81,7 +81,8 @@ class TeraRaid:
         self.tera_type: TeraType = None
         self.difficulty: StarLevel = None
         self.raid_enemy_info: RaidEnemyInfo = None
-        self.species: Species
+        self.species: Species = None
+        self.form: int = None
         self.is_event: bool = None
         self.encryption_constant: int = None
         self.pid: int = None
@@ -104,6 +105,7 @@ class TeraRaid:
         # TODO: support default event settings if ever used
         self.raid_enemy_info = raid_enemy_info
         self.species = raid_enemy_info.boss_poke_para.dev_id
+        self.form = raid_enemy_info.boss_poke_para.form_id
 
         rng = Xoroshiro128Plus(self.seed)
         self.encryption_constant = rng.rand(0xFFFFFFFF)
@@ -188,7 +190,7 @@ class TeraRaid:
         if not self.is_enabled:
             return "Empty Den"
         return f"{self.difficulty=!r} " \
-               f"{self.species=!r} " \
+               f"{self.species=!r}{f'-{self.form}' if self.form else ''} " \
                f"{self.area_id=} " \
                f"{self.den_id=} " \
                f"{self.is_shiny=} " \

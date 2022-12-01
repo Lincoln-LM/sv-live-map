@@ -1,5 +1,6 @@
 """Subclass of NXReader with functions specifically for raids"""
 
+import socket
 from sv_live_map_core.nxreader import NXReader
 from sv_live_map_core.sv_enums import StarLevel, StoryProgress
 from sv_live_map_core.raid_enemy_table_array import RaidEnemyTableArray
@@ -11,19 +12,27 @@ class RaidReader(NXReader):
     RAID_BINARY_SIZES = (0x3128, 0x3058, 0x4400, 0x5A78, 0x6690, 0x4FB0)
     # https://github.com/Manu098vm/SVResearches/blob/master/RAM%20Pointers/RAM%20Pointers.txt
     RAID_BLOCK_PTR = ("[[main+42FD560]+160]+40", 0xC98) # ty skylink!
-    RAID_BINARY_EVENT_PTR = ("[[[[[main+42DA820]+30]+388]+300]+28]+414", 0x7530)
     SAVE_BLOCK_PTR = "[[[[[main+42F3130]+B0]]]+30]+8]"
     DIFFICULTY_FLAG_LOCATIONS = (0x2BEE0, 0x1F3C0, 0x1B600, 0x13E80)
 
-    def __init__(self, ip_address = None, port = 6000):
+    def __init__(
+        self,
+        ip_address: str = None,
+        port: int = 6000,
+        read_safety: bool = False,
+        raid_enemy_table_arrays: tuple[RaidEnemyTableArray, 7] = None,
+    ):
         super().__init__(ip_address, port)
+        self.read_safety = read_safety
         self.raid_enemy_table_arrays: tuple[RaidEnemyTableArray, 7] = \
-            self.read_raid_enemy_table_arrays()
+            raid_enemy_table_arrays or self.read_raid_enemy_table_arrays()
         self.story_progress: StoryProgress = self.read_story_progess()
 
     @staticmethod
     def raid_binary_ptr(star_level: StarLevel) -> tuple[str, int]:
         """Get a pointer to the raid flatbuffer binary in memory"""
+        if star_level == StarLevel.EVENT:
+            return ("[[[[[main+42DA820]+30]+388]+300]+28]+414", 0x7530)
         return (
             f"[[[[[[[[main+42FD670]+C0]+E8]]+10]+4A8]+{0xD0 + star_level * 0xB0:X}]+1E8]",
             RaidReader.RAID_BINARY_SIZES[star_level]
@@ -81,7 +90,7 @@ class RaidReader(NXReader):
                 self.read_pointer(*self.raid_binary_ptr(StarLevel.SIX_STAR))
             ),
             RaidEnemyTableArray(
-                self.read_pointer(*self.RAID_BINARY_EVENT_PTR)
+                self.read_pointer(*self.raid_binary_ptr(StarLevel.EVENT))
             ),
         )
 
@@ -90,3 +99,39 @@ class RaidReader(NXReader):
         raid_block = process_raid_block(self.read_pointer(*self.RAID_BLOCK_PTR))
         raid_block.initialize_data(self.raid_enemy_table_arrays, self.story_progress)
         return raid_block
+
+    def check_if_data_avaiable(self):
+        """Check if data is avaiable to be read from socket"""
+        try:
+            self.socket.recv(1, socket.MSG_PEEK)
+            return True
+        except TimeoutError:
+            return False
+
+    def clear_all_data(self):
+        """Clear all data waiting to be read"""
+        try:
+            while self.check_if_data_avaiable():
+                self.socket.recv(0x8000)
+        except TimeoutError:
+            pass
+
+    def read(self, address, size):
+        if self.read_safety:
+            self.clear_all_data()
+        return super().read(address, size)
+
+    def read_absolute(self, address, size):
+        if self.read_safety:
+            self.clear_all_data()
+        return super().read_absolute(address, size)
+
+    def read_main(self, address, size):
+        if self.read_safety:
+            self.clear_all_data()
+        return super().read_main(address, size)
+
+    def read_pointer(self, pointer, size):
+        if self.read_safety:
+            self.clear_all_data()
+        return super().read_pointer(pointer, size)

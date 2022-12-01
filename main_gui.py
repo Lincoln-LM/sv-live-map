@@ -1,5 +1,8 @@
 """Live Map GUI"""
 
+import binascii
+import pickle
+import os
 import os.path
 from typing import Any
 import json
@@ -11,6 +14,10 @@ from sv_live_map_core.raid_reader import RaidReader
 from sv_live_map_core.paldea_map_view import PaldeaMapView
 from sv_live_map_core.poke_sprite_handler import PokeSpriteHandler
 from sv_live_map_core.scrollable_frame import ScrollableFrame
+from sv_live_map_core.raid_info_widget import RaidInfoWidget
+from sv_live_map_core.raid_block import TeraRaid
+from sv_live_map_core.sv_enums import StarLevel
+from sv_live_map_core.raid_enemy_table_array import RaidEnemyTableArray
 
 customtkinter.set_default_color_theme("blue")
 customtkinter.set_appearance_mode("dark")
@@ -23,6 +30,7 @@ class Application(customtkinter.CTk):
     DEFAULT_IP = "192.168.0.0"
     PLAYER_POS_ADDRESS = 0x42D6110
     ICON_PATH = "./resources/icons8/icon.png"
+    SEPARATOR_COLOR = "#949392"
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -61,13 +69,21 @@ class Application(customtkinter.CTk):
         self.ip_entry.grid(row = 0, column = 1, pady = 5)
         self.ip_entry.insert(0, self.settings.get("IP", self.DEFAULT_IP))
 
+        self.use_cached_tables = customtkinter.CTkCheckBox(
+            master = self.settings_frame,
+            text = "Use Cached Tables"
+        )
+        self.use_cached_tables.grid(row = 1, column = 0, columnspan = 2, padx = 10, pady = 5)
+        if self.settings.get("UseCachedTables", False):
+            self.use_cached_tables.select()
+
         self.connect_button = customtkinter.CTkButton(
             master = self.settings_frame,
             text = "Connect!",
             width = 300,
             command=self.toggle_connection
         )
-        self.connect_button.grid(row = 1, column = 0, columnspan = 2, padx = 10, pady = 5)
+        self.connect_button.grid(row = 2, column = 0, columnspan = 2, padx = 10, pady = 5)
 
         self.position_button = customtkinter.CTkButton(
             master = self.settings_frame,
@@ -75,7 +91,15 @@ class Application(customtkinter.CTk):
             width = 300,
             command=self.toggle_position_work
         )
-        self.position_button.grid(row = 2, column = 0, columnspan = 2, padx = 10, pady = 5)
+        self.position_button.grid(row = 3, column = 0, columnspan = 2, padx = 10, pady = 5)
+
+        self.read_raids_button = customtkinter.CTkButton(
+            master = self.settings_frame,
+            text = "Read All Raids",
+            width = 300,
+            command=self.read_all_raids
+        )
+        self.read_raids_button.grid(row = 4, column = 0, columnspan = 2, padx = 10, pady = 5)
 
         # middle frame
         self.map_frame = customtkinter.CTkFrame(master = self, width = 150)
@@ -88,19 +112,105 @@ class Application(customtkinter.CTk):
         self.info_frame = ScrollableFrame(master = self, width = 150)
         self.info_frame.grid(row = 0, column = 3, sticky = "nsew")
 
-        label = customtkinter.CTkLabel(
+        self.info_frame_label = customtkinter.CTkLabel(
             master = self.info_frame.scrollable_frame,
             text = "Raid Info:"
         )
-        label.grid(row = 0, column = 0)
+        self.info_frame_label.grid(
+            row = 0,
+            column = 0,
+            columnspan = 4,
+            sticky = "ew",
+            padx = 10,
+            pady = 5
+        )
+
+        self.info_frame_horizontal_separator = \
+            customtkinter.CTkFrame(
+                self.info_frame.scrollable_frame,
+                bg_color = self.SEPARATOR_COLOR,
+                height = 5,
+                bd = 0
+            )
+        self.info_frame_horizontal_separator.grid(
+            row = 1,
+            column = 0,
+            columnspan = 4,
+            sticky = "ew",
+            padx = 10,
+            pady = 5
+        )
+        self.raid_info_widgets: list[RaidInfoWidget] = []
 
         # background work
         self.background_workers: dict[str, dict] = {}
 
+    def insert_raid_data(self, raid_data: TeraRaid):
+        """Display raid data info"""
+        raid_info_widget = RaidInfoWidget(
+            self,
+            poke_sprite_handler = self.sprite_handler,
+            raid_data = raid_data
+        )
+        raid_info_widget.grid(row = len(self.raid_info_widgets) + 1, column = 0)
+        self.raid_info_widgets.append(raid_info_widget)
+
+    def read_cached_tables(self) -> tuple[RaidEnemyTableArray]:
+        """Read cached encounter tables"""
+        tables = []
+        for level in StarLevel:
+            if not os.path.exists(f"./cached_tables/{level.name}.pkl"):
+                self.error_message_window(
+                    "File Missing",
+                    f"cached table ./cached_tables/{level.name}.pkl does not exist."
+                )
+                return None
+            with open(f"./cached_tables/{level.name}.pkl", "rb") as file:
+                tables.append(pickle.load(file))
+        return tuple(tables)
+
+    def dump_cached_tables(self):
+        """Dump cached encounter tables"""
+        if not os.path.exists("./cached_tables/"):
+            os.mkdir("./cached_tables/")
+        for level in StarLevel:
+            with open(f"./cached_tables/{level.name}.pkl", "wb+") as file:
+                index = level
+                if level == StarLevel.EVENT:
+                    index = -1
+                pickle.dump(self.reader.raid_enemy_table_arrays[index], file)
+
     def connect(self) -> bool:
         """Connect to switch and return True if success"""
         try:
-            self.reader = RaidReader(self.ip_entry.get())
+            if self.use_cached_tables.get():
+                cached_tables = self.read_cached_tables()
+                if cached_tables is not None:
+                    self.reader = RaidReader(
+                        self.ip_entry.get(),
+                        read_safety = False,
+                        raid_enemy_table_arrays = cached_tables
+                    )
+                    if len(self.reader.raid_enemy_table_arrays[0].raid_enemy_tables) == 0:
+                        self.reader = None
+                        self.error_message_window(
+                            "Invalid",
+                            "Cached raid data is invalid. " \
+                            "Ensure the game is loaded in when reading."
+                        )
+                        return False
+                else:
+                    return False
+            else:
+                self.reader = RaidReader(self.ip_entry.get())
+                if len(self.reader.raid_enemy_table_arrays[0].raid_enemy_tables) == 0:
+                    self.reader = None
+                    self.error_message_window(
+                        "Invalid",
+                        "Raid data is invalid. Ensure the game is loaded in."
+                    )
+                    return False
+                self.dump_cached_tables()
             return True
         except TimeoutError:
             self.reader = None
@@ -116,6 +226,30 @@ class Application(customtkinter.CTk):
         else:
             if self.connect():
                 self.connect_button.configure(text = "Disconnect")
+
+    def read_all_raids(self):
+        """Read and display all raid information"""
+        if self.reader:
+            # struct.error/binascii.Error when connection terminates before all 12 bytes are read
+            try:
+                raid_block_data = self.reader.read_raid_block_data()
+                for raid in raid_block_data.raids:
+                    if raid.is_enabled:
+                        info_widget = RaidInfoWidget(
+                            master = self.info_frame.scrollable_frame,
+                            poke_sprite_handler = self.sprite_handler,
+                            raid_data = raid
+                        )
+                        self.raid_info_widgets.append(info_widget)
+                        print(len(self.raid_info_widgets), "/", len(raid_block_data.raids))
+                        info_widget.grid(row = len(self.raid_info_widgets) + 1, column = 0)
+            except (TimeoutError, struct.error, binascii.Error):
+                self.toggle_connection()
+                self.toggle_position_work()
+                self.error_message_window("TimeoutError", "Connection timed out.")
+                return
+        else:
+            self.error_message_window("Invalid", "Not connected to switch.")
 
     def toggle_position_work(self):
         """Toggle player tracking"""
@@ -142,8 +276,8 @@ class Application(customtkinter.CTk):
                 # omit Y (height) coordinate
                 game_x, _, game_z = \
                     struct.unpack("fff", self.reader.read_main(self.PLAYER_POS_ADDRESS, 12))
-            # struct.error when connection terminates before all 12 bytes are read
-            except (TimeoutError, struct.error):
+            # struct.error/binascii.Error when connection terminates before all 12 bytes are read
+            except (TimeoutError, struct.error, binascii.Error):
                 self.toggle_connection()
                 self.toggle_position_work()
                 self.error_message_window("TimeoutError", "Connection timed out.")
@@ -165,7 +299,7 @@ class Application(customtkinter.CTk):
     def error_message_window(self, title, message):
         """Open new window with error message"""
         window = customtkinter.CTkToplevel(self)
-        window.geometry("325x100")
+        window.geometry("450x100")
         window.title(title)
 
         label = customtkinter.CTkLabel(window, text = message)
@@ -179,6 +313,7 @@ class Application(customtkinter.CTk):
         # save settings on termination
         with open("settings.json", "w+", encoding = "utf-8") as settings_file:
             self.settings['IP'] = self.ip_entry.get()
+            self.settings['UseCachedTables'] = self.use_cached_tables.get()
             json.dump(self.settings, settings_file)
 
         # close reader on termination

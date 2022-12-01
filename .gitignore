@@ -161,3 +161,4 @@ cython_debug/
 
 misc_hidden/
 settings.json
+cached_tables/

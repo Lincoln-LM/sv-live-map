@@ -10,6 +10,7 @@ class Xoroshiro128Plus:
     _ROT_40: np.uint64 = np.uint64(40)
     _SHIFT_16: np.uint64 = np.uint64(16)
     _ONE: np.uint64 = np.uint64(1)
+    _ZERO: np.uint64 = np.uint64(0)
 
     def __init__(self, seed0: np.uint64, seed1: np.uint64 = _XORO_CONST) -> None:
         # disable integer overflow warnings
@@ -42,6 +43,7 @@ class Xoroshiro128Plus:
 
     def rand(self, maximum: np.uint64) -> int:
         """Generate a pseudorandom number in range [0, maximum)"""
+        assert maximum != self._ZERO
         # ensure integer inputs are casted to numpy ints
         maximum = np.uint64(maximum)
         mask = self.get_mask(maximum)
