@@ -9,7 +9,8 @@ import customtkinter
 from tkintermapview import osm_to_decimal
 from sv_live_map_core.raid_reader import RaidReader
 from sv_live_map_core.paldea_map_view import PaldeaMapView
-from sv_live_map_core.sprite_handler import SpriteHandler
+from sv_live_map_core.poke_sprite_handler import PokeSpriteHandler
+from sv_live_map_core.scrollable_frame import ScrollableFrame
 
 customtkinter.set_default_color_theme("blue")
 customtkinter.set_appearance_mode("dark")
@@ -17,7 +18,7 @@ customtkinter.set_appearance_mode("dark")
 class Application(customtkinter.CTk):
     """Live Map GUI"""
     APP_NAME = "SV Live Map"
-    WIDTH = 800
+    WIDTH = 1230
     HEIGHT = 512
     DEFAULT_IP = "192.168.0.0"
     PLAYER_POS_ADDRESS = 0x42D6110
@@ -28,7 +29,7 @@ class Application(customtkinter.CTk):
 
         # initialize for later
         self.reader: RaidReader = None
-        self.sprite_handler: SpriteHandler = SpriteHandler(tk_image = True)
+        self.sprite_handler: PokeSpriteHandler = PokeSpriteHandler(tk_image = True)
         self.settings: dict[str, Any] = {}
 
         # if settings file exists then access it
@@ -49,6 +50,7 @@ class Application(customtkinter.CTk):
         self.createcommand('tk::mac::Quit', self.on_closing)
 
         # initialize widgets
+        # leftmost frame
         self.settings_frame = customtkinter.CTkFrame(master = self, width = 150)
         self.settings_frame.grid(row = 0, column = 0, columnspan = 2, sticky = "nsew")
 
@@ -75,11 +77,22 @@ class Application(customtkinter.CTk):
         )
         self.position_button.grid(row = 2, column = 0, columnspan = 2, padx = 10, pady = 5)
 
+        # middle frame
         self.map_frame = customtkinter.CTkFrame(master = self, width = 150)
         self.map_frame.grid(row = 0, column = 2, sticky = "nsew")
 
         self.map_widget = PaldeaMapView(self.map_frame)
         self.map_widget.grid(row = 1, column = 0, sticky = "nw")
+
+        # rightmost frame
+        self.info_frame = ScrollableFrame(master = self, width = 150)
+        self.info_frame.grid(row = 0, column = 3, sticky = "nsew")
+
+        label = customtkinter.CTkLabel(
+            master = self.info_frame.scrollable_frame,
+            text = "Raid Info:"
+        )
+        label.grid(row = 0, column = 0)
 
         # background work
         self.background_workers: dict[str, dict] = {}
