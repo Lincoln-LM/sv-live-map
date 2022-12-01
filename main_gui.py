@@ -7,7 +7,7 @@ import struct
 from PIL import Image, ImageTk
 import customtkinter
 from tkintermapview import osm_to_decimal
-from sv_live_map_core.nxreader import NXReader
+from sv_live_map_core.raid_reader import RaidReader
 from sv_live_map_core.paldea_map_view import PaldeaMapView
 
 customtkinter.set_default_color_theme("blue")
@@ -26,7 +26,7 @@ class Application(customtkinter.CTk):
         super().__init__(*args, **kwargs)
 
         # initialize for later
-        self.reader: NXReader = None
+        self.reader: RaidReader = None
         self.settings: dict[str, Any] = {}
 
         # if settings file exists then access it
@@ -85,7 +85,7 @@ class Application(customtkinter.CTk):
     def connect(self) -> bool:
         """Connect to switch and return True if success"""
         try:
-            self.reader = NXReader(self.ip_entry.get())
+            self.reader = RaidReader(self.ip_entry.get())
             return True
         except TimeoutError:
             self.reader = None
