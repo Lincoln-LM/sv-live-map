@@ -9,6 +9,7 @@ import customtkinter
 from tkintermapview import osm_to_decimal
 from sv_live_map_core.raid_reader import RaidReader
 from sv_live_map_core.paldea_map_view import PaldeaMapView
+from sv_live_map_core.sprite_handler import SpriteHandler
 
 customtkinter.set_default_color_theme("blue")
 customtkinter.set_appearance_mode("dark")
@@ -27,6 +28,7 @@ class Application(customtkinter.CTk):
 
         # initialize for later
         self.reader: RaidReader = None
+        self.sprite_handler: SpriteHandler = SpriteHandler(tk_image = True)
         self.settings: dict[str, Any] = {}
 
         # if settings file exists then access it

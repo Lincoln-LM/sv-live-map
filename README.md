@@ -23,5 +23,6 @@ The main purpose of this project is to show off [elegant parsing of flatbuffer b
 * [EzPzStreamz/SteveCookTU](https://github.com/SteveCookTU) for help with map resources and direct aid in reverse engineering
 * [SkyLink98/Manu098vm](https://github.com/Manu098vm) for their early SV research along with documentation on memory pointers in [SVResearches](https://github.com/Manu098vm/SVResearches)
 
-### Icon Credits:
+### Image Credits:
+* Pokemon sprites accessed directly from [PKHex](https://github.com/kwsch/PKHeX/blob/master/PKHeX.Drawing.PokeSprite/Resources/img/Artwork%20Pokemon%20Sprites/a_1.png)
 * Icons in [icons8](./resources/icons8) folder provided by [icons8](https://icons8.com)
