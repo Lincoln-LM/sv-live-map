@@ -5,9 +5,15 @@ from PIL import Image, ImageTk
 from sv_live_map_core.raid_block import TeraRaid
 from sv_live_map_core.poke_sprite_handler import PokeSpriteHandler
 from sv_live_map_core.image_widget import ImageWidget
+from sv_live_map_core.sv_enums import TeraType
 
 class RaidInfoWidget(customtkinter.CTkFrame):
     """customtkinter widget for displaying raid info"""
+    EMPTY_SPRITE: ImageTk.PhotoImage = None
+    EVENT_SPRITE: ImageTk.PhotoImage = None
+    SHINY_SPRITE: ImageTk.PhotoImage = None
+    TERA_SPRITES: list[ImageTk.PhotoImage] = None
+
     def __init__(
         self,
         *args,
@@ -31,18 +37,30 @@ class RaidInfoWidget(customtkinter.CTkFrame):
 
         self.poke_sprite = \
             self.poke_sprite_handler.grab_sprite(self.raid_data.species, self.raid_data.form)
-        self.tera_sprite = ImageTk.PhotoImage(
-            Image.open(f"./resources/gem/{self.raid_data.tera_type.name}.png")
-        )
-        self.empty_sprite = ImageTk.PhotoImage(
-            Image.open("./resources/info_icons/empty.png")
-        )
-        self.event_sprite = ImageTk.PhotoImage(
-            Image.open("./resources/info_icons/event.png")
-        )
-        self.shiny_sprite = ImageTk.PhotoImage(
-            Image.open("./resources/info_icons/shiny.png")
-        )
+        if RaidInfoWidget.TERA_SPRITES is None:
+            RaidInfoWidget.TERA_SPRITES = []
+            for tera_type in TeraType:
+                RaidInfoWidget.TERA_SPRITES.append(
+                    ImageTk.PhotoImage(
+                        Image.open(f"./resources/gem/{tera_type.name}.png")
+                    )
+                )
+        self.tera_sprite = RaidInfoWidget.TERA_SPRITES[raid_data.tera_type]
+        if RaidInfoWidget.EMPTY_SPRITE is None:
+            RaidInfoWidget.EMPTY_SPRITE = ImageTk.PhotoImage(
+                Image.open("./resources/info_icons/empty.png")
+            )
+        self.empty_sprite = RaidInfoWidget.EMPTY_SPRITE
+        if RaidInfoWidget.EVENT_SPRITE is None:
+            RaidInfoWidget.EVENT_SPRITE = ImageTk.PhotoImage(
+                Image.open("./resources/info_icons/event.png")
+            )
+        self.event_sprite = RaidInfoWidget.EVENT_SPRITE
+        if RaidInfoWidget.SHINY_SPRITE is None:
+            RaidInfoWidget.SHINY_SPRITE = ImageTk.PhotoImage(
+                Image.open("./resources/info_icons/shiny.png")
+            )
+        self.shiny_sprite = RaidInfoWidget.SHINY_SPRITE
 
         self.tera_sprite_display = ImageWidget(
             master = self,

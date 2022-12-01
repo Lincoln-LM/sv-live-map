@@ -1,6 +1,7 @@
 """Sprite handler to grab pokemon sprites from PKHex"""
 
 import requests
+import os
 from PIL import Image, ImageTk
 from .sv_enums import Species
 
@@ -13,9 +14,26 @@ class PokeSpriteHandler:
     def __init__(self, tk_image = False):
         self.tk_image = tk_image
         self.cache: dict[(Species, int), Image.Image | ImageTk.PhotoImage] = {}
+        if not os.path.exists("./cached_sprites/"):
+            os.mkdir("./cached_sprites/")
+        for file in os.listdir("./cached_sprites/"):
+            title = file.split(".")[0]
+            split = title.split("-")
+            species = Species(int(split[0]))
+            if "-" not in title:
+                form = None
+            else:
+                form = int(split[-1])
+            img = Image.open(f"./cached_sprites/{file}")
+            # convert to tk image for gui
+            if self.tk_image:
+                img = ImageTk.PhotoImage(img)
+            self.cache[(species, form)] = img
 
     def grab_sprite(self, species: Species, form: int) -> Image.Image:
         """Grab a sprite from PKHex's github"""
+        if form == 0:
+            form = None
         if (species, form) not in self.cache:
             title = f"{species}"
             if form:
@@ -23,6 +41,7 @@ class PokeSpriteHandler:
             sprite_location = self.SPRITE_LINK.replace("{title}", title)
             req = requests.get(sprite_location, stream = True, timeout = 5.0)
             img = Image.open(req.raw)
+            img.save(f"./cached_sprites/{title}.png")
             # convert to tk image for gui
             if self.tk_image:
                 img = ImageTk.PhotoImage(img)

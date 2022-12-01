@@ -260,7 +260,7 @@ class Application(customtkinter.CTk):
                             # TODO: document all den locs, deal with dupe 19-5
                             print(f"WARNING den {raid.area_id}-{raid.den_id} location not present")
                         # TODO: thread + progress bar
-                        print(len(self.raid_info_widgets), "/", len(raid_block_data.raids))
+                        print(f"{len(self.raid_info_widgets)}/69")
                         info_widget.grid(row = len(self.raid_info_widgets) + 1, column = 0)
             except (TimeoutError, struct.error, binascii.Error):
                 self.toggle_connection()
