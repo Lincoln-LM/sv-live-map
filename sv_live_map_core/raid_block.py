@@ -23,6 +23,46 @@ def is_shiny(pid: int, sidtid: int):
     temp = pid ^ sidtid
     return ((temp & 0xFFFF) ^ (temp >> 16)) < 0x10
 
+def calc_difficulty(story_progress: StoryProgress, difficulty_rand: int) -> StarLevel:
+    """Calculate raid difficulty from story progress and difficulty rand"""
+    match story_progress:
+        case StoryProgress.DEFAULT:
+            if difficulty_rand <= 80:
+                return StarLevel.ONE_STAR
+            # elif (difficulty_rand - 80) <= 20
+            return StarLevel.TWO_STAR
+        case StoryProgress.THREE_STAR_UNLOCKED:
+            if difficulty_rand <= 30:
+                return StarLevel.ONE_STAR
+            if difficulty_rand <= 70: # elif (difficulty_rand - 30) <= 40
+                return StarLevel.TWO_STAR
+            # elif (difficulty_rand - 30 - 40) <= 30
+            return StarLevel.THREE_STAR
+        case StoryProgress.FOUR_STAR_UNLOCKED:
+            if difficulty_rand <= 20:
+                return StarLevel.ONE_STAR
+            if difficulty_rand <= 40: # elif (difficulty_rand - 20) <= 20
+                return StarLevel.TWO_STAR
+            if difficulty_rand <= 70: # elif (difficulty_rand - 20 - 20) <= 30
+                return StarLevel.THREE_STAR
+            # elif (difficulty_rand - 20 - 20 - 30) <= 30
+            return StarLevel.FOUR_STAR
+        case StoryProgress.FIVE_STAR_UNLOCKED:
+            if difficulty_rand <= 40:
+                return StarLevel.THREE_STAR
+            if difficulty_rand <= 75: # elif (difficulty_rand - 40) <= 35
+                return StarLevel.FOUR_STAR
+            # elif (difficulty_rand - 40 - 35) <= 25
+            return StarLevel.FIVE_STAR
+        case StoryProgress.SIX_STAR_UNLOCKED:
+            if difficulty_rand <= 30:
+                return StarLevel.THREE_STAR
+            if difficulty_rand <= 70: # elif (difficulty_rand - 30) <= 40
+                return StarLevel.FOUR_STAR
+            # elif (difficulty_rand - 30 - 40) <= 30
+            return StarLevel.FIVE_STAR
+    return None
+
 @dataclass
 class TeraRaid:
     """Single Tera Raid Data"""
@@ -119,44 +159,8 @@ class TeraRaid:
         if self.content == 1:
             self.difficulty = StarLevel.SIX_STAR
         else:
-            # TODO: split into own function?
             difficulty_rand = rng_slot.rand(100)
-            match story_progress:
-                case StoryProgress.DEFAULT:
-                    if difficulty_rand <= 80:
-                        self.difficulty = StarLevel.ONE_STAR
-                    else: # elif (difficulty_rand - 80) <= 20
-                        self.difficulty = StarLevel.TWO_STAR
-                case StoryProgress.THREE_STAR_UNLOCKED:
-                    if difficulty_rand <= 30:
-                        self.difficulty = StarLevel.ONE_STAR
-                    elif difficulty_rand <= 70: # elif (difficulty_rand - 30) <= 40
-                        self.difficulty = StarLevel.TWO_STAR
-                    else: # elif (difficulty_rand - 30 - 40) <= 30
-                        self.difficulty = StarLevel.THREE_STAR
-                case StoryProgress.FOUR_STAR_UNLOCKED:
-                    if difficulty_rand <= 20:
-                        self.difficulty = StarLevel.ONE_STAR
-                    elif difficulty_rand <= 40: # elif (difficulty_rand - 20) <= 20
-                        self.difficulty = StarLevel.TWO_STAR
-                    elif difficulty_rand <= 70: # elif (difficulty_rand - 20 - 20) <= 30
-                        self.difficulty = StarLevel.THREE_STAR
-                    else:
-                        self.difficulty = StarLevel.FOUR_STAR
-                case StoryProgress.FIVE_STAR_UNLOCKED:
-                    if difficulty_rand <= 40:
-                        self.difficulty = StarLevel.THREE_STAR
-                    elif difficulty_rand <= 75: # elif (difficulty_rand - 40) <= 35
-                        self.difficulty = StarLevel.FOUR_STAR
-                    else: # elif (difficulty_rand - 40 - 35) <= 25
-                        self.difficulty = StarLevel.FIVE_STAR
-                case StoryProgress.SIX_STAR_UNLOCKED:
-                    if difficulty_rand <= 30:
-                        self.difficulty = StarLevel.THREE_STAR
-                    elif difficulty_rand <= 70: # elif (difficulty_rand - 30) <= 40
-                        self.difficulty = StarLevel.FOUR_STAR
-                    else: # elif (difficulty_rand - 30 - 40) <= 30
-                        self.difficulty = StarLevel.FIVE_STAR
+            self.difficulty = calc_difficulty(story_progress, difficulty_rand)
 
         if self.is_event:
             raid_enemy_table_array = raid_enemy_table_arrays[-1]
