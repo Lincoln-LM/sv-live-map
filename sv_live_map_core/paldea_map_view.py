@@ -3,6 +3,7 @@
 import os.path
 from tkintermapview import TkinterMapView
 from PIL import Image, ImageTk
+from .corrected_marker import CorrectedMarker
 
 class PaldeaMapView(TkinterMapView):
     """Modified TkinterMapView for use with the paldea map"""
@@ -73,3 +74,9 @@ class PaldeaMapView(TkinterMapView):
             self.tile_image_cache[f'z{zoom}x{x}y{y}'] = img
             return img
         return self.empty_tile_image
+
+    def set_marker(self, deg_x: float, deg_y: float, text: str = None, **kwargs) -> CorrectedMarker:
+        marker = CorrectedMarker(self, (deg_x, deg_y), text=text, **kwargs)
+        marker.draw()
+        self.canvas_marker_list.append(marker)
+        return marker

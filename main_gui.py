@@ -44,6 +44,9 @@ class Application(customtkinter.CTk):
             with open("settings.json", "r", encoding = "utf-8") as settings_file:
                 self.settings = json.load(settings_file)
 
+        with open("./resources/den_locations.json", "r", encoding = "utf-8") as location_file:
+            self.den_locations: dict[str, list[int, int, int]] = json.load(location_file)
+
         # window settings
         self.title(self.APP_NAME)
         self.geometry(f"{self.WIDTH}x{self.HEIGHT}")
@@ -239,6 +242,23 @@ class Application(customtkinter.CTk):
                             fg_color = customtkinter.ThemeManager.theme["color"]["frame_low"],
                         )
                         self.raid_info_widgets.append(info_widget)
+                        if f"{raid.area_id}-{raid.den_id}" in self.den_locations:
+                            game_x,_,game_z = self.den_locations[f"{raid.area_id}-{raid.den_id}"]
+                            pos_x, pos_y = osm_to_decimal(
+                                (game_x + 2.072021484) / 5000,
+                                (game_z + 5505.240018) / 5000,
+                                0
+                            )
+                            # TODO: event/shiny icons
+                            tera_sprite: Image.Image = ImageTk.getimage(info_widget.tera_sprite)
+                            tera_sprite = tera_sprite.resize((tera_sprite.height // 2, tera_sprite.width // 2))
+                            tera_sprite = ImageTk.PhotoImage(tera_sprite)
+                            poke_sprite = ImageTk.getimage(info_widget.poke_sprite)
+                            poke_sprite = ImageTk.PhotoImage(poke_sprite)
+                            self.map_widget.set_marker(pos_x, pos_y, icon = tera_sprite, image = poke_sprite)
+                        else:
+                            # TODO: document all den locs, deal with dupe 19-5
+                            print(f"WARNING den {raid.area_id}-{raid.den_id} location not present")
                         # TODO: thread + progress bar
                         print(len(self.raid_info_widgets), "/", len(raid_block_data.raids))
                         info_widget.grid(row = len(self.raid_info_widgets) + 1, column = 0)

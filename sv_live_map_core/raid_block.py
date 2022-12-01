@@ -189,7 +189,7 @@ class TeraRaid:
         for table in raid_enemy_table_array.raid_enemy_tables:
             if table.raid_enemy_info.difficulty in (None, self.difficulty) \
               and table.raid_enemy_info.rom_ver in (None, game, Game.BOTH):
-                if encounter_slot_rand <= table.raid_enemy_info.rate:
+                if encounter_slot_rand < table.raid_enemy_info.rate:
                     self.generate_pokemon(table.raid_enemy_info)
                     break
                 encounter_slot_rand -= table.raid_enemy_info.rate
