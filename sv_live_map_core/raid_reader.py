@@ -4,16 +4,18 @@ import socket
 from sv_live_map_core.nxreader import NXReader
 from sv_live_map_core.sv_enums import StarLevel, StoryProgress, Game
 from sv_live_map_core.raid_enemy_table_array import RaidEnemyTableArray
+from sv_live_map_core.delivery_raid_priority_array import DeliveryRaidPriorityArray
 from sv_live_map_core.raid_block import RaidBlock, process_raid_block
 from sv_live_map_core.rng import SCXorshift32
 
 class RaidReader(NXReader):
     """Subclass of NXReader with functions specifically for raids"""
     RAID_BINARY_SIZES = (0x3128, 0x3058, 0x4400, 0x5A78, 0x6690, 0x4FB0)
+    RAID_PRIORITY_PTR = ("[[[[main+43A7798]+08]+2C0]+10]+88", 0x58)
     # https://github.com/Manu098vm/SVResearches/blob/master/RAM%20Pointers/RAM%20Pointers.txt
-    RAID_BLOCK_PTR = ("[[main+42FD560]+160]+40", 0xC98) # ty skylink!
-    SAVE_BLOCK_PTR = "[[[[[main+42F3130]+B0]]]+30]+8]"
-    DIFFICULTY_FLAG_LOCATIONS = (0x2BEE0, 0x1F3C0, 0x1B600, 0x13E80)
+    RAID_BLOCK_PTR = ("[[main+43A77C8]+160]+40", 0xC98) # ty skylink!
+    SAVE_BLOCK_PTR = "[[[main+4385F30]+80]+8]"
+    DIFFICULTY_FLAG_LOCATIONS = (0x2BF20, 0x1F400, 0x1B640, 0x13EC0)
 
     def __init__(
         self,
@@ -26,16 +28,25 @@ class RaidReader(NXReader):
         self.read_safety = read_safety
         self.raid_enemy_table_arrays: tuple[RaidEnemyTableArray, 7] = \
             raid_enemy_table_arrays or self.read_raid_enemy_table_arrays()
+        # TODO: cache
+        self.delivery_raid_priority: tuple[int] = self.read_delivery_raid_priority()
         self.story_progress: StoryProgress = self.read_story_progess()
         self.game_version: Game = self.read_game_version()
+
+    def read_delivery_raid_priority(self) -> tuple[int]:
+        """Read the delivery priority flatbuffer from memory"""
+        return DeliveryRaidPriorityArray(self.read_pointer(*self.RAID_PRIORITY_PTR)) \
+            .delivery_raid_prioritys[0] \
+            .delivery_group_id \
+            .group_counts
 
     @staticmethod
     def raid_binary_ptr(star_level: StarLevel) -> tuple[str, int]:
         """Get a pointer to the raid flatbuffer binary in memory"""
         if star_level == StarLevel.EVENT:
-            return ("[[[[[main+42DA820]+30]+388]+300]+28]+414", 0x7530)
+            return ("[[[[[[main+4384A50]+30]+288]+290]+280]+28]+414", 0x7530)
         return (
-            f"[[[[[[[[main+42FD670]+C0]+E8]]+10]+4A8]+{0xD0 + star_level * 0xB0:X}]+1E8]",
+            f"[[[[[[[[main+43A78D8]+C0]+E8]]+10]+4A8]+{0xD0 + star_level * 0xB0:X}]+1E8]",
             RaidReader.RAID_BINARY_SIZES[star_level]
         )
 
@@ -71,7 +82,7 @@ class RaidReader(NXReader):
 
     def read_game_version(self) -> Game:
         """Read game version"""
-        return Game(self.read_main_int(0x42DBDA0, 4) - 49)
+        return Game.from_game_id(self.read_main_int(0x4385FD0, 4))
 
     def read_raid_enemy_table_arrays(self) -> tuple[RaidEnemyTableArray, 7]:
         """Read all raid flatbuffer binaries from memory"""
@@ -102,7 +113,12 @@ class RaidReader(NXReader):
     def read_raid_block_data(self) -> RaidBlock:
         """Read raid block data from memory and process"""
         raid_block = process_raid_block(self.read_pointer(*self.RAID_BLOCK_PTR))
-        raid_block.initialize_data(self.raid_enemy_table_arrays, self.story_progress, self.game_version)
+        raid_block.initialize_data(
+            self.raid_enemy_table_arrays, 
+            self.story_progress,
+            self.game_version,
+            self.delivery_raid_priority
+        )
         return raid_block
 
     def check_if_data_avaiable(self):

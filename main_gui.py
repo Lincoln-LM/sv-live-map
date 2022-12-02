@@ -30,7 +30,7 @@ class Application(customtkinter.CTk):
     WIDTH = 1330
     HEIGHT = 512
     DEFAULT_IP = "192.168.0.0"
-    PLAYER_POS_ADDRESS = 0x42D6110
+    PLAYER_POS_ADDRESS = 0x4380340
     ICON_PATH = "./resources/icons8/icon.png"
     SEPARATOR_COLOR = "#949392"
 
@@ -243,11 +243,11 @@ class Application(customtkinter.CTk):
             # struct.error/binascii.Error when connection terminates before all 12 bytes are read
             try:
                 raid_block_data = self.reader.read_raid_block_data()
-                self.connect_button.configure(state = "disabled")
+                self.connect_button.configure(require_redraw = True, state = "disabled")
                 work = partial(self.read_all_raids_work, raid_block_data)
                 work_thread = threading.Thread(target = work)
                 work_thread.start()
-                self.connect_button.configure(state = "enabled")
+                self.connect_button.configure(require_redraw = True, state = "enabled")
             except (TimeoutError, struct.error, binascii.Error):
                 self.toggle_connection()
                 if 'position' in self.background_workers \

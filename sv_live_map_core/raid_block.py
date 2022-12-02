@@ -12,6 +12,7 @@ from .sv_enums import (
     TeraType,
     Species,
     AbilityGeneration,
+    IVGeneration,
     Nature,
     Game,
 )
@@ -79,6 +80,7 @@ class TeraRaid:
 
     def __post_init__(self) -> None:
         # information that needs to be derived
+        self.delivery_group_id: int = None
         self.tera_type: TeraType = None
         self.difficulty: StarLevel = None
         self.raid_enemy_info: RaidEnemyInfo = None
@@ -105,6 +107,8 @@ class TeraRaid:
         """Derive pokemon data from seed and slot"""
         # TODO: support default event settings if ever used
         self.raid_enemy_info = raid_enemy_info
+        if self.raid_enemy_info.difficulty:
+            self.difficulty = self.raid_enemy_info.difficulty
         self.species = raid_enemy_info.boss_poke_para.dev_id
         self.form = raid_enemy_info.boss_poke_para.form_id
 
@@ -114,17 +118,30 @@ class TeraRaid:
         self.pid = rng.rand(0xFFFFFFFF)
         self.is_shiny = is_shiny(self.pid, self.sidtid)
 
-        temp_ivs = [-1 for _ in range(6)]
-        for i in range(raid_enemy_info.boss_poke_para.talent_vnum or 0):
-            index = rng.rand(6)
-            while temp_ivs[index] != -1:
-                index = rng.rand(6)
-            temp_ivs[index] = 31
-        for i in range(6):
-            if temp_ivs[i] == -1:
-                temp_ivs[i] = rng.rand(32)
+        match raid_enemy_info.boss_poke_para.talent_type:
+            case IVGeneration.RANDOM_IVS:
+                self.ivs = tuple(rng.rand(32) for _ in range(6))
+            case IVGeneration.SET_GUARANTEED_IVS:
+                temp_ivs = [-1 for _ in range(6)]
+                for i in range(raid_enemy_info.boss_poke_para.talent_vnum or 0):
+                    index = rng.rand(6)
+                    while temp_ivs[index] != -1:
+                        index = rng.rand(6)
+                    temp_ivs[index] = 31
+                for i in range(6):
+                    if temp_ivs[i] == -1:
+                        temp_ivs[i] = rng.rand(32)
+                self.ivs = tuple(temp_ivs)
+            case IVGeneration.SET_IVS:
+                self.ivs = (
+                    raid_enemy_info.boss_poke_para.talent_value.hp,
+                    raid_enemy_info.boss_poke_para.talent_value.atk,
+                    raid_enemy_info.boss_poke_para.talent_value.def_,
+                    raid_enemy_info.boss_poke_para.talent_value.spa,
+                    raid_enemy_info.boss_poke_para.talent_value.spd,
+                    raid_enemy_info.boss_poke_para.talent_value.spe
+                )
 
-        self.ivs = tuple(temp_ivs)
         match raid_enemy_info.boss_poke_para.tokusei:
             case AbilityGeneration.RANDOM_12 | None:
                 self.ability = rng.rand(2) + 1
@@ -148,9 +165,12 @@ class TeraRaid:
         self,
         raid_enemy_table_arrays: tuple[RaidEnemyTableArray],
         story_progress: StoryProgress,
-        game: Game
+        game: Game,
+        delivery_group_id: int
     ):
         """Initialize raid with derived information"""
+        self.delivery_group_id = delivery_group_id
+
         # rng object used only for tera type
         rng_tera = Xoroshiro128Plus(self.seed)
         self.tera_type = TeraType(rng_tera.rand(18))
@@ -158,10 +178,13 @@ class TeraRaid:
         # rng object used for difficulty and slot
         rng_slot = Xoroshiro128Plus(self.seed)
 
-        self.is_event = self.content == 2
+        self.is_event = self.content >= 2
 
+        # TODO: do 7 stars still do the rand(100)? (will this ever matter?)
         if self.content == 1:
             self.difficulty = StarLevel.SIX_STAR
+        elif self.content == 3:
+            self.difficulty = StarLevel.SEVEN_STAR
         else:
             difficulty_rand = rng_slot.rand(100)
             self.difficulty = calc_difficulty(story_progress, difficulty_rand)
@@ -171,8 +194,12 @@ class TeraRaid:
             encounter_slot_total = sum(
                 (
                     table.raid_enemy_info.rate for table in raid_enemy_table_array.raid_enemy_tables
-                    if table.raid_enemy_info.difficulty == self.difficulty and
-                       table.raid_enemy_info.rom_ver in (None, game, Game.BOTH)
+                    if table.raid_enemy_info.delivery_group_id == self.delivery_group_id and
+                        (
+                            table.raid_enemy_info.difficulty is None
+                            or table.raid_enemy_info.difficulty.is_unlocked(story_progress)
+                        ) and
+                        table.raid_enemy_info.rom_ver in (None, game, Game.BOTH)
                 )
             )
         else:
@@ -185,10 +212,13 @@ class TeraRaid:
             )
 
         encounter_slot_rand = rng_slot.rand(encounter_slot_total)
-
         for table in raid_enemy_table_array.raid_enemy_tables:
-            if table.raid_enemy_info.difficulty in (None, self.difficulty) \
-              and table.raid_enemy_info.rom_ver in (None, game, Game.BOTH):
+            if (table.raid_enemy_info.delivery_group_id in (None, self.delivery_group_id) and
+              (
+                table.raid_enemy_info.difficulty is None
+                or table.raid_enemy_info.difficulty.is_unlocked(story_progress)
+              ) and
+              table.raid_enemy_info.rom_ver in (None, game, Game.BOTH)):
                 if encounter_slot_rand < table.raid_enemy_info.rate:
                     self.generate_pokemon(table.raid_enemy_info)
                     break
@@ -215,11 +245,24 @@ class RaidBlock:
         self,
         raid_enemy_table_arrays: tuple[RaidEnemyTableArray],
         story_progress: StoryProgress,
-        game: Game
+        game: Game,
+        delivery_raid_priority: tuple[int]
     ) -> None:
         """Initialize each raid with derived information"""
-        for raid in self.raids:
-            raid.initialize_data(raid_enemy_table_arrays, story_progress, game)
+        for i, raid in enumerate(self.raids):
+            # check the event delivery group
+            den_delivery_group_id = None
+            for delivery_group_id, delivery_group_size in enumerate(delivery_raid_priority):
+                if i < delivery_group_size:
+                    den_delivery_group_id = delivery_group_id
+                    break
+                i -= delivery_group_size
+            raid.initialize_data(
+                raid_enemy_table_arrays,
+                story_progress,
+                game,
+                den_delivery_group_id
+            )
 
 def process_raid_block(raid_block: bytes) -> RaidBlock:
     """Process raid block with bytechomp"""
