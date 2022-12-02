@@ -5,3 +5,4 @@ Pillow==9.3.0
 requests==2.28.1
 tkintermapview==1.17
 numpy==1.23.5
+pyinstaller==5.6.2
