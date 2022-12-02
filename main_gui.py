@@ -30,7 +30,7 @@ class Application(customtkinter.CTk):
     WIDTH = 1330
     HEIGHT = 512
     DEFAULT_IP = "192.168.0.0"
-    PLAYER_POS_ADDRESS = 0x42D6110
+    PLAYER_POS_ADDRESS = 0x4380340
     ICON_PATH = "./resources/icons8/icon.png"
     SEPARATOR_COLOR = "#949392"
 

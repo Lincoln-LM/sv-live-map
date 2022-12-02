@@ -11,9 +11,9 @@ class RaidReader(NXReader):
     """Subclass of NXReader with functions specifically for raids"""
     RAID_BINARY_SIZES = (0x3128, 0x3058, 0x4400, 0x5A78, 0x6690, 0x4FB0)
     # https://github.com/Manu098vm/SVResearches/blob/master/RAM%20Pointers/RAM%20Pointers.txt
-    RAID_BLOCK_PTR = ("[[main+42FD560]+160]+40", 0xC98) # ty skylink!
-    SAVE_BLOCK_PTR = "[[[[[main+42F3130]+B0]]]+30]+8]"
-    DIFFICULTY_FLAG_LOCATIONS = (0x2BEE0, 0x1F3C0, 0x1B600, 0x13E80)
+    RAID_BLOCK_PTR = ("[[main+43A77C8]+160]+40", 0xC98) # ty skylink!
+    SAVE_BLOCK_PTR = "[[[main+4385F30]+80]+8]"
+    DIFFICULTY_FLAG_LOCATIONS = (0x2BF20, 0x1F400, 0x1B640, 0x13EC0)
 
     def __init__(
         self,
@@ -33,9 +33,9 @@ class RaidReader(NXReader):
     def raid_binary_ptr(star_level: StarLevel) -> tuple[str, int]:
         """Get a pointer to the raid flatbuffer binary in memory"""
         if star_level == StarLevel.EVENT:
-            return ("[[[[[main+42DA820]+30]+388]+300]+28]+414", 0x7530)
+            return ("[[[[[[main+4384A50]+30]+288]+290]+280]+28]+414", 0x7530)
         return (
-            f"[[[[[[[[main+42FD670]+C0]+E8]]+10]+4A8]+{0xD0 + star_level * 0xB0:X}]+1E8]",
+            f"[[[[[[[[main+43A78D8]+C0]+E8]]+10]+4A8]+{0xD0 + star_level * 0xB0:X}]+1E8]",
             RaidReader.RAID_BINARY_SIZES[star_level]
         )
 
@@ -71,7 +71,7 @@ class RaidReader(NXReader):
 
     def read_game_version(self) -> Game:
         """Read game version"""
-        return Game(self.read_main_int(0x42DBDA0, 4) - 49)
+        return Game(self.read_main_int(0x4385FD0, 4) - 49)
 
     def read_raid_enemy_table_arrays(self) -> tuple[RaidEnemyTableArray, 7]:
         """Read all raid flatbuffer binaries from memory"""
