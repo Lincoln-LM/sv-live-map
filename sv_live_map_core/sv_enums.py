@@ -19,6 +19,9 @@ class StarLevel(IntEnum):
     FIVE_STAR = 4
     SIX_STAR = 5
 
+    # event exclusive
+    SEVEN_STAR = 6
+
     # for easy compatability
     EVENT = 255
 
