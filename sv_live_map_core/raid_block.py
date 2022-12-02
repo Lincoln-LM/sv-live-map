@@ -195,6 +195,10 @@ class TeraRaid:
                 (
                     table.raid_enemy_info.rate for table in raid_enemy_table_array.raid_enemy_tables
                     if table.raid_enemy_info.delivery_group_id == self.delivery_group_id and
+                        (
+                            table.raid_enemy_info.difficulty is None
+                            or table.raid_enemy_info.difficulty.is_unlocked(story_progress)
+                        ) and
                         table.raid_enemy_info.rom_ver in (None, game, Game.BOTH)
                 )
             )
@@ -210,6 +214,10 @@ class TeraRaid:
         encounter_slot_rand = rng_slot.rand(encounter_slot_total)
         for table in raid_enemy_table_array.raid_enemy_tables:
             if (table.raid_enemy_info.delivery_group_id in (None, self.delivery_group_id) and
+              (
+                table.raid_enemy_info.difficulty is None
+                or table.raid_enemy_info.difficulty.is_unlocked(story_progress)
+              ) and
               table.raid_enemy_info.rom_ver in (None, game, Game.BOTH)):
                 if encounter_slot_rand < table.raid_enemy_info.rate:
                     self.generate_pokemon(table.raid_enemy_info)

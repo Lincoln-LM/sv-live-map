@@ -1,6 +1,7 @@
 """Enums for data from SV"""
 
 from enum import IntEnum
+from typing import Self
 
 class StoryProgress(IntEnum):
     """Enum for story progress"""
@@ -25,11 +26,28 @@ class StarLevel(IntEnum):
     # for easy compatability
     EVENT = 255
 
+    @staticmethod
+    def from_game(value) -> Self:
+        """Convert from the value sometimes used in game"""
+        return StarLevel(value - 1)
+
+    def is_unlocked(self, story_progress: StoryProgress) -> bool:
+        """Check if a den of this difficulty is allowed to be generated"""
+        # six star unlocks everything
+        if story_progress == StoryProgress.SIX_STAR_UNLOCKED:
+            return True
+        return self < story_progress + 2
+
 class Game(IntEnum):
     """Enum for the game version"""
     BOTH = 0
     SCARLET = 1
     VIOLET = 2
+
+    @staticmethod
+    def from_game_id(value) -> Self:
+        """Convert game id to Game enum"""
+        return Game(value - 49)
 
 class Move(IntEnum):
     """Enum for pokemon moves"""

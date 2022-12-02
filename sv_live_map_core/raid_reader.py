@@ -82,7 +82,7 @@ class RaidReader(NXReader):
 
     def read_game_version(self) -> Game:
         """Read game version"""
-        return Game(self.read_main_int(0x4385FD0, 4) - 49)
+        return Game.from_game_id(self.read_main_int(0x4385FD0, 4))
 
     def read_raid_enemy_table_arrays(self) -> tuple[RaidEnemyTableArray, 7]:
         """Read all raid flatbuffer binaries from memory"""

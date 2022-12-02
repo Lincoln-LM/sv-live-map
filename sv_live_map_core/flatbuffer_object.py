@@ -1,7 +1,7 @@
 """Generic FlatBuffer object"""
 
 from enum import IntEnum
-from typing import Type, Self
+from typing import Type, Self, Callable
 import flatbuffers
 
 # type union not yet supported by pylint
@@ -65,7 +65,7 @@ class FlatBufferObject:
         self._counter += 2
         return value
 
-    def read_init_int_enum(self, _type: INT_TYPES, _enum: Type[IntEnum], default = None):
+    def read_init_int_enum(self, _type: INT_TYPES, _enum: Type[IntEnum] | Callable, default = None):
         """Read value of _type at the position of self._counter as _enum
            and increment the counter"""
         value = self.read_int_enum(_type, self._counter, _enum, default = default)
