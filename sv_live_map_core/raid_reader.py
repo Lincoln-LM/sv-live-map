@@ -56,28 +56,24 @@ class RaidReader(NXReader):
         # for the sake of showing how to decrypt it this is not done
         loc = self.DIFFICULTY_FLAG_LOCATIONS[3]
         difficulty_6_key = self.read_pointer_int(f"{self.SAVE_BLOCK_PTR}+{loc:X}", 4)
-        self.write_pointer(f"[{self.SAVE_BLOCK_PTR}+{loc+8:X}]", f"{(2 ^ SCXorshift32(difficulty_6_key).next()):02X}")
         difficulty_6_val = self.read_pointer_int(f"[{self.SAVE_BLOCK_PTR}+{loc+8:X}]", 1) \
             ^ SCXorshift32(difficulty_6_key).next()
         if difficulty_6_val == 2:
             return StoryProgress.SIX_STAR_UNLOCKED
         loc = self.DIFFICULTY_FLAG_LOCATIONS[2]
         difficulty_5_key = self.read_pointer_int(f"{self.SAVE_BLOCK_PTR}+{loc:X}", 4)
-        self.write_pointer(f"[{self.SAVE_BLOCK_PTR}+{loc+8:X}]", f"{(2 ^ SCXorshift32(difficulty_6_key).next()):02X}")
         difficulty_5_val = self.read_pointer_int(f"[{self.SAVE_BLOCK_PTR}+{loc+8:X}]", 1) \
             ^ SCXorshift32(difficulty_5_key).next()
         if difficulty_5_val == 2:
             return StoryProgress.FIVE_STAR_UNLOCKED
         loc = self.DIFFICULTY_FLAG_LOCATIONS[1]
         difficulty_4_key = self.read_pointer_int(f"{self.SAVE_BLOCK_PTR}+{loc:X}", 4)
-        self.write_pointer(f"[{self.SAVE_BLOCK_PTR}+{loc+8:X}]", f"{(2 ^ SCXorshift32(difficulty_6_key).next()):02X}")
         difficulty_4_val = self.read_pointer_int(f"[{self.SAVE_BLOCK_PTR}+{loc+8:X}]", 1) \
             ^ SCXorshift32(difficulty_4_key).next()
         if difficulty_4_val == 2:
             return StoryProgress.FOUR_STAR_UNLOCKED
         loc = self.DIFFICULTY_FLAG_LOCATIONS[0]
         difficulty_3_key = self.read_pointer_int(f"{self.SAVE_BLOCK_PTR}+{loc:X}", 4)
-        self.write_pointer(f"[{self.SAVE_BLOCK_PTR}+{loc+8:X}]", f"{(2 ^ SCXorshift32(difficulty_6_key).next()):02X}")
         difficulty_3_val = self.read_pointer_int(f"[{self.SAVE_BLOCK_PTR}+{loc+8:X}]", 1) \
             ^ SCXorshift32(difficulty_3_key).next()
         if difficulty_3_val == 2:
