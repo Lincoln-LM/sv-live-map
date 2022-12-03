@@ -8,7 +8,7 @@ a = Analysis(
     ['main_gui.py'],
     pathex=[],
     binaries=[],
-    datas=[('./resources/customtkinter', 'customtkinter/'), ('./resources', 'resources/')],
+    datas=[('./resources/customtkinter', 'customtkinter/')],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
