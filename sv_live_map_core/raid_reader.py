@@ -35,7 +35,12 @@ class RaidReader(NXReader):
 
     def read_delivery_raid_priority(self) -> tuple[int]:
         """Read the delivery priority flatbuffer from memory"""
-        return DeliveryRaidPriorityArray(self.read_pointer(*self.RAID_PRIORITY_PTR)) \
+        delivery_raid_priority_array = DeliveryRaidPriorityArray(
+            self.read_pointer(*self.RAID_PRIORITY_PTR)
+        )
+        if len(delivery_raid_priority_array.delivery_raid_prioritys) == 0:
+            return (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+        return delivery_raid_priority_array \
             .delivery_raid_prioritys[0] \
             .delivery_group_id \
             .group_counts
