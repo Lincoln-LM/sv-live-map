@@ -1,12 +1,14 @@
 """Subclass of NXReader with functions specifically for raids"""
 
 import socket
+from bytechomp import ByteOrder, Reader
 from sv_live_map_core.nxreader import NXReader
 from sv_live_map_core.sv_enums import StarLevel, StoryProgress, Game
 from sv_live_map_core.raid_enemy_table_array import RaidEnemyTableArray
 from sv_live_map_core.delivery_raid_priority_array import DeliveryRaidPriorityArray
 from sv_live_map_core.raid_block import RaidBlock, process_raid_block
 from sv_live_map_core.rng import SCXorshift32
+from sv_live_map_core.koverworld import KOverworld
 
 class RaidReader(NXReader):
     """Subclass of NXReader with functions specifically for raids"""
@@ -16,6 +18,10 @@ class RaidReader(NXReader):
     RAID_BLOCK_PTR = ("[[main+43A77C8]+160]+40", 0xC98) # ty skylink!
     SAVE_BLOCK_PTR = "[[[main+4385F30]+80]+8]"
     DIFFICULTY_FLAG_LOCATIONS = (0x2BF20, 0x1F400, 0x1B640, 0x13EC0)
+    KOVERWORLD_INNER_COUNT = 20
+    KOVERWORLD_INNER_SIZE = 0x158 + 0x7C
+    OVERWORLD_LOC = 0x4320
+    OVERWORLD_SIZE = KOVERWORLD_INNER_COUNT * KOVERWORLD_INNER_SIZE
 
     def __init__(
         self,
@@ -109,6 +115,29 @@ class RaidReader(NXReader):
                 self.read_pointer(*self.raid_binary_ptr(StarLevel.EVENT))
             ),
         )
+
+    @staticmethod
+    def decrypt_save_block(key: int, block: bytearray) -> bytearray:
+        """Decrypt all data in a save block"""
+        rng = SCXorshift32(key)
+        size = len(block)
+        for i in range(size):
+            block[i] ^= rng.next()
+        return block
+
+    def read_overworld_block(self) -> KOverworld:
+        """Read KOverworld block"""
+        overworld_key = self.read_pointer_int(f"{self.SAVE_BLOCK_PTR}+{self.OVERWORLD_LOC:X}", 4)
+        overworld_block = bytearray(
+            self.read_pointer(
+                f"[{self.SAVE_BLOCK_PTR}+{self.OVERWORLD_LOC + 8:X}]",
+                self.OVERWORLD_SIZE
+            )
+        )
+        overworld_block = self.decrypt_save_block(overworld_key, overworld_block)
+        byte_reader = Reader[KOverworld](ByteOrder.LITTLE).allocate()
+        byte_reader.feed(overworld_block)
+        return byte_reader.build()
 
     def read_raid_block_data(self) -> RaidBlock:
         """Read raid block data from memory and process"""

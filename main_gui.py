@@ -20,6 +20,7 @@ from sv_live_map_core.raid_info_widget import RaidInfoWidget
 from sv_live_map_core.sv_enums import StarLevel
 from sv_live_map_core.raid_enemy_table_array import RaidEnemyTableArray
 from sv_live_map_core.raid_block import RaidBlock
+from sv_live_map_core.corrected_marker import CorrectedMarker
 
 customtkinter.set_default_color_theme("blue")
 customtkinter.set_appearance_mode("dark")
@@ -114,6 +115,14 @@ class Application(customtkinter.CTk):
         self.raid_progress.grid(row = 5, column = 0, columnspan = 2, padx = 10, pady = 5)
         self.raid_progress.set(0)
 
+        self.read_overworld_button = customtkinter.CTkButton(
+            master = self.settings_frame,
+            text = "Read Saved Overworld",
+            width = 300,
+            command=self.read_saved_overworld
+        )
+        self.read_overworld_button.grid(row = 6, column = 0, columnspan = 2, padx = 10, pady = 5)
+
         # middle frame
         self.map_frame = customtkinter.CTkFrame(master = self, width = 150)
         self.map_frame.grid(row = 0, column = 2, sticky = "nsew")
@@ -156,6 +165,7 @@ class Application(customtkinter.CTk):
             sticky = "ew",
         )
         self.raid_info_widgets: list[RaidInfoWidget] = []
+        self.overworld_markers: list[CorrectedMarker] = []
 
         # background work
         self.background_workers: dict[str, dict] = {}
@@ -233,6 +243,40 @@ class Application(customtkinter.CTk):
         else:
             if self.connect():
                 self.connect_button.configure(text = "Disconnect")
+
+    def read_saved_overworld(self):
+        """Read and display saved overworld pokemon"""
+        for marker in self.overworld_markers:
+            marker.delete()
+        self.overworld_markers.clear()
+        if self.reader:
+            # struct.error/binascii.Error when connection terminates before all 12 bytes are read
+            try:
+                overworld_block = self.reader.read_overworld_block()
+                for pokemon in overworld_block.inner_data:
+                    game_x,_,game_z = (float(x) for x in pokemon.position)
+                    pos_x, pos_y = osm_to_decimal(
+                        (game_x + 2.072021484) / 5000,
+                        (game_z + 5505.240018) / 5000,
+                        0
+                    )
+                    # TODO: form
+                    poke_sprite = self.sprite_handler.grab_sprite(pokemon.pkm.species, 0)
+                    marker = self.map_widget.set_marker(
+                        pos_x,
+                        pos_y,
+                        icon = poke_sprite
+                    )
+                    self.overworld_markers.append(marker)
+            except (TimeoutError, struct.error, binascii.Error):
+                self.toggle_connection()
+                if 'position' in self.background_workers \
+                  and self.background_workers['position']['active']:
+                    self.toggle_position_work()
+                self.error_message_window("TimeoutError", "Connection timed out.")
+                return
+        else:
+            self.error_message_window("Invalid", "Not connected to switch.")
 
     def read_all_raids(self):
         """Read and display all raid information"""
