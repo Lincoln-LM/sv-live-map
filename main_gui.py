@@ -20,6 +20,7 @@ from sv_live_map_core.raid_info_widget import RaidInfoWidget
 from sv_live_map_core.sv_enums import StarLevel
 from sv_live_map_core.raid_enemy_table_array import RaidEnemyTableArray
 from sv_live_map_core.raid_block import RaidBlock
+from sv_live_map_core.corrected_marker import CorrectedMarker
 
 customtkinter.set_default_color_theme("blue")
 customtkinter.set_appearance_mode("dark")
@@ -156,6 +157,8 @@ class Application(customtkinter.CTk):
             sticky = "ew",
         )
         self.raid_info_widgets: list[RaidInfoWidget] = []
+        self.raid_markers: list[CorrectedMarker] = []
+        self.raid_ids: list[str] = []
 
         # background work
         self.background_workers: dict[str, dict] = {}
@@ -238,7 +241,11 @@ class Application(customtkinter.CTk):
         """Read and display all raid information"""
         for info_widget in self.raid_info_widgets:
             info_widget.grid_forget()
+        for marker in self.raid_markers:
+            marker.delete()
         self.raid_info_widgets.clear()
+        self.raid_markers.clear()
+        self.raid_ids.clear()
         if self.reader:
             # struct.error/binascii.Error when connection terminates before all 12 bytes are read
             try:
@@ -271,8 +278,13 @@ class Application(customtkinter.CTk):
                 )
                 self.raid_info_widgets.append(info_widget)
                 count += 1
-                if f"{raid.area_id}-{raid.den_id}" in self.den_locations:
-                    game_x,_,game_z = self.den_locations[f"{raid.area_id}-{raid.den_id}"]
+                id_str = f"{raid.area_id}-{raid.den_id}"
+                if id_str in self.raid_ids:
+                    print(f"WARNING duplicate raid id {id_str} is treated as {id_str}_")
+                    id_str += "_"
+                self.raid_ids.append(id_str)
+                if id_str in self.den_locations:
+                    game_x,_,game_z = self.den_locations[id_str]
                     pos_x, pos_y = osm_to_decimal(
                         (game_x + 2.072021484) / 5000,
                         (game_z + 5505.240018) / 5000,
@@ -289,11 +301,13 @@ class Application(customtkinter.CTk):
                     tera_sprite = ImageTk.PhotoImage(tera_sprite)
                     poke_sprite = ImageTk.getimage(info_widget.poke_sprite)
                     poke_sprite = ImageTk.PhotoImage(poke_sprite)
-                    self.map_widget.set_marker(
-                        pos_x,
-                        pos_y,
-                        icon = tera_sprite,
-                        image = poke_sprite
+                    self.raid_markers.append(
+                        self.map_widget.set_marker(
+                            pos_x,
+                            pos_y,
+                            icon = tera_sprite,
+                            image = poke_sprite
+                        )
                     )
                 else:
                     # TODO: document all den locs, deal with dupe 19-5

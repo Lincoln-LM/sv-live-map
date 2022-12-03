@@ -110,7 +110,8 @@ class TeraRaid:
         self.raid_enemy_info = raid_enemy_info
         if self.raid_enemy_info.difficulty:
             self.difficulty = self.raid_enemy_info.difficulty
-        if self.raid_enemy_info.boss_poke_para.gem_type >= TeraTypeGeneration.NORMAL:
+        if self.raid_enemy_info.boss_poke_para.gem_type \
+          and self.raid_enemy_info.boss_poke_para.gem_type >= TeraTypeGeneration.NORMAL:
             self.tera_type = TeraType.from_generation(self.raid_enemy_info.boss_poke_para.gem_type)
         self.species = raid_enemy_info.boss_poke_para.dev_id
         self.form = raid_enemy_info.boss_poke_para.form_id
