@@ -7,6 +7,8 @@ Spiritual sequel to [PLA-Live-Map](https://github.com/Lincoln-LM/PLA-Live-Map)
 
 For a non-map GUI and automation of rerolling dens, check out [LegoFigure11](https://github.com/LegoFigure11)'s [RaidCrawler](https://github.com/LegoFigure11/RaidCrawler)
 
+### Feature Requests/Pull Requests are welcome! Current problems/planned features are denoted with "TODO:" in code, or posted in the issues tab.
+
 ### Details:
 sv-live-map reads tera raid encounter info directly from the flatbuffer binary in memory, this means that this repo does not need to contain serialized encounter information. 
 This encounter info is then used to predict the generation of raid dens from their seeds and the player's current story progress, also stored in memory.
