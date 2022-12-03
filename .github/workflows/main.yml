@@ -16,6 +16,8 @@ jobs:
       with:
         path: ./
 
+    - run: cp -R ./resources ./dist/windows/resources/
+
     - uses: actions/upload-artifact@v3
       with:
         name: windows-build
