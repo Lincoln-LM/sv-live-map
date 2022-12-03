@@ -1,4 +1,8 @@
 # sv-live-map
+[![GitHub License](https://img.shields.io/github/license/Lincoln-LM/sv-live-map?color=ff69b4)](https://github.com/LegoFigure11/swsh-overworld-rng-gui/blob/main/LICENSE)
+[![](https://img.shields.io/github/workflow/status/Lincoln-LM/sv-live-map/Package%20Application%20with%20PyInstaller?logo=github)](https://github.com/Lincoln-LM/sv-live-map/actions/workflows/main.yml)
+[![](https://img.shields.io/badge/Windows%20Executable-Direct%20Download-blue)](https://nightly.link/Lincoln-LM/sv-live-map/workflows/main/master/windows-build.zip)
+
 WIP GUI Map displaying information on Tera Raid Dens in Pokémon Scarlet and Violet
 
 Spiritual sequel to [PLA-Live-Map](https://github.com/Lincoln-LM/PLA-Live-Map)
