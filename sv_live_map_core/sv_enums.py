@@ -27,7 +27,7 @@ class StarLevel(IntEnum):
     EVENT = 255
 
     @staticmethod
-    def from_game(value) -> Self:
+    def from_game(value: int) -> Self:
         """Convert from the value sometimes used in game"""
         return StarLevel(value - 1)
 
@@ -45,7 +45,7 @@ class Game(IntEnum):
     VIOLET = 2
 
     @staticmethod
-    def from_game_id(value) -> Self:
+    def from_game_id(value: int) -> Self:
         """Convert game id to Game enum"""
         return Game(value - 49)
 
@@ -4263,6 +4263,10 @@ class TeraType(IntEnum):
     DRAGON = 15
     DARK = 16
     FAIRY = 17
+
+    @staticmethod
+    def from_generation(generation: TeraTypeGeneration) -> Self:
+        return TeraType(generation - 2)
 
 class AbilityGeneration(IntEnum):
     """Enum for pokemon ability generation"""
