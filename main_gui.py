@@ -322,6 +322,7 @@ class Application(customtkinter.CTk):
             self.background_workers['position'] = {'active': False}
         if self.background_workers['position']['active']:
             self.background_workers['position']['marker'].delete()
+            self.background_workers['position'].pop('marker')
             self.after_cancel(self.background_workers['position']['worker'])
             self.background_workers['position']['active'] = False
             self.position_button.configure(text = "Track Player")
