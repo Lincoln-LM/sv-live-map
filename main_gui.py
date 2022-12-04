@@ -7,7 +7,7 @@ import pickle
 import os
 import os.path
 import threading
-from typing import Any
+from typing import Any, Type
 import json
 import struct
 from PIL import Image, ImageTk
@@ -281,6 +281,14 @@ class Application(customtkinter.CTk):
                     raid_data = raid,
                     fg_color = customtkinter.ThemeManager.theme["color"]["frame_low"],
                 )
+                if raid.is_shiny:
+                    self.widget_message_window(
+                        f"Shiny {raid.species.name.title()} ★",
+                        RaidInfoWidget,
+                        poke_sprite_handler = self.sprite_handler,
+                        raid_data = raid,
+                        fg_color = customtkinter.ThemeManager.theme["color"]["frame_low"],
+                    )
                 self.raid_info_widgets.append(info_widget)
                 count += 1
                 id_str = f"{raid.area_id}-{raid.den_id}"
@@ -373,7 +381,7 @@ class Application(customtkinter.CTk):
 
             self.background_workers['position']['worker'] = self.after(1000, self.position_work)
 
-    def error_message_window(self, title, message):
+    def error_message_window(self, title: str, message: str):
         """Open new window with error message"""
         window = customtkinter.CTkToplevel(self)
         window.geometry("450x100")
@@ -384,6 +392,28 @@ class Application(customtkinter.CTk):
 
         button = customtkinter.CTkButton(window, text = "OK", command = window.destroy)
         button.pack(side = "bottom", pady = 10, padx = 10, fill = "x")
+
+        # TODO: this or focus()?
+        window.focus_force()
+
+    def widget_message_window(
+        self,
+        title: str,
+        widget_type: Type[customtkinter.CTkBaseClass],
+        **kwargs
+    ):
+        """Open new window with widget"""
+        window = customtkinter.CTkToplevel(self)
+        window.title(title)
+
+        widget = widget_type(master = window, **kwargs)
+        widget.pack(side = "top", pady = 10, padx = 10)
+
+        button = customtkinter.CTkButton(window, text = "OK", command = window.destroy)
+        button.pack(side = "bottom", pady = 10, padx = 10, fill = "x")
+
+        # TODO: this or focus()?
+        window.focus_force()
 
     def on_closing(self, _ = None):
         """Handle closing of the application"""
