@@ -112,3 +112,10 @@ class CorrectedMarker(CanvasPositionMarker):
                 self.canvas_text = None
 
             self.map_widget.manage_z_order()
+
+    def delete(self):
+        if self.icon is not None:
+            self.map_widget.canvas.delete(self.canvas_icon)
+        if self.image is not None:
+            self.map_widget.canvas.delete(self.canvas_image)
+        return super().delete()

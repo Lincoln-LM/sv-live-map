@@ -12,7 +12,6 @@ import json
 import struct
 from PIL import Image, ImageTk
 import customtkinter
-from tkintermapview import osm_to_decimal
 from sv_live_map_core.raid_reader import RaidReader
 from sv_live_map_core.paldea_map_view import PaldeaMapView
 from sv_live_map_core.poke_sprite_handler import PokeSpriteHandler
@@ -20,7 +19,7 @@ from sv_live_map_core.scrollable_frame import ScrollableFrame
 from sv_live_map_core.raid_info_widget import RaidInfoWidget
 from sv_live_map_core.sv_enums import StarLevel
 from sv_live_map_core.raid_enemy_table_array import RaidEnemyTableArray
-from sv_live_map_core.raid_block import RaidBlock
+from sv_live_map_core.raid_block import RaidBlock, TeraRaid
 from sv_live_map_core.corrected_marker import CorrectedMarker
 
 customtkinter.set_default_color_theme("blue")
@@ -158,8 +157,7 @@ class Application(customtkinter.CTk):
             sticky = "ew",
         )
         self.raid_info_widgets: list[RaidInfoWidget] = []
-        self.raid_markers: list[CorrectedMarker] = []
-        self.raid_ids: list[str] = []
+        self.raid_markers: dict[str, CorrectedMarker] = {}
 
         # background work
         self.background_workers: dict[str, dict] = {}
@@ -242,11 +240,10 @@ class Application(customtkinter.CTk):
         """Read and display all raid information"""
         for info_widget in self.raid_info_widgets:
             info_widget.grid_forget()
-        for marker in self.raid_markers:
+        for marker in self.raid_markers.values():
             marker.delete()
         self.raid_info_widgets.clear()
         self.raid_markers.clear()
-        self.raid_ids.clear()
         if self.reader:
             # struct.error/binascii.Error when connection terminates before all 12 bytes are read
             try:
@@ -275,7 +272,7 @@ class Application(customtkinter.CTk):
         count = 0
 
         # popup display of marker info for both shiny alerts and on_click events
-        def popup_display_builder(raid, _ = None):
+        def popup_display_builder(raid: TeraRaid, _ = None):
             self.widget_message_window(
                 f"Shiny {raid.species.name.title()} ★"
                   if raid.is_shiny else raid.species.name.title(),
@@ -285,12 +282,56 @@ class Application(customtkinter.CTk):
                 fg_color = customtkinter.ThemeManager.theme["color"]["frame_low"],
             )
 
+        # swap the marker to its alternative position
+        def swap_position(raid: TeraRaid):
+            # swap whether or not the underscore is present
+            if raid.id_str.endswith("_"):
+                other_id_str = raid.id_str[:-1]
+            else:
+                other_id_str = raid.id_str + "_"
+            # position has not been changed
+            if self.raid_markers[raid.id_str].position \
+              == self.map_widget.game_coordinates_to_deg(*self.den_locations[raid.id_str]):
+                # swap the positions of the two markers
+                self.raid_markers[raid.id_str].set_position(
+                    *self.map_widget.game_coordinates_to_deg(*self.den_locations[other_id_str])
+                )
+                if other_id_str in self.raid_markers:
+                    self.raid_markers[other_id_str].set_position(
+                        *self.map_widget.game_coordinates_to_deg(*self.den_locations[raid.id_str])
+                    )
+            # position has been changed
+            else:
+                # set the two markers back to normal
+                self.raid_markers[raid.id_str].set_position(
+                    *self.map_widget.game_coordinates_to_deg(*self.den_locations[raid.id_str])
+                )
+                if other_id_str in self.raid_markers:
+                    self.raid_markers[other_id_str].set_position(
+                        *self.map_widget.game_coordinates_to_deg(*self.den_locations[other_id_str])
+                    )
+
+        def focus_marker(raid: TeraRaid):
+            self.map_widget.set_zoom(self.map_widget.max_zoom)
+            self.map_widget.set_position(*self.raid_markers[raid.id_str].position)
+
         for raid in raid_block_data.raids:
             if raid.is_enabled:
+                if raid.id_str in self.raid_markers:
+                    print(f"WARNING duplicate raid id {raid.id_str} is treated as {raid.id_str}_")
+                    raid.id_str += "_"
+
+                has_alternate_location = raid.id_str.endswith("_") \
+                    or (raid.id_str + "_") in self.den_locations
+
                 info_widget = RaidInfoWidget(
                     master = self.info_frame.scrollable_frame,
                     poke_sprite_handler = self.sprite_handler,
                     raid_data = raid,
+                    has_alternate_location = has_alternate_location,
+                    focus_command = partial(focus_marker, raid),
+                    swap_command = partial(swap_position, raid),
+                    is_popup = False,
                     fg_color = customtkinter.ThemeManager.theme["color"]["frame_low"],
                 )
                 popup_display = partial(popup_display_builder, raid)
@@ -299,18 +340,8 @@ class Application(customtkinter.CTk):
                     popup_display()
                 self.raid_info_widgets.append(info_widget)
                 count += 1
-                id_str = f"{raid.area_id}-{raid.den_id}"
-                if id_str in self.raid_ids:
-                    print(f"WARNING duplicate raid id {id_str} is treated as {id_str}_")
-                    id_str += "_"
-                self.raid_ids.append(id_str)
-                if id_str in self.den_locations:
-                    game_x,_,game_z = self.den_locations[id_str]
-                    pos_x, pos_y = osm_to_decimal(
-                        (game_x + 2.072021484) / 5000,
-                        (game_z + 5505.240018) / 5000,
-                        0
-                    )
+                if raid.id_str in self.den_locations:
+                    pos_x, pos_y = self.map_widget.game_coordinates_to_deg(*self.den_locations[raid.id_str])
                     # TODO: event/shiny icons
                     tera_sprite: Image.Image = ImageTk.getimage(info_widget.tera_sprite)
                     tera_sprite = tera_sprite.resize(
@@ -323,18 +354,15 @@ class Application(customtkinter.CTk):
                     poke_sprite = ImageTk.getimage(info_widget.poke_sprite)
                     poke_sprite = ImageTk.PhotoImage(poke_sprite)
 
-                    self.raid_markers.append(
-                        self.map_widget.set_marker(
-                            pos_x,
-                            pos_y,
-                            icon = tera_sprite,
-                            image = poke_sprite,
-                            command = popup_display
-                        )
+                    self.raid_markers[raid.id_str] = self.map_widget.set_marker(
+                        pos_x,
+                        pos_y,
+                        icon = tera_sprite,
+                        image = poke_sprite,
+                        command = popup_display
                     )
                 else:
-                    # TODO: document all den locs, deal with dupes
-                    print(f"WARNING den {id_str} location not present")
+                    print(f"WARNING den {raid.id_str} location not present")
                 self.raid_progress.set(count/69)
                 info_widget.grid(row = count + 1, column = 0)
         self.connect_button.configure(require_redraw = True, state = "normal")
@@ -377,12 +405,7 @@ class Application(customtkinter.CTk):
                 self.toggle_position_work()
                 self.error_message_window("TimeoutError", "Connection timed out.")
                 return
-            # TODO: more accurate conversion
-            pos_x, pos_y = osm_to_decimal(
-                (game_x + 2.072021484) / 5000,
-                (game_z + 5505.240018) / 5000,
-                0
-            )
+            pos_x, pos_y = self.map_widget.game_coordinates_to_deg(game_x, _, game_z)
             if 'marker' not in self.background_workers['position']:
                 self.background_workers['position']['marker'] = \
                     self.map_widget.set_marker(pos_x, pos_y, "PLAYER")

@@ -105,6 +105,9 @@ class TeraRaid:
         self.size1: int = None
         self.size2: int = None
 
+        # for map display
+        self.id_str: str = f"{self.area_id}-{self.den_id}"
+
     def generate_pokemon(self, raid_enemy_info: RaidEnemyInfo):
         """Derive pokemon data from seed and slot"""
         # TODO: support default event settings if ever used

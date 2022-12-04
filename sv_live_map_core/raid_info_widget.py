@@ -1,5 +1,6 @@
 """customtkinter widget for displaying raid info"""
 
+from typing import Callable
 import customtkinter
 from PIL import Image, ImageTk
 from sv_live_map_core.raid_block import TeraRaid
@@ -19,6 +20,10 @@ class RaidInfoWidget(customtkinter.CTkFrame):
         *args,
         poke_sprite_handler: PokeSpriteHandler = None,
         raid_data: TeraRaid = None,
+        is_popup = True,
+        focus_command: Callable = None,
+        swap_command: Callable = None,
+        has_alternate_location: bool = False,
         width: int = 200,
         height: int = 200,
         **kwargs
@@ -34,6 +39,9 @@ class RaidInfoWidget(customtkinter.CTkFrame):
 
         self.poke_sprite_handler = poke_sprite_handler
         self.raid_data = raid_data
+        self.is_popup = is_popup
+        self.focus_command = focus_command
+        self.swap_command = swap_command
 
         self.poke_sprite = \
             self.poke_sprite_handler.grab_sprite(self.raid_data.species, self.raid_data.form)
@@ -62,11 +70,22 @@ class RaidInfoWidget(customtkinter.CTkFrame):
             )
         self.shiny_sprite = RaidInfoWidget.SHINY_SPRITE
 
-        self.tera_sprite_display = ImageWidget(
-            master = self,
-            image = self.tera_sprite,
-            fg_color = self.fg_color
-        )
+        if self.is_popup:
+            self.tera_sprite_display = ImageWidget(
+                master = self,
+                image = self.tera_sprite,
+                fg_color = self.fg_color
+            )
+        else:
+            self.tera_sprite_display = customtkinter.CTkButton(
+                master = self,
+                text = "",
+                width = self.tera_sprite.width(),
+                height = self.tera_sprite.height(),
+                image = self.tera_sprite,
+                command = self.focus_command,
+                fg_color = self.fg_color
+            )
         self.tera_sprite_display.pack(side = "left", fill = "y", padx = (40, 0), pady = (20, 0))
 
         self.sprite_display = ImageWidget(
@@ -87,7 +106,7 @@ class RaidInfoWidget(customtkinter.CTkFrame):
         ability_str = str(self.raid_data.ability)
         gender_str = str(self.raid_data.gender)
         tera_type_str = self.raid_data.tera_type.name.title()
-        # TODO: better location names (and coords)
+        # TODO: better location names
         location_str = f"{self.raid_data.area_id}-{self.raid_data.den_id}"
         seed_str = f"{self.raid_data.seed:08X}"
         pid_str = f"{self.raid_data.pid:08X}"
@@ -139,3 +158,22 @@ class RaidInfoWidget(customtkinter.CTkFrame):
                 fg_color = self.fg_color
             )
         self.shiny_sprite_display.pack(side = "left", fill = "y", pady = (20, 0))
+
+        if not self.is_popup:
+            if has_alternate_location:
+                # todo: tooltip text
+                self.swap_location_button = customtkinter.CTkButton(
+                    master = self,
+                    text = "Swap",
+                    width = 50,
+                    command = self.swap_command
+                )
+                self.swap_location_button.pack(side = "left", padx = (0, 15))
+            else:
+                # padding
+                self.swap_location_button = customtkinter.CTkLabel(
+                    master = self,
+                    text = "",
+                    width = 50
+                )
+                self.swap_location_button.pack(side = "left", padx = (0, 15))

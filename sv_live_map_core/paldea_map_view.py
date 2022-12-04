@@ -1,7 +1,7 @@
 """Modified TkinterMapView for use with the paldea map"""
 
 import os.path
-from tkintermapview import TkinterMapView
+from tkintermapview import TkinterMapView, osm_to_decimal
 from PIL import Image, ImageTk
 from .corrected_marker import CorrectedMarker
 
@@ -82,3 +82,12 @@ class PaldeaMapView(TkinterMapView):
         marker.draw()
         self.canvas_marker_list.append(marker)
         return marker
+
+    def game_coordinates_to_deg(self, game_x: float, _: float, game_z: float):
+        """Convert game coordinates to degrees for map"""
+        # TODO: more accurate conversion
+        return osm_to_decimal(
+            (game_x + 2.072021484) / 5000,
+            (game_z + 5505.240018) / 5000,
+            0
+        )
