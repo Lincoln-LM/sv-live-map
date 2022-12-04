@@ -13,6 +13,7 @@ from .sv_enums import (
     Species,
     TeraTypeGeneration,
     AbilityGeneration,
+    NatureGeneration,
     IVGeneration,
     Nature,
     Game,
@@ -158,8 +159,11 @@ class TeraRaid:
             case AbilityGeneration.ABILITY_HA:
                 self.ability = 3
         self.gender = rng.rand(100)
-        # TODO: Toxtricity?
-        self.nature = Nature(rng.rand(25))
+        if raid_enemy_info.boss_poke_para.seikaku:
+            self.nature = Nature.from_generation(raid_enemy_info.boss_poke_para.seikaku)
+        else:
+            # TODO: Toxtricity?
+            self.nature = Nature(rng.rand(25))
         # TODO: label weight/height/scale, deal with forced size ranges
         self.size0 = rng.rand(0x81) + rng.rand(0x80)
         self.size1 = rng.rand(0x81) + rng.rand(0x80)

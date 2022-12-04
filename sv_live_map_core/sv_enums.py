@@ -2041,6 +2041,11 @@ class Nature(IntEnum):
     CAREFUL = 23
     QUIRKY = 24
 
+    @staticmethod
+    def from_generation(generation: NatureGeneration) -> Nature:
+        """Convert from NatureGeneration"""
+        return Nature(generation - 1)
+
 class Item(IntEnum):
     """Enum for pokemon items"""
     NONE = 0
