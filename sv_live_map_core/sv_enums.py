@@ -1,5 +1,6 @@
 """Enums for data from SV"""
 
+from __future__ import annotations
 from enum import IntEnum
 from typing import Self
 
@@ -10,6 +11,10 @@ class StoryProgress(IntEnum):
     FOUR_STAR_UNLOCKED = 2
     FIVE_STAR_UNLOCKED = 3
     SIX_STAR_UNLOCKED = 4
+
+    def to_star_level(self) -> StarLevel:
+        """Convert StoryProgress to the highest StarLevel it unlocks (excl SEVEN_STAR)"""
+        return StarLevel(self + StarLevel.TWO_STAR)
 
 class StarLevel(IntEnum):
     """Enum for the basic star levels"""
@@ -33,10 +38,16 @@ class StarLevel(IntEnum):
 
     def is_unlocked(self, story_progress: StoryProgress) -> bool:
         """Check if a den of this difficulty is allowed to be generated"""
-        # six star unlocks everything
-        if story_progress == StoryProgress.SIX_STAR_UNLOCKED:
-            return True
-        return self < story_progress + 2
+        # five star makes 1/2 stars not appear
+        if self <= StarLevel.TWO_STAR:
+            return story_progress < StoryProgress.FIVE_STAR_UNLOCKED
+
+        # six star also unlocks seven star
+        if self == StarLevel.SEVEN_STAR:
+            return story_progress >= StoryProgress.SIX_STAR_UNLOCKED
+
+        # staggered unlocks
+        return self <= story_progress.to_star_level()
 
 class Game(IntEnum):
     """Enum for the game version"""
@@ -4266,6 +4277,7 @@ class TeraType(IntEnum):
 
     @staticmethod
     def from_generation(generation: TeraTypeGeneration) -> Self:
+        """Convert from TeraTypeGeneration"""
         return TeraType(generation - 2)
 
 class AbilityGeneration(IntEnum):

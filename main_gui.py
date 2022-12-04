@@ -310,8 +310,8 @@ class Application(customtkinter.CTk):
                         )
                     )
                 else:
-                    # TODO: document all den locs, deal with dupe 19-5
-                    print(f"WARNING den {raid.area_id}-{raid.den_id} location not present")
+                    # TODO: document all den locs, deal with dupes
+                    print(f"WARNING den {id_str} location not present")
                 self.raid_progress.set(count/69)
                 info_widget.grid(row = count + 1, column = 0)
 
