@@ -2,6 +2,7 @@
 
 import binascii
 from functools import partial
+import sys
 import pickle
 import os
 import os.path
@@ -321,6 +322,7 @@ class Application(customtkinter.CTk):
         self.connect_button.configure(require_redraw = True, state = "normal")
         self.position_button.configure(require_redraw = True, state = "normal")
         self.read_raids_button.configure(require_redraw = True, state = "normal")
+        sys.exit()
 
     def toggle_position_work(self):
         """Toggle player tracking"""
