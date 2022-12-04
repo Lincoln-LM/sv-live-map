@@ -273,6 +273,18 @@ class Application(customtkinter.CTk):
         self.position_button.configure(require_redraw = True, state = "disabled")
         self.read_raids_button.configure(require_redraw = True, state = "disabled")
         count = 0
+
+        # popup display of marker info for both shiny alerts and on_click events
+        def popup_display_builder(raid, _ = None):
+            self.widget_message_window(
+                f"Shiny {raid.species.name.title()} ★"
+                  if raid.is_shiny else raid.species.name.title(),
+                RaidInfoWidget,
+                poke_sprite_handler = self.sprite_handler,
+                raid_data = raid,
+                fg_color = customtkinter.ThemeManager.theme["color"]["frame_low"],
+            )
+
         for raid in raid_block_data.raids:
             if raid.is_enabled:
                 info_widget = RaidInfoWidget(
@@ -281,14 +293,10 @@ class Application(customtkinter.CTk):
                     raid_data = raid,
                     fg_color = customtkinter.ThemeManager.theme["color"]["frame_low"],
                 )
+                popup_display = partial(popup_display_builder, raid)
+
                 if raid.is_shiny:
-                    self.widget_message_window(
-                        f"Shiny {raid.species.name.title()} ★",
-                        RaidInfoWidget,
-                        poke_sprite_handler = self.sprite_handler,
-                        raid_data = raid,
-                        fg_color = customtkinter.ThemeManager.theme["color"]["frame_low"],
-                    )
+                    popup_display()
                 self.raid_info_widgets.append(info_widget)
                 count += 1
                 id_str = f"{raid.area_id}-{raid.den_id}"
@@ -314,12 +322,14 @@ class Application(customtkinter.CTk):
                     tera_sprite = ImageTk.PhotoImage(tera_sprite)
                     poke_sprite = ImageTk.getimage(info_widget.poke_sprite)
                     poke_sprite = ImageTk.PhotoImage(poke_sprite)
+
                     self.raid_markers.append(
                         self.map_widget.set_marker(
                             pos_x,
                             pos_y,
                             icon = tera_sprite,
-                            image = poke_sprite
+                            image = poke_sprite,
+                            command = popup_display
                         )
                     )
                 else:

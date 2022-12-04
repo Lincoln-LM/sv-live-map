@@ -21,7 +21,7 @@ class CorrectedMarker(CanvasPositionMarker):
                         if self.command is not None:
                             self.map_widget.canvas.tag_bind(self.canvas_icon, "<Enter>", self.mouse_enter)
                             self.map_widget.canvas.tag_bind(self.canvas_icon, "<Leave>", self.mouse_leave)
-                            self.map_widget.canvas.tag_bind(self.canvas_icon, "<Button-1>", self.click)
+                            self.map_widget.canvas.tag_bind(self.canvas_icon, "<Double-Button-1>", self.click)
                     else:
                         self.map_widget.canvas.coords(self.canvas_icon, canvas_pos_x, canvas_pos_y)
 
@@ -36,7 +36,7 @@ class CorrectedMarker(CanvasPositionMarker):
                         if self.command is not None:
                             self.map_widget.canvas.tag_bind(self.polygon, "<Enter>", self.mouse_enter)
                             self.map_widget.canvas.tag_bind(self.polygon, "<Leave>", self.mouse_leave)
-                            self.map_widget.canvas.tag_bind(self.polygon, "<Button-1>", self.click)
+                            self.map_widget.canvas.tag_bind(self.polygon, "<Double-Button-1>", self.click)
                     else:
                         self.map_widget.canvas.coords(self.polygon,
                                                       canvas_pos_x - 14, canvas_pos_y - 23,
@@ -50,7 +50,7 @@ class CorrectedMarker(CanvasPositionMarker):
                         if self.command is not None:
                             self.map_widget.canvas.tag_bind(self.big_circle, "<Enter>", self.mouse_enter)
                             self.map_widget.canvas.tag_bind(self.big_circle, "<Leave>", self.mouse_leave)
-                            self.map_widget.canvas.tag_bind(self.big_circle, "<Button-1>", self.click)
+                            self.map_widget.canvas.tag_bind(self.big_circle, "<Double-Button-1>", self.click)
                     else:
                         self.map_widget.canvas.coords(self.big_circle,
                                                       canvas_pos_x - 14, canvas_pos_y - 45,
@@ -67,7 +67,7 @@ class CorrectedMarker(CanvasPositionMarker):
                         if self.command is not None:
                             self.map_widget.canvas.tag_bind(self.canvas_text, "<Enter>", self.mouse_enter)
                             self.map_widget.canvas.tag_bind(self.canvas_text, "<Leave>", self.mouse_leave)
-                            self.map_widget.canvas.tag_bind(self.canvas_text, "<Button-1>", self.click)
+                            self.map_widget.canvas.tag_bind(self.canvas_text, "<Double-Button-1>", self.click)
                     else:
                         self.map_widget.canvas.coords(self.canvas_text, canvas_pos_x, canvas_pos_y + self.text_y_offset)
                         self.map_widget.canvas.itemconfig(self.canvas_text, text=self.text)
@@ -82,7 +82,11 @@ class CorrectedMarker(CanvasPositionMarker):
                         self.canvas_image = self.map_widget.canvas.create_image(canvas_pos_x, canvas_pos_y,
                                                                                 anchor=tkinter.S,
                                                                                 image=self.image,
-                                                                                tag=("marker", "marker_image"))
+                                                                                tag="marker")
+                        if self.command is not None:
+                            self.map_widget.canvas.tag_bind(self.canvas_image, "<Enter>", self.mouse_enter)
+                            self.map_widget.canvas.tag_bind(self.canvas_image, "<Leave>", self.mouse_leave)
+                            self.map_widget.canvas.tag_bind(self.canvas_image, "<Double-Button-1>", self.click)
                     else:
                         self.map_widget.canvas.coords(self.canvas_image, canvas_pos_x, canvas_pos_y)
                 else:
