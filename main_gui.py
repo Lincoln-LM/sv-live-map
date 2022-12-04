@@ -250,13 +250,14 @@ class Application(customtkinter.CTk):
             # struct.error/binascii.Error when connection terminates before all 12 bytes are read
             try:
                 raid_block_data = self.reader.read_raid_block_data()
-                self.connect_button.configure(require_redraw = True, state = "disabled")
                 work = partial(self.read_all_raids_work, raid_block_data)
                 work_thread = threading.Thread(target = work)
                 work_thread.start()
-                self.connect_button.configure(require_redraw = True, state = "enabled")
             except (TimeoutError, struct.error, binascii.Error):
                 self.toggle_connection()
+                self.connect_button.configure(require_redraw = True, state = "normal")
+                self.position_button.configure(require_redraw = True, state = "normal")
+                self.read_raids_button.configure(require_redraw = True, state = "normal")
                 if 'position' in self.background_workers \
                   and self.background_workers['position']['active']:
                     self.toggle_position_work()
@@ -266,7 +267,10 @@ class Application(customtkinter.CTk):
             self.error_message_window("Invalid", "Not connected to switch.")
 
     def read_all_raids_work(self, raid_block_data: RaidBlock):
-        """Threading wokr for read all raids"""
+        """Threading work for read all raids"""
+        self.connect_button.configure(require_redraw = True, state = "disabled")
+        self.position_button.configure(require_redraw = True, state = "disabled")
+        self.read_raids_button.configure(require_redraw = True, state = "disabled")
         count = 0
         for raid in raid_block_data.raids:
             if raid.is_enabled:
@@ -314,6 +318,9 @@ class Application(customtkinter.CTk):
                     print(f"WARNING den {id_str} location not present")
                 self.raid_progress.set(count/69)
                 info_widget.grid(row = count + 1, column = 0)
+        self.connect_button.configure(require_redraw = True, state = "normal")
+        self.position_button.configure(require_redraw = True, state = "normal")
+        self.read_raids_button.configure(require_redraw = True, state = "normal")
 
     def toggle_position_work(self):
         """Toggle player tracking"""
@@ -344,6 +351,9 @@ class Application(customtkinter.CTk):
             # struct.error/binascii.Error when connection terminates before all 12 bytes are read
             except (TimeoutError, struct.error, binascii.Error):
                 self.toggle_connection()
+                self.connect_button.configure(require_redraw = True, state = "normal")
+                self.position_button.configure(require_redraw = True, state = "normal")
+                self.read_raids_button.configure(require_redraw = True, state = "normal")
                 self.toggle_position_work()
                 self.error_message_window("TimeoutError", "Connection timed out.")
                 return
