@@ -31,6 +31,8 @@ class PaldeaMapView(TkinterMapView):
             **kwargs
         )
 
+        self.set_zoom(self.min_zoom)
+
     def pre_cache(self):
         # disable precaching
         pass
