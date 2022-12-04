@@ -43,8 +43,9 @@ class RaidInfoWidget(customtkinter.CTkFrame):
         self.focus_command = focus_command
         self.swap_command = swap_command
 
+        # TODO: gender
         self.poke_sprite = \
-            self.poke_sprite_handler.grab_sprite(self.raid_data.species, self.raid_data.form)
+            self.poke_sprite_handler.grab_sprite(self.raid_data.species, self.raid_data.form, False)
         if RaidInfoWidget.TERA_SPRITES is None:
             RaidInfoWidget.TERA_SPRITES = []
             for tera_type in TeraType:
