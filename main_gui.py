@@ -341,7 +341,9 @@ class Application(customtkinter.CTk):
                 self.raid_info_widgets.append(info_widget)
                 count += 1
                 if raid.id_str in self.den_locations:
-                    pos_x, pos_y = self.map_widget.game_coordinates_to_deg(*self.den_locations[raid.id_str])
+                    pos_x, pos_y = self.map_widget.game_coordinates_to_deg(
+                        *self.den_locations[raid.id_str]
+                    )
                     # TODO: event/shiny icons
                     tera_sprite: Image.Image = ImageTk.getimage(info_widget.tera_sprite)
                     tera_sprite = tera_sprite.resize(

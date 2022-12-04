@@ -13,7 +13,6 @@ from .sv_enums import (
     Species,
     TeraTypeGeneration,
     AbilityGeneration,
-    NatureGeneration,
     IVGeneration,
     Nature,
     Game,
@@ -21,6 +20,35 @@ from .sv_enums import (
 from .raid_enemy_table_array import RaidEnemyTableArray, RaidEnemyInfo
 
 RAID_COUNT = 72
+TOXTRICITY_AMPED_NATURES = (
+    Nature.ADAMANT,
+    Nature.NAUGHTY,
+    Nature.BRAVE,
+    Nature.IMPISH,
+    Nature.LAX,
+    Nature.RASH,
+    Nature.SASSY,
+    Nature.HASTY,
+    Nature.JOLLY,
+    Nature.NAIVE,
+    Nature.HARDY,
+    Nature.DOCILE,
+    Nature.QUIRKY,
+)
+TOXTRICITY_LOWKEY_NATURES = (
+    Nature.LONELY,
+    Nature.BOLD,
+    Nature.RELAXED,
+    Nature.TIMID,
+    Nature.SERIOUS,
+    Nature.MODEST,
+    Nature.MILD,
+    Nature.QUIET,
+    Nature.BASHFUL,
+    Nature.CALM,
+    Nature.GENTLE,
+    Nature.CAREFUL,
+)
 
 def is_shiny(pid: int, sidtid: int):
     """Check if a given pid is shiny"""
@@ -164,8 +192,13 @@ class TeraRaid:
         self.gender = rng.rand(100)
         if raid_enemy_info.boss_poke_para.seikaku:
             self.nature = Nature.from_generation(raid_enemy_info.boss_poke_para.seikaku)
+        elif self.species == Species.TOXTRICITY:
+            match self.form:
+                case 0: # amped
+                    self.nature = TOXTRICITY_AMPED_NATURES[rng.rand(13)]
+                case 1: # lowkey
+                    self.nature = TOXTRICITY_LOWKEY_NATURES[rng.rand(12)]
         else:
-            # TODO: Toxtricity?
             self.nature = Nature(rng.rand(25))
         # TODO: label weight/height/scale, deal with forced size ranges
         self.size0 = rng.rand(0x81) + rng.rand(0x80)
