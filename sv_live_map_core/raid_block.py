@@ -230,8 +230,6 @@ class TeraRaid:
                     self.raid_enemy_info.boss_poke_para.talent_value.spe
                 )
 
-        return (-1, -1, -1, -1, -1, -1)
-
     def rand_ability(self, rng: Xoroshiro128Plus) -> int:
         """Generate ability"""
         match self.raid_enemy_info.boss_poke_para.tokusei:
@@ -245,8 +243,6 @@ class TeraRaid:
                 return 2
             case AbilityGeneration.ABILITY_HA:
                 return 3
-
-        return -1
 
     def rand_gender(self, rng: Xoroshiro128Plus) -> int:
         """Generate gender"""
