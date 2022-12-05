@@ -8,13 +8,16 @@ from sv_live_map_core.poke_sprite_handler import PokeSpriteHandler
 from sv_live_map_core.image_widget import ImageWidget
 from sv_live_map_core.sv_enums import TeraType
 
+# type union not yet supported by pylint
+# pylint: disable=unsupported-binary-operation
+
 class RaidInfoWidget(customtkinter.CTkFrame):
     """customtkinter widget for displaying raid info"""
-    # pylint: disable=too-many-instance-attributes, too-many-ancestors, too-many-locals, too-many-statements, too-many-branches
+    # pylint: disable=too-many-instance-attributes, too-many-ancestors
     EMPTY_SPRITE: ImageTk.PhotoImage = None
     EVENT_SPRITE: ImageTk.PhotoImage = None
     SHINY_SPRITE: ImageTk.PhotoImage = None
-    TERA_SPRITES: list[ImageTk.PhotoImage] = None
+    TERA_SPRITES: list[ImageTk.PhotoImage] = []
 
     def __init__(
         self,
@@ -44,87 +47,58 @@ class RaidInfoWidget(customtkinter.CTkFrame):
         self.focus_command = focus_command
         self.swap_command = swap_command
 
-        # TODO: gender
-        self.poke_sprite = \
-            self.poke_sprite_handler.grab_sprite(self.raid_data.species, self.raid_data.form, False)
-        if RaidInfoWidget.TERA_SPRITES is None:
-            RaidInfoWidget.TERA_SPRITES = [
-                ImageTk.PhotoImage(
-                    Image.open(f"./resources/gem/{tera_type.name}.png")
-                )
-                for tera_type in TeraType
-            ]
+        # pylint doesnt handle nested initialization well
+        self.tera_sprite: ImageTk.PhotoImage
+        self.empty_sprite: ImageTk.PhotoImage
+        self.event_sprite: ImageTk.PhotoImage
+        self.shiny_sprite: ImageTk.PhotoImage
+        self.tera_sprite_display: customtkinter.CTkButton | ImageWidget
+        self.sprite_display: ImageWidget
+        self.info_display: customtkinter.CTkLabel
+        self.event_sprite_display: ImageWidget
+        self.shiny_sprite_display: ImageWidget
+        self.swap_location_button: customtkinter.CTkButton
+
+        self.initialize_components(raid_data, has_alternate_location)
+
+    def initialize_components(self, raid_data: TeraRaid, has_alternate_location: bool):
+        """Draw all components of the widget"""
+        self.poke_sprite = self.grab_poke_sprite()
+        self.cache_sprites()
         self.tera_sprite = RaidInfoWidget.TERA_SPRITES[raid_data.tera_type]
-        if RaidInfoWidget.EMPTY_SPRITE is None:
-            RaidInfoWidget.EMPTY_SPRITE = ImageTk.PhotoImage(
-                Image.open("./resources/info_icons/empty.png")
-            )
         self.empty_sprite = RaidInfoWidget.EMPTY_SPRITE
-        if RaidInfoWidget.EVENT_SPRITE is None:
-            RaidInfoWidget.EVENT_SPRITE = ImageTk.PhotoImage(
-                Image.open("./resources/info_icons/event.png")
-            )
         self.event_sprite = RaidInfoWidget.EVENT_SPRITE
-        if RaidInfoWidget.SHINY_SPRITE is None:
-            RaidInfoWidget.SHINY_SPRITE = ImageTk.PhotoImage(
-                Image.open("./resources/info_icons/shiny.png")
-            )
         self.shiny_sprite = RaidInfoWidget.SHINY_SPRITE
 
-        if self.is_popup:
-            self.tera_sprite_display = ImageWidget(
-                master = self,
-                image = self.tera_sprite,
-                fg_color = self.fg_color
-            )
-        else:
-            self.tera_sprite_display = customtkinter.CTkButton(
-                master = self,
-                text = "",
-                width = self.tera_sprite.width(),
-                height = self.tera_sprite.height(),
-                image = self.tera_sprite,
-                command = self.focus_command,
-                fg_color = self.fg_color
-            )
-        self.tera_sprite_display.pack(side = "left", fill = "y", padx = (40, 0), pady = (20, 0))
+        self.draw_main_sprites()
+        self.draw_info(raid_data)
+        self.draw_action_buttons(has_alternate_location)
 
-        self.sprite_display = ImageWidget(
-            master = self,
-            image = self.poke_sprite,
-            fg_color = self.fg_color
-        )
-        self.sprite_display.pack(side = "left", fill = "y", pady = (10, 0))
+    def draw_action_buttons(self, has_alternate_location: bool):
+        """Draw swap button"""
+        if not self.is_popup:
+            if has_alternate_location:
+                # TODO: tooltip text
+                self.swap_location_button = customtkinter.CTkButton(
+                    master = self,
+                    text = "Swap",
+                    width = 50,
+                    command = self.swap_command
+                )
+            else:
+                # padding
+                self.swap_location_button = customtkinter.CTkLabel(
+                    master = self,
+                    text = "",
+                    width = 50
+                )
+            self.swap_location_button.pack(side = "left", padx = (0, 15))
 
-        species_str = self.raid_data.species.name.capitalize()
-        form_str = f"-{self.raid_data.form}" if self.raid_data.form else ""
-        shiny_str = "Shiny " if self.raid_data.is_shiny else ""
-        event_str = "Event " if self.raid_data.is_event else ""
-        star_str = "★" * (self.raid_data.difficulty + 1)
-        iv_str = "/".join(map(str, self.raid_data.ivs))
-        nature_str = self.raid_data.nature.name.title()
-        # TODO: ability and gender enums from personalinfo
-        ability_str = str(self.raid_data.ability)
-        gender_str = str(self.raid_data.gender)
-        tera_type_str = self.raid_data.tera_type.name.title()
-        # TODO: better location names
-        location_str = f"{self.raid_data.area_id}-{self.raid_data.den_id}"
-        seed_str = f"{self.raid_data.seed:08X}"
-        pid_str = f"{self.raid_data.pid:08X}"
-        ec_str = f"{self.raid_data.encryption_constant:08X}"
-        sidtid_str = f"{self.raid_data.sidtid:08X}"
-        info_str = f"{species_str}{form_str}\n" \
-                   f"{shiny_str}{event_str}{star_str}\n" \
-                   f"IVs: {iv_str}\n" \
-                   f"Nature: {nature_str} Ability: {ability_str} Gender: {gender_str}\n" \
-                   f"Tera Type: {tera_type_str}\n" \
-                   f"Location: {location_str}\n" \
-                   f"Seed: {seed_str} EC: {ec_str}\n" \
-                   f"PID: {pid_str} SIDTID: {sidtid_str}\n"
-
+    def draw_info(self, raid_data: TeraRaid):
+        """Draw pokemon info display"""
         self.info_display = customtkinter.CTkLabel(
             master = self,
-            text = info_str,
+            text = raid_data,
             text_font = (
                 customtkinter.ThemeManager.theme["text"]["font"],
                 8
@@ -132,6 +106,10 @@ class RaidInfoWidget(customtkinter.CTkFrame):
             width = 200
         )
         self.info_display.pack(side = "left", fill = "x")
+        self.draw_info_sprites(raid_data)
+
+    def draw_info_sprites(self, raid_data: TeraRaid):
+        """Draw info sprites"""
         if raid_data.is_event:
             self.event_sprite_display = ImageWidget(
                 master = self,
@@ -160,21 +138,60 @@ class RaidInfoWidget(customtkinter.CTkFrame):
             )
         self.shiny_sprite_display.pack(side = "left", fill = "y", pady = (20, 0))
 
-        if not self.is_popup:
-            if has_alternate_location:
-                # TODO: tooltip text
-                self.swap_location_button = customtkinter.CTkButton(
-                    master = self,
-                    text = "Swap",
-                    width = 50,
-                    command = self.swap_command
+    def draw_main_sprites(self):
+        """Draw tera_sprite and poke_sprite"""
+        if self.is_popup:
+            self.tera_sprite_display = ImageWidget(
+                master = self,
+                image = self.tera_sprite,
+                fg_color = self.fg_color
+            )
+        else:
+            self.tera_sprite_display = customtkinter.CTkButton(
+                master = self,
+                text = "",
+                width = self.tera_sprite.width(),
+                height = self.tera_sprite.height(),
+                image = self.tera_sprite,
+                command = self.focus_command,
+                fg_color = self.fg_color
+            )
+        self.tera_sprite_display.pack(side = "left", fill = "y", padx = (40, 0), pady = (20, 0))
+
+        self.sprite_display = ImageWidget(
+            master = self,
+            image = self.poke_sprite,
+            fg_color = self.fg_color
+        )
+        self.sprite_display.pack(side = "left", fill = "y", pady = (10, 0))
+
+    def cache_sprites(self):
+        """Grab and cache sprites if not present"""
+        if len(RaidInfoWidget.TERA_SPRITES) == 0:
+            RaidInfoWidget.TERA_SPRITES = [
+                ImageTk.PhotoImage(
+                    Image.open(f"./resources/gem/{tera_type.name}.png")
                 )
-                self.swap_location_button.pack(side = "left", padx = (0, 15))
-            else:
-                # padding
-                self.swap_location_button = customtkinter.CTkLabel(
-                    master = self,
-                    text = "",
-                    width = 50
-                )
-                self.swap_location_button.pack(side = "left", padx = (0, 15))
+                for tera_type in TeraType
+            ]
+        if RaidInfoWidget.EMPTY_SPRITE is None:
+            RaidInfoWidget.EMPTY_SPRITE = ImageTk.PhotoImage(
+                Image.open("./resources/info_icons/empty.png")
+            )
+        if RaidInfoWidget.EVENT_SPRITE is None:
+            RaidInfoWidget.EVENT_SPRITE = ImageTk.PhotoImage(
+                Image.open("./resources/info_icons/event.png")
+            )
+        if RaidInfoWidget.SHINY_SPRITE is None:
+            RaidInfoWidget.SHINY_SPRITE = ImageTk.PhotoImage(
+                Image.open("./resources/info_icons/shiny.png")
+            )
+
+    def grab_poke_sprite(self) -> Image:
+        """Grab poke_sprite from the sprite handler"""
+        return self.poke_sprite_handler.grab_sprite(
+            self.raid_data.species,
+            self.raid_data.form,
+            # TODO: gender
+            False
+        )

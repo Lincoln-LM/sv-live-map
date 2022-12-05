@@ -27,7 +27,7 @@ customtkinter.set_appearance_mode("dark")
 
 class Application(customtkinter.CTk):
     """Live Map GUI"""
-    # pylint: disable=too-many-instance-attributes, too-many-statements
+    # pylint: disable=too-many-instance-attributes
     APP_NAME = "SV Live Map"
     WIDTH = 1330
     HEIGHT = 512
@@ -44,6 +44,22 @@ class Application(customtkinter.CTk):
         self.sprite_handler: PokeSpriteHandler = PokeSpriteHandler(tk_image = True)
         self.settings: dict[str, Any] = {}
 
+        self.load_settings_and_data()
+
+        self.raid_info_widgets: list[RaidInfoWidget] = []
+        self.raid_markers: dict[str, CorrectedMarker] = {}
+        self.background_workers: dict[str, dict] = {}
+
+        self.set_window_settings()
+        self.handle_close_events()
+
+        # initialize widgets
+        self.draw_settings_frame()
+        self.draw_map_frame()
+        self.draw_info_frame()
+
+    def load_settings_and_data(self):
+        """Load settings information and den locations"""
         # if settings file exists then access it
         if os.path.exists("settings.json"):
             with open("settings.json", "r", encoding = "utf-8") as settings_file:
@@ -52,20 +68,52 @@ class Application(customtkinter.CTk):
         with open("./resources/den_locations.json", "r", encoding = "utf-8") as location_file:
             self.den_locations: dict[str, list[int, int, int]] = json.load(location_file)
 
-        # window settings
-        self.title(self.APP_NAME)
-        self.geometry(f"{self.WIDTH}x{self.HEIGHT}")
-        self.minsize(self.WIDTH, self.HEIGHT)
-        self.iconphoto(True, ImageTk.PhotoImage(Image.open(self.ICON_PATH)))
+    def draw_info_frame(self):
+        """Draw the rightmost frame"""
+        self.info_frame = ScrollableFrame(master = self, width = 500)
+        self.info_frame.grid(row = 0, column = 3, sticky = "nsew")
+        self.grid_columnconfigure(3, minsize = 500)
 
-        # handle closing the application
-        self.protocol("WM_DELETE_WINDOW", self.on_closing)
-        self.bind("<Command-q>", self.on_closing)
-        self.bind("<Command-w>", self.on_closing)
-        self.createcommand('tk::mac::Quit', self.on_closing)
+        self.info_frame_label = customtkinter.CTkLabel(
+            master = self.info_frame.scrollable_frame,
+            text = "Raid Info:",
+        )
+        self.info_frame_label.grid(
+            row = 0,
+            column = 0,
+            columnspan = 4,
+            sticky = "ew",
+            padx = 10,
+            pady = 5
+        )
 
-        # initialize widgets
-        # leftmost frame
+        self.info_frame_horizontal_separator = \
+            customtkinter.CTkFrame(
+                self.info_frame.scrollable_frame,
+                bg_color = self.SEPARATOR_COLOR,
+                fg_color = customtkinter.ThemeManager.theme["color"]["frame_low"],
+                width = 500,
+                height = 5,
+                bd = 0
+            )
+        self.info_frame_horizontal_separator.grid(
+            row = 1,
+            column = 0,
+            columnspan = 4,
+            sticky = "ew",
+        )
+
+    def draw_map_frame(self):
+        """Draw the middle frame"""
+        self.map_frame = customtkinter.CTkFrame(master = self, width = 150)
+        self.map_frame.grid(row = 0, column = 2, sticky = "nsew")
+        self.grid_columnconfigure(2, minsize = 150)
+
+        self.map_widget = PaldeaMapView(self.map_frame)
+        self.map_widget.grid(row = 1, column = 0, sticky = "nw")
+
+    def draw_settings_frame(self):
+        """Draw the leftmost frame"""
         self.settings_frame = customtkinter.CTkFrame(master = self, width = 150)
         self.settings_frame.grid(row = 0, column = 0, columnspan = 2, sticky = "nsew")
         self.grid_columnconfigure(0, minsize = 150)
@@ -116,52 +164,19 @@ class Application(customtkinter.CTk):
         self.raid_progress.grid(row = 5, column = 0, columnspan = 2, padx = 10, pady = 5)
         self.raid_progress.set(0)
 
-        # middle frame
-        self.map_frame = customtkinter.CTkFrame(master = self, width = 150)
-        self.map_frame.grid(row = 0, column = 2, sticky = "nsew")
-        self.grid_columnconfigure(2, minsize = 150)
+    def handle_close_events(self):
+        """Handle close events"""
+        self.protocol("WM_DELETE_WINDOW", self.on_closing)
+        self.bind("<Command-q>", self.on_closing)
+        self.bind("<Command-w>", self.on_closing)
+        self.createcommand('tk::mac::Quit', self.on_closing)
 
-        self.map_widget = PaldeaMapView(self.map_frame)
-        self.map_widget.grid(row = 1, column = 0, sticky = "nw")
-
-        # rightmost frame
-        self.info_frame = ScrollableFrame(master = self, width = 500)
-        self.info_frame.grid(row = 0, column = 3, sticky = "nsew")
-        self.grid_columnconfigure(3, minsize = 500)
-
-        self.info_frame_label = customtkinter.CTkLabel(
-            master = self.info_frame.scrollable_frame,
-            text = "Raid Info:",
-        )
-        self.info_frame_label.grid(
-            row = 0,
-            column = 0,
-            columnspan = 4,
-            sticky = "ew",
-            padx = 10,
-            pady = 5
-        )
-
-        self.info_frame_horizontal_separator = \
-            customtkinter.CTkFrame(
-                self.info_frame.scrollable_frame,
-                bg_color = self.SEPARATOR_COLOR,
-                fg_color = customtkinter.ThemeManager.theme["color"]["frame_low"],
-                width = 500,
-                height = 5,
-                bd = 0
-            )
-        self.info_frame_horizontal_separator.grid(
-            row = 1,
-            column = 0,
-            columnspan = 4,
-            sticky = "ew",
-        )
-        self.raid_info_widgets: list[RaidInfoWidget] = []
-        self.raid_markers: dict[str, CorrectedMarker] = {}
-
-        # background work
-        self.background_workers: dict[str, dict] = {}
+    def set_window_settings(self):
+        """Set window settings"""
+        self.title(self.APP_NAME)
+        self.geometry(f"{self.WIDTH}x{self.HEIGHT}")
+        self.minsize(self.WIDTH, self.HEIGHT)
+        self.iconphoto(True, ImageTk.PhotoImage(Image.open(self.ICON_PATH)))
 
     def read_cached_tables(self) -> tuple[RaidEnemyTableArray]:
         """Read cached encounter tables"""
@@ -183,49 +198,47 @@ class Application(customtkinter.CTk):
             os.mkdir("./cached_tables/")
         for level in StarLevel:
             with open(f"./cached_tables/{level.name}.pkl", "wb+") as file:
-                index = level
-                if level == StarLevel.EVENT:
-                    index = -1
-                pickle.dump(self.reader.raid_enemy_table_arrays[index], file)
+                pickle.dump(self.reader.raid_enemy_table_arrays[level], file)
 
     def connect(self) -> bool:
         """Connect to switch and return True if success"""
         try:
             if self.use_cached_tables.get():
                 cached_tables = self.read_cached_tables()
-                if cached_tables is not None:
-                    self.reader = RaidReader(
-                        self.ip_entry.get(),
-                        read_safety = False,
-                        raid_enemy_table_arrays = cached_tables
-                    )
-                    if len(self.reader.raid_enemy_table_arrays[0].raid_enemy_tables) == 0:
-                        self.reader = None
-                        self.error_message_window(
-                            "Invalid",
-                            "Cached raid data is invalid. " \
-                            "Ensure the game is loaded in when reading."
-                        )
-                        return False
-                else:
+                if cached_tables is None:
                     return False
+                self.reader = RaidReader(
+                    self.ip_entry.get(),
+                    read_safety = False,
+                    raid_enemy_table_arrays = cached_tables
+                )
+                if len(self.reader.raid_enemy_table_arrays[0].raid_enemy_tables) == 0:
+                    return self.connection_error(
+                        "Cached raid data is invalid. Ensure the game is loaded in when reading."
+                    )
+
             else:
                 self.reader = RaidReader(self.ip_entry.get(), read_safety = True)
                 # disable after the tables are read
                 self.reader.read_safety = False
                 if len(self.reader.raid_enemy_table_arrays[0].raid_enemy_tables) == 0:
-                    self.reader = None
-                    self.error_message_window(
-                        "Invalid",
+                    return self.connection_error(
                         "Raid data is invalid. Ensure the game is loaded in."
                     )
-                    return False
+
                 self.dump_cached_tables()
             return True
-        except TimeoutError:
+        except (TimeoutError, struct.error, binascii.Error) as error:
             self.reader = None
             self.error_message_window("TimeoutError", "Connection timed out.")
+            print(error)
             return False
+
+    def connection_error(self, error_message):
+        """Set reader to None and open error window"""
+        self.reader = None
+        self.error_message_window("Invalid", error_message)
+        return False
 
     def toggle_connection(self):
         """Toggle connection to switch"""
@@ -233,9 +246,8 @@ class Application(customtkinter.CTk):
             self.reader.close()
             self.reader = None
             self.connect_button.configure(text = "Connect")
-        else:
-            if self.connect():
-                self.connect_button.configure(text = "Disconnect")
+        elif self.connect():
+            self.connect_button.configure(text = "Disconnect")
 
     def read_all_raids(self):
         """Read and display all raid information"""
@@ -246,22 +258,17 @@ class Application(customtkinter.CTk):
         self.raid_info_widgets.clear()
         self.raid_markers.clear()
         if self.reader:
-            # struct.error/binascii.Error when connection terminates before all 12 bytes are read
+            # struct.error/binascii.Error when connection terminates before all bytes are read
             try:
                 raid_block_data = self.reader.read_raid_block_data()
                 work = partial(self.read_all_raids_work, raid_block_data)
                 work_thread = threading.Thread(target = work)
                 work_thread.start()
-            except (TimeoutError, struct.error, binascii.Error):
-                self.toggle_connection()
-                self.connect_button.configure(require_redraw = True, state = "normal")
-                self.position_button.configure(require_redraw = True, state = "normal")
-                self.read_raids_button.configure(require_redraw = True, state = "normal")
+            except (TimeoutError, struct.error, binascii.Error) as error:
                 if 'position' in self.background_workers \
                   and self.background_workers['position']['active']:
                     self.toggle_position_work()
-                self.error_message_window("TimeoutError", "Connection timed out.")
-                return
+                self.connection_timeout(error)
         else:
             self.error_message_window("Invalid", "Not connected to switch.")
 
@@ -289,7 +296,7 @@ class Application(customtkinter.CTk):
             if raid.id_str.endswith("_"):
                 other_id_str = raid.id_str[:-1]
             else:
-                other_id_str = raid.id_str + "_"
+                other_id_str = f"{raid.id_str}_"
             # position has not been changed
             if self.raid_markers[raid.id_str].position \
               == self.map_widget.game_coordinates_to_deg(*self.den_locations[raid.id_str]):
@@ -312,18 +319,17 @@ class Application(customtkinter.CTk):
                         *self.map_widget.game_coordinates_to_deg(*self.den_locations[other_id_str])
                     )
 
+        # focus the map to the marker
         def focus_marker(raid: TeraRaid):
             self.map_widget.set_zoom(self.map_widget.max_zoom)
             self.map_widget.set_position(*self.raid_markers[raid.id_str].position)
 
         for raid in raid_block_data.raids:
             if raid.is_enabled:
+                has_alternate_location = f"{raid.id_str}_" in self.den_locations
                 if raid.id_str in self.raid_markers:
                     print(f"WARNING duplicate raid id {raid.id_str} is treated as {raid.id_str}_")
-                    raid.id_str += "_"
-
-                has_alternate_location = raid.id_str.endswith("_") \
-                    or (raid.id_str + "_") in self.den_locations
+                    raid.id_str = f"{raid.id_str}_"
 
                 info_widget = RaidInfoWidget(
                     master = self.info_frame.scrollable_frame,
@@ -384,41 +390,45 @@ class Application(customtkinter.CTk):
             self.after_cancel(self.background_workers['position']['worker'])
             self.background_workers['position']['active'] = False
             self.position_button.configure(text = "Track Player")
+        elif self.reader:
+            self.position_button.configure(text = "Stop Tracking Player")
+            self.background_workers['position']['active'] = True
+            self.after(1000, self.position_work)
         else:
-            if self.reader:
-                self.position_button.configure(text = "Stop Tracking Player")
-                self.background_workers['position']['active'] = True
-                self.after(1000, self.position_work)
-            else:
-                self.error_message_window("Invalid", "Not connected to switch.")
+            self.error_message_window("Invalid", "Not connected to switch.")
 
     def position_work(self):
         """Work to be done to update the player's position"""
-        if self.reader:
-            try:
-                # omit Y (height) coordinate
-                game_x, _, game_z = \
+        if not self.reader:
+            return
+        try:
+            # omit Y (height) coordinate
+            game_x, _, game_z = \
                     struct.unpack("fff", self.reader.read_main(self.PLAYER_POS_ADDRESS, 12))
-            # struct.error/binascii.Error when connection terminates before all 12 bytes are read
-            except (TimeoutError, struct.error, binascii.Error):
-                self.toggle_connection()
-                self.connect_button.configure(require_redraw = True, state = "normal")
-                self.position_button.configure(require_redraw = True, state = "normal")
-                self.read_raids_button.configure(require_redraw = True, state = "normal")
-                self.toggle_position_work()
-                self.error_message_window("TimeoutError", "Connection timed out.")
-                return
-            pos_x, pos_y = self.map_widget.game_coordinates_to_deg(game_x, _, game_z)
-            if 'marker' not in self.background_workers['position']:
-                self.background_workers['position']['marker'] = \
+        except (TimeoutError, struct.error, binascii.Error) as error:
+            self.connection_timeout(error)
+        pos_x, pos_y = self.map_widget.game_coordinates_to_deg(game_x, _, game_z)
+        if 'marker' not in self.background_workers['position']:
+            self.background_workers['position']['marker'] = \
                     self.map_widget.set_marker(pos_x, pos_y, "PLAYER")
-            else:
-                self.background_workers['position']['marker'].set_position(pos_x, pos_y)
+        else:
+            self.background_workers['position']['marker'].set_position(pos_x, pos_y)
 
-            self.background_workers['position']['worker'] = self.after(1000, self.position_work)
+        self.background_workers['position']['worker'] = self.after(1000, self.position_work)
+
+    def connection_timeout(self, error):
+        """Toggle connection + buttons and display timeout error"""
+        self.toggle_connection()
+        self.connect_button.configure(require_redraw = True, state = "normal")
+        self.position_button.configure(require_redraw = True, state = "normal")
+        self.read_raids_button.configure(require_redraw = True, state = "normal")
+        self.toggle_position_work()
+        self.error_message_window("TimeoutError", "Connection timed out.")
+        raise error
 
     def error_message_window(self, title: str, message: str):
         """Open new window with error message"""
+        # TODO: scrollable textbox with full console error information
         window = customtkinter.CTkToplevel(self)
         window.geometry("450x100")
         window.title(title)

@@ -6,7 +6,7 @@ from time import sleep
 
 class NXReader:
     """Simplified class to read information from sys-botbase"""
-    def __init__(self, ip_address = None, port = 6000) -> None:
+    def __init__(self, ip_address: str, port: int = 6000) -> None:
         self.socket: socket.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.settimeout(1)
         self.socket.connect((ip_address, port))

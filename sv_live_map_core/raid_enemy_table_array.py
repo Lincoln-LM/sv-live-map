@@ -5,7 +5,7 @@ from .sv_enums import (
     Game,
     Move,
     Species,
-    Gender,
+    GenderGeneration,
     NatureGeneration,
     Item,
     TeraTypeGeneration,
@@ -66,7 +66,7 @@ class PokeDataBattle(FlatBufferObject):
         FlatBufferObject.__init__(self, buf, offset)
         self.dev_id: Species = self.read_init_int_enum(U16, Species)
         self.form_id: int = self.read_init_int(I16)
-        self.sex: Gender = self.read_init_int_enum(I32, Gender)
+        self.sex: GenderGeneration = self.read_init_int_enum(I32, GenderGeneration)
         self.item: Item = self.read_init_int_enum(I32, Item)
         self.level: int = self.read_init_int(I32)
         self.ball_id: Ball = self.read_init_int_enum(I32, Ball)

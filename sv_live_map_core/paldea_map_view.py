@@ -60,14 +60,15 @@ class PaldeaMapView(TkinterMapView):
             self.width = event.width
             self.height = event.height
 
-    def request_image(self, zoom: int, x: int, y: int, db_cursor=None):
-        # bounds checking
-        if not (
-            0 < zoom <= self.max_zoom # ensure zoom is a valid value
-            and 2 ** zoom > max(x, y) # ensure x and y are within zoom scale
-            and min(x, y) >= 0 # ensure x and y are non negative
-        ):
+    def get_tile_image_from_cache(self, zoom: int, x: int, y: int):
+        if f"z{zoom}x{x}y{y}" in self.tile_image_cache:
+            return self.tile_image_cache[f"z{zoom}x{x}y{y}"]
+        return False
+
+    def request_image(self, zoom: int, x: int, y: int, db_cursor = None):
+        if not self.tile_in_bounds(zoom, x, y):
             return self.empty_tile_image
+
         # files are stored with zoom inverted
         zoom = 5 - zoom
         # TODO: dynamic path?
@@ -77,6 +78,14 @@ class PaldeaMapView(TkinterMapView):
             self.tile_image_cache[f'z{zoom}x{x}y{y}'] = img
             return img
         return self.empty_tile_image
+
+    def tile_in_bounds(self, zoom: int, x_pos: int, y_pos: int):
+        """Check if a tile is in bounds"""
+        return (
+            0 < zoom <= self.max_zoom # ensure zoom is a valid value
+            and 2 ** zoom > max(x_pos, y_pos) # ensure x and y are within zoom scale
+            and min(x_pos, y_pos) >= 0 # ensure x and y are non negative
+        )
 
     def set_marker(self, deg_x: float, deg_y: float, text: str = None, **kwargs) -> CorrectedMarker:
         marker = CorrectedMarker(self, (deg_x, deg_y), text=text, **kwargs)

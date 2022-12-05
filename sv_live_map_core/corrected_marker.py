@@ -6,7 +6,7 @@ from tkintermapview.canvas_position_marker import CanvasPositionMarker
 class CorrectedMarker(CanvasPositionMarker):
     """CanvasPositionMarker that renders images correctly"""
     def bind_click(self, obj):
-        """bind click methods of a canvas object"""
+        """Bind click methods of a canvas object"""
         if self.command is not None:
             self.map_widget.canvas.tag_bind(
                 obj,
@@ -24,126 +24,163 @@ class CorrectedMarker(CanvasPositionMarker):
                 self.click
         )
 
+    def in_bounds(self):
+        """Check if marker is in bounds"""
+        canvas_pos_x, canvas_pos_y = self.get_canvas_pos(self.position)
+        return (
+            -50 < canvas_pos_x < self.map_widget.width + 50 and
+            0 < canvas_pos_y < self.map_widget.height + 70
+        )
+
     def draw(self, _ = None):
         if self.deleted:
             return
 
-        canvas_pos_x, canvas_pos_y = self.get_canvas_pos(self.position)
-
         # unrender when out of bounds
-        if not (-50 < canvas_pos_x < self.map_widget.width + 50
-          and 0 < canvas_pos_y < self.map_widget.height + 70):
+        if not self.in_bounds():
             self.unrender()
             self.map_widget.manage_z_order()
             return
 
+        canvas_pos_x, canvas_pos_y = self.get_canvas_pos(self.position)
+
+        # draw standard icon shape
+        if self.icon is None:
+            self.update_standard_icon(canvas_pos_x, canvas_pos_y)
         # draw icon image for marker
-        if self.icon is not None:
-            if self.canvas_icon is None:
-                self.canvas_icon = self.map_widget.canvas.create_image(
+        else:
+            self.update_canvas_icon(canvas_pos_x, canvas_pos_y)
+
+        # ensure no text is drawn
+        if self.text is None:
+            if self.canvas_text is not None:
+                self.map_widget.canvas.delete(self.canvas_text)
+        # draw set text
+        else:
+            self.update_canvas_text(canvas_pos_x, canvas_pos_y)
+
+        if self.image is not None and not self.image_hidden and self.image_zoom_visible():
+            self.update_canvas_image(canvas_pos_x, canvas_pos_y)
+        # unrender image if hidden or not zoom visible
+        elif self.canvas_image is not None:
+            self.map_widget.canvas.delete(self.canvas_image)
+            self.canvas_image = None
+
+        self.map_widget.manage_z_order()
+
+    def image_zoom_visible(self):
+        """Check if images are visible based on map zoom"""
+        return (
+            self.image_zoom_visibility[0]
+              <= self.map_widget.zoom
+              <= self.image_zoom_visibility[1]
+            )
+
+    def update_canvas_image(self, canvas_pos_x, canvas_pos_y):
+        """Update canvas image"""
+        # draw image
+        if self.canvas_image is None:
+            self.canvas_image = self.map_widget.canvas.create_image(
+                canvas_pos_x,
+                canvas_pos_y,
+                anchor = tkinter.S,
+                image = self.image,
+                tag = "marker"
+            )
+            self.bind_click(self.canvas_image)
+        # move image
+        else:
+            self.map_widget.canvas.coords(self.canvas_image, canvas_pos_x, canvas_pos_y)
+
+    def update_canvas_text(self, canvas_pos_x, canvas_pos_y):
+        """Update canvas text"""
+        # draw text
+        if self.canvas_text is None:
+            self.canvas_text = self.map_widget.canvas.create_text(
+                canvas_pos_x,
+                canvas_pos_y + self.text_y_offset,
+                anchor = tkinter.S,
+                text = self.text,
+                fill = self.text_color,
+                font = self.font,
+                tag = ("marker", "marker_text")
+            )
+            self.bind_click(self.canvas_text)
+        # move text
+        else:
+            self.map_widget.canvas.coords(
+                self.canvas_text,
+                canvas_pos_x,
+                canvas_pos_y + self.text_y_offset
+            )
+            self.map_widget.canvas.itemconfig(self.canvas_text, text = self.text)
+
+    def update_canvas_icon(self, canvas_pos_x, canvas_pos_y):
+        """Update icon built from image"""
+        # draw icon
+        if self.canvas_icon is None:
+            self.canvas_icon = self.map_widget.canvas.create_image(
                     canvas_pos_x,
                     canvas_pos_y,
                     anchor = self.icon_anchor,
                     image = self.icon,
                     tag = "marker"
                 )
-                self.bind_click(self.canvas_icon)
-            else:
-                self.map_widget.canvas.coords(self.canvas_icon, canvas_pos_x, canvas_pos_y)
-
-        # draw standard icon shape
+            self.bind_click(self.canvas_icon)
+        # move icon
         else:
-            if self.polygon is None:
-                self.polygon = self.map_widget.canvas.create_polygon(
-                    canvas_pos_x - 14,
-                    canvas_pos_y - 23,
-                    canvas_pos_x,
-                    canvas_pos_y,
-                    canvas_pos_x + 14,
-                    canvas_pos_y - 23,
-                    fill = self.marker_color_outside,
-                    width = 2,
-                    outline = self.marker_color_outside,
-                    tag = "marker"
-                )
-                self.bind_click(self.polygon)
-            else:
-                self.map_widget.canvas.coords(
-                    self.polygon,
-                    canvas_pos_x - 14,
-                    canvas_pos_y - 23,
-                    canvas_pos_x,
-                    canvas_pos_y,
-                    canvas_pos_x + 14,
-                    canvas_pos_y - 23
-                )
-            if self.big_circle is None:
-                self.big_circle = self.map_widget.canvas.create_oval(
-                    canvas_pos_x - 14,
-                    canvas_pos_y - 45,
-                    canvas_pos_x + 14,
-                    canvas_pos_y - 17,
-                    fill = self.marker_color_circle,
-                    width = 6,
-                    outline = self.marker_color_outside,
-                    tag = "marker"
-                )
-                self.bind_click(self.big_circle)
-            else:
-                self.map_widget.canvas.coords(
-                    self.big_circle,
-                    canvas_pos_x - 14,
-                    canvas_pos_y - 45,
-                    canvas_pos_x + 14,
-                    canvas_pos_y - 17
-                )
+            self.map_widget.canvas.coords(self.canvas_icon, canvas_pos_x, canvas_pos_y)
 
-        if self.text is not None:
-            if self.canvas_text is None:
-                self.canvas_text = self.map_widget.canvas.create_text(
-                    canvas_pos_x,
-                    canvas_pos_y + self.text_y_offset,
-                    anchor = tkinter.S,
-                    text = self.text,
-                    fill = self.text_color,
-                    font = self.font,
-                    tag = ("marker", "marker_text")
-                )
-                self.bind_click(self.canvas_text)
-            else:
-                self.map_widget.canvas.coords(
-                    self.canvas_text,
-                    canvas_pos_x,
-                    canvas_pos_y + self.text_y_offset
-                )
-                self.map_widget.canvas.itemconfig(self.canvas_text, text=self.text)
+    def update_standard_icon(self, canvas_pos_x, canvas_pos_y):
+        """Update standard icon build from shapes"""
+        # draw polygon
+        if self.polygon is None:
+            self.polygon = self.map_widget.canvas.create_polygon(
+                canvas_pos_x - 14,
+                canvas_pos_y - 23,
+                canvas_pos_x,
+                canvas_pos_y,
+                canvas_pos_x + 14,
+                canvas_pos_y - 23,
+                fill = self.marker_color_outside,
+                width = 2,
+                outline = self.marker_color_outside,
+                tag = "marker"
+            )
+            self.bind_click(self.polygon)
+        # move polygon
         else:
-            if self.canvas_text is not None:
-                self.map_widget.canvas.delete(self.canvas_text)
-
-        if (self.image is not None
-            and self.image_zoom_visibility[0]
-                <= self.map_widget.zoom
-                <= self.image_zoom_visibility[1]
-            and not self.image_hidden):
-
-            if self.canvas_image is None:
-                self.canvas_image = self.map_widget.canvas.create_image(
-                    canvas_pos_x,
-                    canvas_pos_y,
-                    anchor = tkinter.S,
-                    image = self.image,
-                    tag = "marker"
-                )
-                self.bind_click(self.canvas_image)
-            else:
-                self.map_widget.canvas.coords(self.canvas_image, canvas_pos_x, canvas_pos_y)
+            self.map_widget.canvas.coords(
+                self.polygon,
+                canvas_pos_x - 14,
+                canvas_pos_y - 23,
+                canvas_pos_x,
+                canvas_pos_y,
+                canvas_pos_x + 14,
+                canvas_pos_y - 23
+            )
+        # draw circle
+        if self.big_circle is None:
+            self.big_circle = self.map_widget.canvas.create_oval(
+                canvas_pos_x - 14,
+                canvas_pos_y - 45,
+                canvas_pos_x + 14,
+                canvas_pos_y - 17,
+                fill = self.marker_color_circle,
+                width = 6,
+                outline = self.marker_color_outside,
+                tag = "marker"
+            )
+            self.bind_click(self.big_circle)
+        # move circle
         else:
-            if self.canvas_image is not None:
-                self.map_widget.canvas.delete(self.canvas_image)
-                self.canvas_image = None
-
-        self.map_widget.manage_z_order()
+            self.map_widget.canvas.coords(
+                self.big_circle,
+                canvas_pos_x - 14,
+                canvas_pos_y - 45,
+                canvas_pos_x + 14,
+                canvas_pos_y - 17
+            )
 
     def unrender(self):
         """Unrender icons"""

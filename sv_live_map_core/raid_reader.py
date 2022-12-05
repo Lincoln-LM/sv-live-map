@@ -1,5 +1,6 @@
 """Subclass of NXReader with functions specifically for raids"""
 
+import contextlib
 import socket
 from sv_live_map_core.nxreader import NXReader
 from sv_live_map_core.sv_enums import StarLevel, StoryProgress, Game
@@ -136,11 +137,9 @@ class RaidReader(NXReader):
 
     def clear_all_data(self):
         """Clear all data waiting to be read"""
-        try:
+        with contextlib.suppress(TimeoutError):
             while self.check_if_data_avaiable():
                 self.socket.recv(0x8000)
-        except TimeoutError:
-            pass
 
     def read(self, address, size):
         if self.read_safety:

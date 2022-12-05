@@ -30,7 +30,7 @@ class StarLevel(IntEnum):
     SEVEN_STAR = 6
 
     # for easy compatability
-    EVENT = 255
+    EVENT = -1
 
     @staticmethod
     def from_game(value: int) -> Self:
@@ -1979,8 +1979,8 @@ class Species(IntEnum):
     CLODSIRE = 1009
     ANNIHILAPE = 1010
 
-class Gender(IntEnum):
-    """Enum for pokemon gender"""
+class GenderGeneration(IntEnum):
+    """Enum for pokemon gender generation"""
     NONE = 0
     MALE = 1
     FEMALE = 2

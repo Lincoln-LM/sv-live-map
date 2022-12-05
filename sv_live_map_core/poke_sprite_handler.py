@@ -21,10 +21,7 @@ class PokeSpriteHandler:
             title = file.split(".")[0]
             split = title.split("-")
             species = Species(int(split[0]))
-            if "-" not in title:
-                form = None
-            else:
-                form = int(split[-1])
+            form = None if "-" not in title else int(split[-1])
             female = title.endswith("f")
             img = Image.open(f"./cached_sprites/{file}")
             # convert to tk image for gui
@@ -33,7 +30,7 @@ class PokeSpriteHandler:
             self.cache[(species, form, female)] = img
 
     def grab_sprite(self, species: Species, form: int, female: bool) -> Image.Image:
-        """Grab a sprite from PKHex's github"""
+        """Grab a sprite from cache or request"""
         if form == 0:
             form = None
         if (species, form, female) not in self.cache:
@@ -42,13 +39,17 @@ class PokeSpriteHandler:
                 title += f"-{form}"
             if female:
                 title += "f"
-            sprite_location = self.SPRITE_LINK.replace("{title}", title)
-            req = requests.get(sprite_location, stream = True, timeout = 5.0)
-            img = Image.open(req.raw)
-            img.save(f"./cached_sprites/{title}.png")
-            # convert to tk image for gui
-            if self.tk_image:
-                img = ImageTk.PhotoImage(img)
-            self.cache[(species, form, female)] = img
+            self.cache[(species, form, female)] = self.request_sprite(title)
 
         return self.cache[(species, form, female)]
+
+    def request_sprite(self, title: str):
+        """Request a sprite from PKHex's github"""
+        sprite_location = self.SPRITE_LINK.replace("{title}", title)
+        req = requests.get(sprite_location, stream = True, timeout = 5.0)
+        img = Image.open(req.raw)
+        img.save(f"./cached_sprites/{title}.png")
+        # convert to tk image for gui
+        if self.tk_image:
+            img = ImageTk.PhotoImage(img)
+        return img
