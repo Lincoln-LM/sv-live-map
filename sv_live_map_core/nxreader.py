@@ -61,7 +61,7 @@ class NXReader:
             self.ls_lasty = y_val
         self.move_stick('LEFT', self.ls_lastx, self.ls_lasty)
 
-    def move_right_stick(self, x_val = None, y_val = None) -> None:
+    def move_right_stick(self, x_val: int = None, y_val: int = None) -> None:
         """Move the right stick to position"""
         if x_val is not None:
             self.rs_lastx = x_val
