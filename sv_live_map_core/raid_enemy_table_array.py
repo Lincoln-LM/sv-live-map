@@ -42,6 +42,7 @@ class RaidEnemyTable(FlatBufferObject):
 
 class RaidEnemyInfo(FlatBufferObject):
     """Spawn info of raid pokemon"""
+    # pylint: disable=too-many-instance-attributes
     def __init__(self, buf: bytearray, offset: int):
         FlatBufferObject.__init__(self, buf, offset)
         self.rom_ver: Game = self.read_init_int_enum(I16, Game)
@@ -60,6 +61,7 @@ class RaidEnemyInfo(FlatBufferObject):
 
 class PokeDataBattle(FlatBufferObject):
     """Data that describes attributes of the pokemon itself"""
+    # pylint: disable=too-many-instance-attributes
     def __init__(self, buf: bytearray, offset: int):
         FlatBufferObject.__init__(self, buf, offset)
         self.dev_id: Species = self.read_init_int_enum(U16, Species)
@@ -115,6 +117,7 @@ class RaidBossSizeData(FlatBufferObject):
 
 class RaidBossData(FlatBufferObject):
     """Data that describes raid boss behavior"""
+    # pylint: disable=too-many-instance-attributes
     def __init__(self, buf: bytearray, offset: int):
         FlatBufferObject.__init__(self, buf, offset)
         self.hp_coef: int = self.read_init_int(I16)

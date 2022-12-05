@@ -1,7 +1,7 @@
 """Sprite handler to grab pokemon sprites from PKHex"""
 
-import requests
 import os
+import requests
 from PIL import Image, ImageTk
 from .sv_enums import Species
 
@@ -10,6 +10,7 @@ from .sv_enums import Species
 
 class PokeSpriteHandler:
     """Sprite handler to grab pokemon sprites from PKHex"""
+    # pylint: disable=line-too-long
     SPRITE_LINK = "https://raw.githubusercontent.com/kwsch/PKHeX/master/PKHeX.Drawing.PokeSprite/Resources/img/Artwork%20Pokemon%20Sprites/a_{title}.png"
     def __init__(self, tk_image = False):
         self.tk_image = tk_image

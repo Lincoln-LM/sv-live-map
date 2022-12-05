@@ -1,4 +1,5 @@
 """Enums for data from SV"""
+# pylint: disable=too-many-lines
 
 from __future__ import annotations
 from enum import IntEnum
@@ -3014,7 +3015,7 @@ class Item(IntEnum):
     PIKACHU_CANDY = 987
     SANDSHREW_CANDY = 988
     NIDORANF_CANDY = 989
-    NIDORANMé_CANDY = 990
+    NIDORANM_CANDY = 990
     CLEFAIRY_CANDY = 991
     VULPIX_CANDY = 992
     JIGGLYPUFF_CANDY = 993

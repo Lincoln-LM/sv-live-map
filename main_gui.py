@@ -27,6 +27,7 @@ customtkinter.set_appearance_mode("dark")
 
 class Application(customtkinter.CTk):
     """Live Map GUI"""
+    # pylint: disable=too-many-instance-attributes, too-many-statements
     APP_NAME = "SV Live Map"
     WIDTH = 1330
     HEIGHT = 512

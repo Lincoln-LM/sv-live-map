@@ -10,6 +10,7 @@ from sv_live_map_core.sv_enums import TeraType
 
 class RaidInfoWidget(customtkinter.CTkFrame):
     """customtkinter widget for displaying raid info"""
+    # pylint: disable=too-many-instance-attributes, too-many-ancestors, too-many-locals, too-many-statements, too-many-branches
     EMPTY_SPRITE: ImageTk.PhotoImage = None
     EVENT_SPRITE: ImageTk.PhotoImage = None
     SHINY_SPRITE: ImageTk.PhotoImage = None
@@ -47,13 +48,12 @@ class RaidInfoWidget(customtkinter.CTkFrame):
         self.poke_sprite = \
             self.poke_sprite_handler.grab_sprite(self.raid_data.species, self.raid_data.form, False)
         if RaidInfoWidget.TERA_SPRITES is None:
-            RaidInfoWidget.TERA_SPRITES = []
-            for tera_type in TeraType:
-                RaidInfoWidget.TERA_SPRITES.append(
-                    ImageTk.PhotoImage(
-                        Image.open(f"./resources/gem/{tera_type.name}.png")
-                    )
+            RaidInfoWidget.TERA_SPRITES = [
+                ImageTk.PhotoImage(
+                    Image.open(f"./resources/gem/{tera_type.name}.png")
                 )
+                for tera_type in TeraType
+            ]
         self.tera_sprite = RaidInfoWidget.TERA_SPRITES[raid_data.tera_type]
         if RaidInfoWidget.EMPTY_SPRITE is None:
             RaidInfoWidget.EMPTY_SPRITE = ImageTk.PhotoImage(
@@ -162,7 +162,7 @@ class RaidInfoWidget(customtkinter.CTkFrame):
 
         if not self.is_popup:
             if has_alternate_location:
-                # todo: tooltip text
+                # TODO: tooltip text
                 self.swap_location_button = customtkinter.CTkButton(
                     master = self,
                     text = "Swap",

@@ -22,6 +22,7 @@ class DeliveryRaidPriority(FlatBufferObject):
 
 class DeliveryGroupID(FlatBufferObject):
     """Data that describes how many dens are in each group"""
+    # pylint: disable=too-many-instance-attributes
     def __init__(self, buf: bytearray, offset: int):
         super().__init__(buf, offset)
         self.group_id_01 = self.read_init_int(I8)

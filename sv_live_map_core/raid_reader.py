@@ -119,7 +119,7 @@ class RaidReader(NXReader):
         """Read raid block data from memory and process"""
         raid_block = process_raid_block(self.read_pointer(*self.RAID_BLOCK_PTR))
         raid_block.initialize_data(
-            self.raid_enemy_table_arrays, 
+            self.raid_enemy_table_arrays,
             self.story_progress,
             self.game_version,
             self.delivery_raid_priority

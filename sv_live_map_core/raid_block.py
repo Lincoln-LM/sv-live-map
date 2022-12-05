@@ -59,45 +59,65 @@ def calc_difficulty(story_progress: StoryProgress, difficulty_rand: int) -> Star
     """Calculate raid difficulty from story progress and difficulty rand"""
     match story_progress:
         case StoryProgress.DEFAULT:
-            if difficulty_rand <= 80:
-                return StarLevel.ONE_STAR
-            # elif (difficulty_rand - 80) <= 20
-            return StarLevel.TWO_STAR
+            return (
+                StarLevel.ONE_STAR
+                if difficulty_rand <= 80
+                else StarLevel.TWO_STAR # elif (difficulty_rand - 80) <= 20
+            )
         case StoryProgress.THREE_STAR_UNLOCKED:
-            if difficulty_rand <= 30:
-                return StarLevel.ONE_STAR
-            if difficulty_rand <= 70: # elif (difficulty_rand - 30) <= 40
-                return StarLevel.TWO_STAR
-            # elif (difficulty_rand - 30 - 40) <= 30
-            return StarLevel.THREE_STAR
+            return (
+                StarLevel.ONE_STAR
+                if difficulty_rand <= 30
+                else (
+                    StarLevel.TWO_STAR # elif (difficulty_rand - 30) <= 40
+                    if difficulty_rand <= 70
+                    else
+                    StarLevel.THREE_STAR # elif (difficulty_rand - 30 - 40) <= 30
+                )
+            )
         case StoryProgress.FOUR_STAR_UNLOCKED:
-            if difficulty_rand <= 20:
-                return StarLevel.ONE_STAR
-            if difficulty_rand <= 40: # elif (difficulty_rand - 20) <= 20
-                return StarLevel.TWO_STAR
-            if difficulty_rand <= 70: # elif (difficulty_rand - 20 - 20) <= 30
-                return StarLevel.THREE_STAR
-            # elif (difficulty_rand - 20 - 20 - 30) <= 30
-            return StarLevel.FOUR_STAR
+            return (
+                StarLevel.ONE_STAR
+                if difficulty_rand <= 20
+                else (
+                    StarLevel.TWO_STAR # elif (difficulty_rand - 20) <= 20
+                    if difficulty_rand <= 40
+                    else (
+                        StarLevel.THREE_STAR # elif (difficulty_rand - 20 - 20) <= 30
+                        if difficulty_rand <= 70
+                        else
+                        StarLevel.FOUR_STAR
+                    )
+                )
+            )
         case StoryProgress.FIVE_STAR_UNLOCKED:
-            if difficulty_rand <= 40:
-                return StarLevel.THREE_STAR
-            if difficulty_rand <= 75: # elif (difficulty_rand - 40) <= 35
-                return StarLevel.FOUR_STAR
-            # elif (difficulty_rand - 40 - 35) <= 25
-            return StarLevel.FIVE_STAR
+            return (
+                StarLevel.THREE_STAR
+                if difficulty_rand <= 40
+                else (
+                    StarLevel.FOUR_STAR # elif (difficulty_rand - 40) <= 35
+                    if difficulty_rand <= 75
+                    else
+                    StarLevel.FIVE_STAR # elif (difficulty_rand - 40 - 35) <= 25
+                )
+            )
         case StoryProgress.SIX_STAR_UNLOCKED:
-            if difficulty_rand <= 30:
-                return StarLevel.THREE_STAR
-            if difficulty_rand <= 70: # elif (difficulty_rand - 30) <= 40
-                return StarLevel.FOUR_STAR
-            # elif (difficulty_rand - 30 - 40) <= 30
-            return StarLevel.FIVE_STAR
+            return (
+                StarLevel.THREE_STAR
+                if difficulty_rand <= 30
+                else (
+                    StarLevel.FOUR_STAR # elif (difficulty_rand - 30) <= 40
+                    if difficulty_rand <= 70
+                    else
+                    StarLevel.FIVE_STAR # elif (difficulty_rand - 30 - 40) <= 30
+                )
+            )
     return None
 
 @dataclass
 class TeraRaid:
     """Single Tera Raid Data"""
+    # pylint: disable=too-many-instance-attributes
     # information directly present in raid block
     is_enabled: U32
     area_id: U32
