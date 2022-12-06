@@ -50,7 +50,13 @@ class FlatBufferObject:
             return self._table.Get(_type, pos_offset + self._offset)
         return default
 
-    def read_int_enum(self, _type: INT_TYPES, position: int, _enum: Type[IntEnum], default = None):
+    def read_int_enum(
+        self,
+        _type: INT_TYPES,
+        position: int,
+        _enum: Type[IntEnum] | Callable,
+        default = None
+    ):
         """Read value of _type at position as _enum"""
         if pos_offset := self._table.Offset(position):
             return _enum(self._table.Get(_type, pos_offset + self._offset))

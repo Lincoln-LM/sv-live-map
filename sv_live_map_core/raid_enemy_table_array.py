@@ -153,7 +153,7 @@ class RaidTimeData(FlatBufferObject):
     """Data that describes the timer during raid battle"""
     def __init__(self, buf: bytearray, offset: int):
         FlatBufferObject.__init__(self, buf, offset)
-        self.is_active: bool = self.read_init_int(U8)
+        self.is_active: bool = self.read_init_int_enum(U8, bool)
         self.game_limit: int = self.read_init_int(I32)
         self.client_limit: int = self.read_init_int(I32)
         self.command_limit: int = self.read_init_int(I32)
