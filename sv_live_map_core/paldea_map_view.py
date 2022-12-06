@@ -1,6 +1,6 @@
 """Modified TkinterMapView for use with the paldea map"""
 
-import os.path
+import requests
 from tkintermapview import TkinterMapView, osm_to_decimal
 from PIL import Image, ImageTk
 from .corrected_marker import CorrectedMarker
@@ -69,15 +69,19 @@ class PaldeaMapView(TkinterMapView):
         if not self.tile_in_bounds(zoom, x, y):
             return self.empty_tile_image
 
-        # files are stored with zoom inverted
-        zoom = 5 - zoom
-        # TODO: dynamic path?
-        path = f"resources/map/{zoom}_{x}_{y}.png"
-        if os.path.exists(path):
-            img = ImageTk.PhotoImage(Image.open(path))
+        try:
+            req = requests.get(
+                # files are stored with zoom inverted
+                "https://github.com/Lincoln-LM/paldea-map-assets/raw/main/map/" \
+                f"{5 - zoom}_{x}_{y}.png",
+                stream = True,
+                timeout = 5.0
+            )
+            img = ImageTk.PhotoImage(Image.open(req.raw))
             self.tile_image_cache[f'z{zoom}x{x}y{y}'] = img
             return img
-        return self.empty_tile_image
+        except requests.ConnectionError:
+            return self.empty_tile_image
 
     def tile_in_bounds(self, zoom: int, x_pos: int, y_pos: int):
         """Check if a tile is in bounds"""
