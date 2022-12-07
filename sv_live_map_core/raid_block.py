@@ -19,8 +19,11 @@ from .sv_enums import (
     ShinyGeneration,
     Nature,
     Game,
+    Ability,
+    Gender,
 )
 from .raid_enemy_table_array import RaidEnemyTableArray, RaidEnemyTable, RaidEnemyInfo
+from .personal_data_handler import PersonalDataHandler
 
 RAID_COUNT = 72
 TOXTRICITY_AMPED_NATURES = (
@@ -152,10 +155,8 @@ class TeraRaid:
         self.is_shiny: bool = None
         self.ivs: tuple[int, 6] = None
 
-        # TODO: check gender ratios and ability ids from personal info
-        # to get better values for these (enum)
-        self.ability: int = None
-        self.gender: int = None
+        self.ability: Ability = None
+        self.gender: Gender = None
 
         self.nature: Nature = None
         self.height: int = None
@@ -230,32 +231,43 @@ class TeraRaid:
                     self.raid_enemy_info.boss_poke_para.talent_value.spe
                 )
 
-    def rand_ability(self, rng: Xoroshiro128Plus) -> int:
+    def rand_ability(self, rng: Xoroshiro128Plus) -> Ability:
         """Generate ability"""
-        match self.raid_enemy_info.boss_poke_para.tokusei:
+        raid_fixed_ability = self.raid_enemy_info.boss_poke_para.tokusei
+        match raid_fixed_ability:
             case AbilityGeneration.RANDOM_12 | None:
-                return rng.rand(2) + 1
+                return PersonalDataHandler.get_ability(self.species, self.form, rng.rand(2))
             case AbilityGeneration.RANDOM_12HA:
-                return rng.rand(3) + 1
-            case AbilityGeneration.ABILITY_1:
-                return 1
-            case AbilityGeneration.ABILITY_2:
-                return 2
-            case AbilityGeneration.ABILITY_HA:
-                return 3
-
-    def rand_gender(self, rng: Xoroshiro128Plus) -> int:
-        """Generate gender"""
-        # TODO: gender ratio and gender enum
-        match self.raid_enemy_info.boss_poke_para.sex:
-            case None | GenderGeneration.NONE:
-                return rng.rand(100)
+                return PersonalDataHandler.get_ability(self.species, self.form, rng.rand(3))
             case _:
-                return self.raid_enemy_info.boss_poke_para.sex.value
+                return PersonalDataHandler.get_ability(
+                    self.species,
+                    self.form,
+                    raid_fixed_ability.to_ability_index()
+                )
+
+    def rand_gender(self, rng: Xoroshiro128Plus) -> Gender:
+        """Generate gender"""
+        raid_fixed_gender = self.raid_enemy_info.boss_poke_para.sex
+        match raid_fixed_gender:
+            case None | GenderGeneration.RANDOM_GENDER:
+                species_fixed_gender = PersonalDataHandler.fixed_gender(self.species, self.form)
+                match species_fixed_gender:
+                    case GenderGeneration.RANDOM_GENDER:
+                        return PersonalDataHandler.get_gender(
+                            self.species,
+                            self.form,
+                            rng.rand(100)
+                        )
+                    case _:
+                        return Gender.from_generation(species_fixed_gender)
+            case _:
+                return Gender.from_generation(raid_fixed_gender)
 
     def rand_nature(self, rng: Xoroshiro128Plus) -> Nature:
         """Generate nature"""
-        match self.raid_enemy_info.boss_poke_para.seikaku:
+        raid_fixed_nature = self.raid_enemy_info.boss_poke_para.seikaku
+        match raid_fixed_nature:
             case None | NatureGeneration.NONE:
                 if self.species == Species.TOXTRICITY:
                     match self.form:
@@ -265,7 +277,7 @@ class TeraRaid:
                             return TOXTRICITY_LOWKEY_NATURES[rng.rand(12)]
                 return Nature(rng.rand(25))
             case _:
-                return Nature.from_generation(self.raid_enemy_info.boss_poke_para.seikaku)
+                return Nature.from_generation(raid_fixed_nature)
 
     def rand_size(self, rng: Xoroshiro128Plus) -> int:
         """Generate size scalar"""
@@ -381,8 +393,9 @@ class TeraRaid:
         return f"{self.species.name.capitalize()}{form_str}\n" \
                f"{shiny_str}{event_str}{star_str}\n" \
                f"IVs: {'/'.join(map(str, self.ivs))}\n" \
-               f"Nature: {self.nature.name.title()} " \
-                   f"Ability: {self.ability} Gender: {self.gender}\n" \
+               f"Nature: {self.nature.name.title()}\n" \
+               f"Ability: {self.ability.name.replace('_', ' ').title()} " \
+                   f"Gender: {self.gender.name.title()}\n" \
                f"Tera Type: {self.tera_type.name.title()}\n" \
                f"Location: {self.id_str}\n" \
                f"Seed: {self.seed:08X} EC: {self.encryption_constant:08X}\n" \

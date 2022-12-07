@@ -61,6 +61,17 @@ class Game(IntEnum):
         """Convert game id to Game enum"""
         return Game(value - 49)
 
+class Gender(IntEnum):
+    """Enum for genders"""
+    MALE = 0
+    FEMALE = 1
+    GENDERLESS = 2
+
+    @staticmethod
+    def from_generation(value: GenderGeneration) -> Self:
+        """Convert from GenderGeneration"""
+        return Gender(value - 1)
+
 class Ability(IntEnum):
     """Enum for pokemon abilities"""
     NONE = 0
@@ -2283,7 +2294,7 @@ class Species(IntEnum):
 
 class GenderGeneration(IntEnum):
     """Enum for pokemon gender generation"""
-    NONE = 0
+    RANDOM_GENDER = 0
     MALE = 1
     FEMALE = 2
     GENDERLESS = 3
@@ -4618,6 +4629,10 @@ class AbilityGeneration(IntEnum):
     ABILITY_1 = 2
     ABILITY_2 = 3
     ABILITY_HA = 4
+
+    def to_ability_index(self) -> int:
+        """Convert to ability index"""
+        return self.value - AbilityGeneration.ABILITY_1
 
 class Ball(IntEnum):
     """Enum for pokemon balls"""

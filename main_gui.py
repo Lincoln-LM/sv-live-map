@@ -21,6 +21,7 @@ from sv_live_map_core.sv_enums import StarLevel
 from sv_live_map_core.raid_enemy_table_array import RaidEnemyTableArray
 from sv_live_map_core.raid_block import RaidBlock, TeraRaid
 from sv_live_map_core.corrected_marker import CorrectedMarker
+from sv_live_map_core.personal_data_handler import PersonalDataHandler
 
 customtkinter.set_default_color_theme("blue")
 customtkinter.set_appearance_mode("dark")
@@ -67,6 +68,9 @@ class Application(customtkinter.CTk):
 
         with open("./resources/den_locations.json", "r", encoding = "utf-8") as location_file:
             self.den_locations: dict[str, list[int, int, int]] = json.load(location_file)
+
+        # ensure personal data is loaded
+        PersonalDataHandler()
 
     def draw_info_frame(self):
         """Draw the rightmost frame"""
