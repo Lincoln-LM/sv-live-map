@@ -6,7 +6,7 @@ from PIL import Image, ImageTk
 from sv_live_map_core.raid_block import TeraRaid
 from sv_live_map_core.poke_sprite_handler import PokeSpriteHandler
 from sv_live_map_core.image_widget import ImageWidget
-from sv_live_map_core.sv_enums import TeraType
+from sv_live_map_core.sv_enums import TeraType, Gender
 
 # type union not yet supported by pylint
 # pylint: disable=unsupported-binary-operation
@@ -110,32 +110,18 @@ class RaidInfoWidget(customtkinter.CTkFrame):
 
     def draw_info_sprites(self, raid_data: TeraRaid):
         """Draw info sprites"""
-        if raid_data.is_event:
-            self.event_sprite_display = ImageWidget(
-                master = self,
-                image = self.event_sprite,
-                fg_color = self.fg_color
-            )
-        else:
-            self.event_sprite_display = ImageWidget(
-                master = self,
-                image = self.empty_sprite,
-                fg_color = self.fg_color
-            )
+        self.event_sprite_display = ImageWidget(
+            master = self,
+            image = self.event_sprite if raid_data.is_event else self.empty_sprite,
+            fg_color = self.fg_color
+        )
         self.event_sprite_display.pack(side = "left", fill = "y", pady = (20, 0))
 
-        if raid_data.is_shiny:
-            self.shiny_sprite_display = ImageWidget(
-                master = self,
-                image = self.shiny_sprite,
-                fg_color = self.fg_color
-            )
-        else:
-            self.shiny_sprite_display = ImageWidget(
-                master = self,
-                image = self.empty_sprite,
-                fg_color = self.fg_color
-            )
+        self.shiny_sprite_display = ImageWidget(
+            master = self,
+            image = self.shiny_sprite if raid_data.is_shiny else self.empty_sprite,
+            fg_color = self.fg_color
+        )
         self.shiny_sprite_display.pack(side = "left", fill = "y", pady = (20, 0))
 
     def draw_main_sprites(self):
@@ -156,14 +142,23 @@ class RaidInfoWidget(customtkinter.CTkFrame):
                 command = self.focus_command,
                 fg_color = self.fg_color
             )
-        self.tera_sprite_display.pack(side = "left", fill = "y", padx = (40, 0), pady = (20, 0))
+        self.tera_sprite_display.pack(
+            side = "left",
+            fill = "y",
+            padx = (40, 0),
+            pady = (40, 0) if self.is_popup else (20, 0)
+        )
 
         self.sprite_display = ImageWidget(
             master = self,
             image = self.poke_sprite,
             fg_color = self.fg_color
         )
-        self.sprite_display.pack(side = "left", fill = "y", pady = (10, 0))
+        self.sprite_display.pack(
+            side = "left",
+            fill = "y",
+            pady = (35, 0) if self.is_popup else (45, 0)
+        )
 
     def cache_sprites(self):
         """Grab and cache sprites if not present"""
@@ -192,6 +187,5 @@ class RaidInfoWidget(customtkinter.CTkFrame):
         return self.poke_sprite_handler.grab_sprite(
             self.raid_data.species,
             self.raid_data.form,
-            # TODO: gender
-            False
+            self.raid_data.gender == Gender.FEMALE
         )

@@ -389,13 +389,12 @@ class TeraRaid:
         shiny_str = "Shiny " if self.is_shiny else ""
         event_str = "Event " if self.is_event else ""
         star_str = "★" * (self.difficulty + 1)
-        # TODO: ability and gender enums from personalinfo
         return f"{self.species.name.capitalize()}{form_str}\n" \
                f"{shiny_str}{event_str}{star_str}\n" \
                f"IVs: {'/'.join(map(str, self.ivs))}\n" \
                f"Nature: {self.nature.name.title()}\n" \
-               f"Ability: {self.ability.name.replace('_', ' ').title()} " \
-                   f"Gender: {self.gender.name.title()}\n" \
+               f"Ability: {self.ability.name.replace('_', ' ').title()}\n" \
+               f"Gender: {self.gender.name.title()}\n" \
                f"Tera Type: {self.tera_type.name.title()}\n" \
                f"Location: {self.id_str}\n" \
                f"Seed: {self.seed:08X} EC: {self.encryption_constant:08X}\n" \

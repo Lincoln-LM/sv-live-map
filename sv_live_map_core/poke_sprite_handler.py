@@ -20,8 +20,8 @@ class PokeSpriteHandler:
         for file in os.listdir("./cached_sprites/"):
             title = file.split(".")[0]
             split = title.split("-")
-            species = Species(int(split[0]))
-            form = None if "-" not in title else int(split[-1])
+            species = Species(int(split[0].replace("f", "")))
+            form = None if "-" not in title else int(split[-1].replace("f", ""))
             female = title.endswith("f")
             img = Image.open(f"./cached_sprites/{file}")
             # convert to tk image for gui
@@ -46,7 +46,11 @@ class PokeSpriteHandler:
     def request_sprite(self, title: str):
         """Request a sprite from PKHex's github"""
         sprite_location = self.SPRITE_LINK.replace("{title}", title)
-        req = requests.get(sprite_location, stream = True, timeout = 5.0)
+        req = requests.get(sprite_location, stream = True, timeout = 1.0)
+        # female-specific image does not exist, try normal
+        if req.status_code == 404 and title.endswith("f"):
+            sprite_location = sprite_location.replace("f.png", ".png")
+            req = requests.get(sprite_location, stream = True, timeout = 1.0)
         img = Image.open(req.raw)
         img.save(f"./cached_sprites/{title}.png")
         # convert to tk image for gui
