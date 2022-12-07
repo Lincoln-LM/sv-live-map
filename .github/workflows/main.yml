@@ -12,13 +12,13 @@ jobs:
     - uses: actions/checkout@v3
 
     - name: Package Application
-      uses: Lincoln-LM/pyinstaller-action-windows@main
+      uses: Lincoln-LM/pyinstaller-action-linux@main
       with:
         path: ./
 
-    - run: cp -R ./resources ./dist/windows/resources/
+    - run: cp -R ./resources ./dist/linux/resources/
 
     - uses: actions/upload-artifact@v3
       with:
-        name: windows-build
+        name: linux-build
         path: dist
