@@ -11,14 +11,28 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
-    - name: Package Application
+    - name: Package Application for Windows
       uses: Lincoln-LM/pyinstaller-action-windows@main
       with:
         path: ./
 
     - run: cp -R ./resources ./dist/windows/resources/
 
+    - name: Package Application for Linux
+      uses: Lincoln-LM/pyinstaller-action-linux@main
+      with:
+        path: ./
+
+    - run: cp -R ./resources ./dist/linux/resources/
+
     - uses: actions/upload-artifact@v3
       with:
         name: windows-build
-        path: dist
+        path: ./dist/windows
+        tkinter: true
+
+    - uses: actions/upload-artifact@v3
+      with:
+        name: linux-build
+        path: ./dist/linux
+        tkinter: true
