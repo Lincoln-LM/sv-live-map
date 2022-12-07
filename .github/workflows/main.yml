@@ -28,11 +28,11 @@ jobs:
     - uses: actions/upload-artifact@v3
       with:
         name: windows-build
-        path: dist
+        path: ./dist/windows
         tkinter: true
 
     - uses: actions/upload-artifact@v3
       with:
         name: linux-build
-        path: dist
+        path: ./dist/linux
         tkinter: true
