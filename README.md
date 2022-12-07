@@ -2,7 +2,7 @@
 [![GitHub License](https://img.shields.io/github/license/Lincoln-LM/sv-live-map?color=ff69b4)](https://github.com/Lincoln-LM/sv-live-map/blob/master/LICENSE)
 [![](https://img.shields.io/github/workflow/status/Lincoln-LM/sv-live-map/Package%20Application%20with%20PyInstaller?logo=github)](https://github.com/Lincoln-LM/sv-live-map/actions/workflows/main.yml)
 [![](https://img.shields.io/badge/Windows%20Executable-Direct%20Download-blue)](https://nightly.link/Lincoln-LM/sv-live-map/workflows/main/master/windows-build.zip)
-[![](https://img.shields.io/badge/Linux%20Executable-Direct%20Download-blue)](https://nightly.link/Lincoln-LM/sv-live-map/workflows/main/master/linux-build.zip)
+[![](https://img.shields.io/badge/Linux%20Executable-Direct%20Download-7c6dbf)](https://nightly.link/Lincoln-LM/sv-live-map/workflows/main/master/linux-build.zip)
 [![](https://img.shields.io/badge/Python%20Scripts-Direct%20Download-orange)](https://github.com/Lincoln-LM/sv-live-map/archive/refs/heads/master.zip)
 
 WIP GUI Map displaying information on Tera Raid Dens in Pokémon Scarlet and Violet
