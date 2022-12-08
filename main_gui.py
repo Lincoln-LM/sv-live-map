@@ -22,6 +22,7 @@ from sv_live_map_core.raid_enemy_table_array import RaidEnemyTableArray
 from sv_live_map_core.raid_block import RaidBlock, TeraRaid
 from sv_live_map_core.corrected_marker import CorrectedMarker
 from sv_live_map_core.personal_data_handler import PersonalDataHandler
+from sv_live_map_core.automation_window import AutomationWindow
 
 customtkinter.set_default_color_theme("blue")
 customtkinter.set_appearance_mode("dark")
@@ -42,6 +43,7 @@ class Application(customtkinter.CTk):
 
         # initialize for later
         self.reader: RaidReader = None
+        self.automation_window: AutomationWindow = None
         self.sprite_handler: PokeSpriteHandler = PokeSpriteHandler(tk_image = True)
         self.settings: dict[str, Any] = {}
 
@@ -168,6 +170,20 @@ class Application(customtkinter.CTk):
         self.raid_progress.grid(row = 5, column = 0, columnspan = 2, padx = 10, pady = 5)
         self.raid_progress.set(0)
 
+        self.automation_button = customtkinter.CTkButton(
+            master = self.settings_frame,
+            text = "Automation",
+            width = 300,
+            command=self.open_automation_window
+        )
+        self.automation_button.grid(row = 6, column = 0, columnspan = 2, padx = 10, pady = 5)
+
+    def open_automation_window(self):
+        """Open Automation Window"""
+        if self.automation_window is None:
+            self.automation_window = AutomationWindow(settings = self.settings)
+        self.automation_window.focus_force()
+
     def handle_close_events(self):
         """Handle close events"""
         self.protocol("WM_DELETE_WINDOW", self.on_closing)
@@ -253,31 +269,36 @@ class Application(customtkinter.CTk):
         elif self.connect():
             self.connect_button.configure(text = "Disconnect")
 
-    def read_all_raids(self):
+    def read_all_raids(self, render: bool = True):
         """Read and display all raid information"""
+        if self.reader:
+            # struct.error/binascii.Error when connection terminates before all bytes are read
+            try:
+                raid_block_data = self.reader.read_raid_block_data()
+            except (TimeoutError, struct.error, binascii.Error) as error:
+                if 'position' in self.background_workers \
+                      and self.background_workers['position']['active']:
+                    self.toggle_position_work()
+                self.connection_timeout(error)
+        else:
+            self.error_message_window("Invalid", "Not connected to switch.")
+        if render:
+            self.render_raids(raid_block_data)
+
+    def render_raids(self, raid_block_data):
+        """Display raid information"""
         for info_widget in self.raid_info_widgets:
             info_widget.grid_forget()
         for marker in self.raid_markers.values():
             marker.delete()
         self.raid_info_widgets.clear()
         self.raid_markers.clear()
-        if self.reader:
-            # struct.error/binascii.Error when connection terminates before all bytes are read
-            try:
-                raid_block_data = self.reader.read_raid_block_data()
-                work = partial(self.read_all_raids_work, raid_block_data)
-                work_thread = threading.Thread(target = work)
-                work_thread.start()
-            except (TimeoutError, struct.error, binascii.Error) as error:
-                if 'position' in self.background_workers \
-                  and self.background_workers['position']['active']:
-                    self.toggle_position_work()
-                self.connection_timeout(error)
-        else:
-            self.error_message_window("Invalid", "Not connected to switch.")
+        work = partial(self.render_raids_work, raid_block_data)
+        work_thread = threading.Thread(target = work)
+        work_thread.start()
 
-    def read_all_raids_work(self, raid_block_data: RaidBlock):
-        """Threading work for read all raids"""
+    def render_raids_work(self, raid_block_data: RaidBlock):
+        """Threading work to render raids"""
         self.connect_button.configure(require_redraw = True, state = "disabled")
         self.position_button.configure(require_redraw = True, state = "disabled")
         self.read_raids_button.configure(require_redraw = True, state = "disabled")
