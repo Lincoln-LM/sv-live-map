@@ -320,8 +320,8 @@ class Application(customtkinter.CTk):
         # popup display of marker info for on_click events
         def popup_display_builder(raid: TeraRaid, _ = None):
             self.widget_message_window(
-                f"Shiny {raid.species.name.title()} ★"
-                  if raid.is_shiny else raid.species.name.title(),
+                f"Shiny {raid.species.name.replace('_', ' ').title()} ★"
+                  if raid.is_shiny else raid.species.name.replace('_', ' ').title(),
                 RaidInfoWidget,
                 poke_sprite_handler = self.sprite_handler,
                 raid_data = raid,
@@ -483,7 +483,7 @@ class Application(customtkinter.CTk):
         title: str,
         widget_type: Type[customtkinter.CTkBaseClass],
         **kwargs
-    ):
+    ) -> tuple[customtkinter.CTkToplevel, Type[customtkinter.CTkBaseClass]]:
         """Open new window with widget"""
         window = customtkinter.CTkToplevel(self)
         window.title(title)
@@ -496,6 +496,7 @@ class Application(customtkinter.CTk):
 
         # TODO: this or focus()?
         window.focus_force()
+        return window, widget
 
     def on_closing(self, _ = None):
         """Handle closing of the application"""

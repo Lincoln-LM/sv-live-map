@@ -389,7 +389,7 @@ class TeraRaid:
         shiny_str = "Shiny " if self.is_shiny else ""
         event_str = "Event " if self.is_event else ""
         star_str = "★" * (self.difficulty + 1)
-        return f"{self.species.name.capitalize()}{form_str}\n" \
+        return f"{self.species.name.replace('_', ' ').title()}{form_str}\n" \
                f"{shiny_str}{event_str}{star_str}\n" \
                f"IVs: {'/'.join(map(str, self.ivs))}\n" \
                f"Nature: {self.nature.name.title()}\n" \

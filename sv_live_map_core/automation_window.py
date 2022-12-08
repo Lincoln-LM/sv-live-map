@@ -2,13 +2,20 @@
 
 from __future__ import annotations
 import sys
+import os
+import io
+import time
 from threading import Thread
-from functools import partial
 from typing import TYPE_CHECKING
+from PIL import ImageGrab, ImageTk
 import customtkinter
+import discord_webhook
 from .raid_info_widget import RaidInfoWidget
+from .sv_enums import Species
 
 if TYPE_CHECKING:
+    from typing import Type
+    from PIL import Image
     from .application import Application
     from .raid_block import TeraRaid
 
@@ -121,26 +128,88 @@ class AutomationWindow(customtkinter.CTkToplevel):
                     self.master.reader.pause(0.2)
 
                 # popup display of marker info for alers
-                def popup_display_builder(raid: TeraRaid, _ = None):
-                    self.master.widget_message_window(
-                        f"Shiny {raid.species.name.title()} ★"
-                        if raid.is_shiny else raid.species.name.title(),
+                def popup_display_builder(
+                    raid: TeraRaid,
+                    _ = None
+                ) -> tuple[customtkinter.CTkToplevel, Type[customtkinter.CTkBaseClass]]:
+                    return self.master.widget_message_window(
+                        f"Shiny {raid.species.name.replace('_', ' ').title()} ★"
+                        if raid.is_shiny else raid.replace('_', ' ').title(),
                         RaidInfoWidget,
                         poke_sprite_handler = self.master.sprite_handler,
                         raid_data = raid,
                         fg_color = customtkinter.ThemeManager.theme["color"]["frame_low"],
                     )
 
-                # webhook display of marker info for both shiny alerts and on_click events
+                # webhook display of info
                 def webhook_display_builder(raid: TeraRaid, _ = None):
-                    # TODO: webhook
-                    pass
+                    if self.embed_select.get():
+                        webhook = discord_webhook.webhook.DiscordWebhook(
+                            url = self.webhook_entry.get(),
+                            content = f"<@{self.ping_entry.get()}>"
+                        )
+                        embed = discord_webhook.webhook.DiscordEmbed(
+                            title = f"Shiny {raid.species.name.replace('_', ' ').title()} ★"
+                                if raid.is_shiny else raid.species.name.replace('_', ' ').title(),
+                            color = 0xF8C8DC
+                        )
+                        embed.set_image("attachment://poke.png")
+                        embed.set_author(
+                            f"{raid.tera_type.name.title()} Tera Type",
+                            icon_url = "attachment://tera.png"
+                        )
+                        dummy_widget = RaidInfoWidget(
+                            poke_sprite_handler = self.master.sprite_handler,
+                            raid_data = raid
+                        )
+
+                        poke_sprite_img: Image = ImageTk.getimage(dummy_widget.poke_sprite)
+                        with io.BytesIO() as poke_sprite_bytes:
+                            poke_sprite_img.save(poke_sprite_bytes, format = "PNG")
+                            webhook.add_file(
+                                poke_sprite_bytes.getvalue(),
+                                "poke.png"
+                            )
+
+                        tera_sprite_img: Image = ImageTk.getimage(dummy_widget.tera_sprite)
+                        with io.BytesIO() as tera_sprite_bytes:
+                            tera_sprite_img.save(tera_sprite_bytes, format = "PNG")
+                            webhook.add_file(
+                                tera_sprite_bytes.getvalue(),
+                                "tera.png"
+                            )
+                        embed.add_embed_field("Info", str(dummy_widget.info_display.text))
+
+                        webhook.add_embed(embed)
+                        webhook.execute()
+                    else:
+                        popup_window, _ = popup_display_builder(raid)
+                        x_pos, y_pos = popup_window.winfo_x() + 8, popup_window.winfo_y() + 5
+                        time.sleep(1)
+                        img = ImageGrab.grab(
+                            (
+                                x_pos,
+                                y_pos,
+                                x_pos + popup_window.winfo_width(),
+                                y_pos + popup_window.winfo_height() + 23
+                            )
+                        )
+                        time.sleep(1)
+                        popup_window.destroy()
+                        if not os.path.exists("./found_screenshots/"):
+                            os.mkdir("./found_screenshots/")
+                        img.save(f"./found_screenshots/{raid.seed}.png")
+                        with open(f"./found_screenshots/{raid.seed}.png", "rb") as img:
+                            webhook = discord_webhook.webhook.DiscordWebhook(
+                                url = self.webhook_entry.get(),
+                                content = f"<@{self.ping_entry.get()}>"
+                            )
+                            webhook.add_file(img.read(), "img.png")
+                            webhook.execute()
 
                 for raid in raid_block.raids:
                     if not raid.is_enabled:
                         continue
-                    popup_display = partial(popup_display_builder, raid)
-                    webhook_display = partial(webhook_display_builder, raid)
 
                     # TODO: filters
                     matches_filters = raid.is_shiny
@@ -148,9 +217,9 @@ class AutomationWindow(customtkinter.CTkToplevel):
 
                     if matches_filters:
                         if self.popup_check.get():
-                            popup_display()
+                            popup_display_builder(raid)
                         if self.webhook_check.get():
-                            webhook_display()
+                            webhook_display_builder(raid)
         self.target_found = True
         sys.exit()
 
@@ -195,7 +264,8 @@ class AutomationWindow(customtkinter.CTkToplevel):
             'Popup': self.popup_check.get(),
             'Webhook': self.webhook_check.get(),
             'Embed': self.embed_select.get(),
-            'WebhookUrl': self.webhook_entry.get()
+            'WebhookUrl': self.webhook_entry.get(),
+            'PingId': self.ping_entry.get()
         }
 
         # TODO: make this less hacky
@@ -210,15 +280,18 @@ class AutomationWindow(customtkinter.CTkToplevel):
         self.embed_select.configure(require_redraw = True, state = new_state)
         self.webhook_entry_label.configure(require_redraw = True, state = new_state)
         self.webhook_entry.configure(require_redraw = True, state = new_state)
+        self.ping_entry_label.configure(require_redraw = True, state = new_state)
+        self.ping_entry.configure(require_redraw = True, state = new_state)
 
     def parse_settings(self):
         """Load settings"""
         automation_settings: dict = self.settings.setdefault('Automation', {})
-        self.map_render_check.check_state = automation_settings.get('MapRender', False)
-        self.popup_check.check_state = automation_settings.get('Popup', False)
-        self.webhook_check.check_state = automation_settings.get('Webhook', False)
-        self.embed_select.check_state = automation_settings.get('Embed', False)
+        self.map_render_check.check_state = bool(automation_settings.get('MapRender', False))
+        self.popup_check.check_state = bool(automation_settings.get('Popup', False))
+        self.webhook_check.check_state = bool(automation_settings.get('Webhook', False))
+        self.embed_select.check_state = bool(automation_settings.get('Embed', False))
         self.webhook_entry.insert(0, automation_settings.get('WebhookUrl', ''))
+        self.ping_entry.insert(0, automation_settings.get('PingId', ''))
         self.toggle_webhook_settings()
 
         # redraw all settings widgets
@@ -227,6 +300,7 @@ class AutomationWindow(customtkinter.CTkToplevel):
         self.webhook_check.draw()
         self.embed_select.draw()
         self.webhook_entry.draw()
+        self.ping_entry.draw()
 
     def draw_settings_frame(self):
         """Draw frame with settings information"""
@@ -280,6 +354,18 @@ class AutomationWindow(customtkinter.CTkToplevel):
             width = 150
         )
         self.webhook_entry.grid(row = 4, column = 1, padx = 10, pady = 10)
+
+        self.ping_entry_label = customtkinter.CTkLabel(
+            master = self.settings_frame,
+            text = "ID to Ping:"
+        )
+        self.ping_entry_label.grid(row = 5, column = 0, padx = 10, pady = 10)
+
+        self.ping_entry = customtkinter.CTkEntry(
+            master = self.settings_frame,
+            width = 150
+        )
+        self.ping_entry.grid(row = 5, column = 1, padx = 10, pady = 10)
 
     def draw_filter_frame(self):
         """Draw frame with filter information"""

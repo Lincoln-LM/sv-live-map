@@ -162,4 +162,5 @@ cython_debug/
 misc_hidden/
 cached_tables/
 cached_sprites/
+found_screenshots/
 settings.json
