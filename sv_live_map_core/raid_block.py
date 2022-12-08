@@ -59,7 +59,7 @@ TOXTRICITY_LOWKEY_NATURES = (
 def is_shiny(shiny_generation: ShinyGeneration, pid: int, sidtid: int) -> bool:
     """Check if a given pid is shiny"""
     match shiny_generation:
-        case ShinyGeneration.RANDOM_SHININESS:
+        case ShinyGeneration.RANDOM_SHININESS | None:
             temp = pid ^ sidtid
             return ((temp & 0xFFFF) ^ (temp >> 16)) < 0x10
         case ShinyGeneration.FORCED_SHINY:

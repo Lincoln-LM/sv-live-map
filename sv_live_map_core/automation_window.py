@@ -1,7 +1,16 @@
 """Automation window"""
 
+from __future__ import annotations
+import sys
+from threading import Thread
+from functools import partial
+from typing import TYPE_CHECKING
 import customtkinter
-from .application import Application
+from .raid_info_widget import RaidInfoWidget
+
+if TYPE_CHECKING:
+    from .application import Application
+    from .raid_block import TeraRaid
 
 class AutomationWindow(customtkinter.CTkToplevel):
     """Automation window"""
@@ -17,6 +26,10 @@ class AutomationWindow(customtkinter.CTkToplevel):
         super().__init__(*args, master = master, fg_color=fg_color, **kwargs)
         self.master: Application
 
+        self.target_found = False
+        self.automation_thread: Thread = None
+        self.update_check = None
+
         self.title("Automation Customization")
         self.handle_close_events()
 
@@ -25,6 +38,130 @@ class AutomationWindow(customtkinter.CTkToplevel):
         self.draw_start_button_frame()
         self.parse_settings()
 
+    def start_automation(self):
+        """Start automation"""
+        self.target_found = False
+        self.start_button.configure(require_redraw = True, text = "Stop Automation")
+        self.start_button.configure(command = self.stop_automation)
+        self.automation_thread = Thread(target = self.automation_work)
+        self.automation_thread.start()
+        self.update_check = self.after(1000, self.check_on_automation)
+
+    def stop_automation(self):
+        """Stop automation"""
+        if self.automation_thread:
+            self.target_found = True
+            self.automation_thread = None
+            self.after_cancel(self.update_check)
+            self.update_check = None
+            self.start_button.configure(require_redraw = True, text = "Start Automation")
+            self.start_button.configure(command = self.start_automation)
+            if self.master.reader:
+                self.master.reader.detach()
+
+    def automation_work(self):
+        """Work for automation"""
+        total_raid_count = 0
+        total_reset_count = 0
+        last_seed = None
+        while not self.target_found:
+            if self.master.reader:
+                # TODO: extract methods + clean + check for target_found between commands
+                self.master.reader.click("HOME")
+                self.master.reader.click("HOME")
+                self.master.reader.click("HOME")
+                self.master.reader.pause(1)
+                self.master.reader.touch_hold(845, 545, 50)
+                self.master.reader.touch_hold(845, 545, 50)
+                self.master.reader.touch_hold(845, 545, 50)
+                self.master.reader.pause(1.5)
+                self.master.reader.press("DDOWN")
+                self.master.reader.press("DDOWN")
+                self.master.reader.press("DDOWN")
+                self.master.reader.pause(2.5)
+                self.master.reader.release("DDOWN")
+                self.master.reader.press("A")
+                self.master.reader.pause(0.1)
+                self.master.reader.release("A")
+                self.master.reader.press("DDOWN")
+                self.master.reader.pause(0.825)
+                self.master.reader.release("DDOWN")
+                self.master.reader.press("A")
+                self.master.reader.pause(0.1)
+                self.master.reader.release("A")
+                self.master.reader.pause(0.4)
+                self.master.reader.touch_hold(1006, 386, 50)
+                self.master.reader.pause(0.2)
+                self.master.reader.touch_hold(151, 470, 50)
+                self.master.reader.pause(0.2)
+                self.master.reader.touch_hold(1102, 470, 50)
+                self.master.reader.pause(0.2)
+                self.master.reader.press("HOME")
+                self.master.reader.pause(0.1)
+                self.master.reader.release("HOME")
+                self.master.reader.pause(0.8)
+                self.master.reader.press("HOME")
+                self.master.reader.pause(0.1)
+                self.master.reader.release("HOME")
+                self.master.reader.pause(5)
+                raid_block = self.master.read_all_raids(self.map_render_check.get())
+                if raid_block.current_seed != last_seed:
+                    last_seed = raid_block.current_seed
+                    total_reset_count += 1
+                    total_raid_count += 69
+                else:
+                    print("WARNING raid seed is a duplicate of the previous day")
+                print(
+                    f"RAIDS PROCESSED {total_reset_count=} "
+                    f"{total_raid_count=} "
+                    f"{raid_block.current_seed=:X}"
+                )
+                # wait until rendering is done
+                while self.master.render_thread is not None:
+                    self.master.reader.pause(0.2)
+
+                # popup display of marker info for alers
+                def popup_display_builder(raid: TeraRaid, _ = None):
+                    self.master.widget_message_window(
+                        f"Shiny {raid.species.name.title()} ★"
+                        if raid.is_shiny else raid.species.name.title(),
+                        RaidInfoWidget,
+                        poke_sprite_handler = self.master.sprite_handler,
+                        raid_data = raid,
+                        fg_color = customtkinter.ThemeManager.theme["color"]["frame_low"],
+                    )
+
+                # webhook display of marker info for both shiny alerts and on_click events
+                def webhook_display_builder(raid: TeraRaid, _ = None):
+                    # TODO: webhook
+                    pass
+
+                for raid in raid_block.raids:
+                    if not raid.is_enabled:
+                        continue
+                    popup_display = partial(popup_display_builder, raid)
+                    webhook_display = partial(webhook_display_builder, raid)
+
+                    # TODO: filters
+                    matches_filters = raid.is_shiny
+                    self.target_found |= matches_filters
+
+                    if matches_filters:
+                        if self.popup_check.get():
+                            popup_display()
+                        if self.webhook_check.get():
+                            webhook_display()
+        self.target_found = True
+        sys.exit()
+
+    def check_on_automation(self):
+        """Check on the progress of automation"""
+        if not self.target_found:
+            self.after(1000, self.check_on_automation)
+        else:
+            print("TARGET FOUND")
+            self.stop_automation()
+
     def draw_start_button_frame(self):
         """Draw start button frame"""
         self.start_button_frame = customtkinter.CTkFrame(master = self, width = 800)
@@ -32,7 +169,8 @@ class AutomationWindow(customtkinter.CTkToplevel):
         self.start_button = customtkinter.CTkButton(
             master = self.start_button_frame,
             text = "Start Automation",
-            width = 800
+            width = 800,
+            command = self.start_automation
         )
         self.start_button.grid(
             row = 0,

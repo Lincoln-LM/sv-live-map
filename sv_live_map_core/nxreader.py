@@ -25,6 +25,10 @@ class NXReader:
     def _configure(self) -> None:
         self._send_command('configure echoCommands 0')
 
+    def detach(self) -> None:
+        """Detach controller from switch"""
+        self._send_command('detachController')
+
     def _recv(self, size: int) -> bytes:
         """Receive response from sys-botbase"""
         return binascii.unhexlify(self.socket.recv(2 * size + 1)[:-1])
@@ -32,11 +36,13 @@ class NXReader:
     def close(self) -> None:
         """Close connection to switch"""
         print("Exiting...")
+        self.detach()
         self.pause(0.5)
         self.socket.shutdown(socket.SHUT_RDWR)
         self.socket.close()
         print('Disconnected')
 
+    # TODO: button enum
     def click(self, button: str) -> None:
         """Press and release button"""
         self._send_command(f'click {button}')
@@ -48,6 +54,10 @@ class NXReader:
     def release(self, button: str) -> None:
         """Release held button"""
         self._send_command(f'release {button}')
+
+    def touch_hold(self, x_val: int, y_val: int, delay_ms: int) -> None:
+        """Hold the touch screen at (x, y) for delay ms"""
+        self._send_command(f"touchHold {x_val} {y_val} {delay_ms}")
 
     def move_stick(self, stick: str, x_val: int, y_val: int) -> None:
         """Move stick to position"""
@@ -112,7 +122,7 @@ class NXReader:
         jumps = pointer.replace('[', '').replace('main', '').split(']')
         command = f'pointerPeek 0x{size:X} 0x{" 0x".join(jump.replace("+", "") for jump in jumps)}'
         self._send_command(command)
-        sleep(size / 0x8000)
+        sleep(size / 0x4000)
         return self._recv(size)
 
     def read_pointer_int(self, pointer: str, size: int) -> int:
@@ -126,6 +136,6 @@ class NXReader:
         self._send_command(command)
 
     @staticmethod
-    def pause(duration):
+    def pause(duration: float):
         """Pause connection to switch"""
         sleep(duration)

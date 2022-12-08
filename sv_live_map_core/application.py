@@ -44,6 +44,7 @@ class Application(customtkinter.CTk):
         # initialize for later
         self.reader: RaidReader = None
         self.automation_window: AutomationWindow = None
+        self.render_thread: threading.Thread = None
         self.sprite_handler: PokeSpriteHandler = PokeSpriteHandler(tk_image = True)
         self.settings: dict[str, Any] = {}
 
@@ -143,7 +144,7 @@ class Application(customtkinter.CTk):
             master = self.settings_frame,
             text = "Connect!",
             width = 300,
-            command=self.toggle_connection
+            command = self.toggle_connection
         )
         self.connect_button.grid(row = 2, column = 0, columnspan = 2, padx = 10, pady = 5)
 
@@ -151,7 +152,7 @@ class Application(customtkinter.CTk):
             master = self.settings_frame,
             text = "Track Player",
             width = 300,
-            command=self.toggle_position_work
+            command = self.toggle_position_work
         )
         self.position_button.grid(row = 3, column = 0, columnspan = 2, padx = 10, pady = 5)
 
@@ -159,7 +160,7 @@ class Application(customtkinter.CTk):
             master = self.settings_frame,
             text = "Read All Raids",
             width = 300,
-            command=self.read_all_raids
+            command = self.read_all_raids
         )
         self.read_raids_button.grid(row = 4, column = 0, columnspan = 2, padx = 10, pady = 5)
 
@@ -174,7 +175,7 @@ class Application(customtkinter.CTk):
             master = self.settings_frame,
             text = "Automation",
             width = 300,
-            command=self.open_automation_window
+            command = self.open_automation_window
         )
         self.automation_button.grid(row = 6, column = 0, columnspan = 2, padx = 10, pady = 5)
 
@@ -269,12 +270,25 @@ class Application(customtkinter.CTk):
         elif self.connect():
             self.connect_button.configure(text = "Disconnect")
 
-    def read_all_raids(self, render: bool = True):
+    def read_all_raids(self, render: bool = True) -> RaidBlock:
         """Read and display all raid information"""
         if self.reader:
             # struct.error/binascii.Error when connection terminates before all bytes are read
             try:
-                raid_block_data = self.reader.read_raid_block_data()
+                # try reading up to 5 times before erroring
+                for i in range(5):
+                    try:
+                        raid_block_data = self.reader.read_raid_block_data()
+                        break
+                    except binascii.Error as error:
+                        self.reader.read_safety = True
+                        print(f"Failed to read {i}")
+                        if i == 4:
+                            raise error
+                self.reader.read_safety = False
+                if render:
+                    self.render_thread = self.render_raids(raid_block_data)
+                return raid_block_data
             except (TimeoutError, struct.error, binascii.Error) as error:
                 if 'position' in self.background_workers \
                       and self.background_workers['position']['active']:
@@ -282,10 +296,8 @@ class Application(customtkinter.CTk):
                 self.connection_timeout(error)
         else:
             self.error_message_window("Invalid", "Not connected to switch.")
-        if render:
-            self.render_raids(raid_block_data)
 
-    def render_raids(self, raid_block_data):
+    def render_raids(self, raid_block_data) -> threading.Thread:
         """Display raid information"""
         for info_widget in self.raid_info_widgets:
             info_widget.grid_forget()
@@ -296,6 +308,7 @@ class Application(customtkinter.CTk):
         work = partial(self.render_raids_work, raid_block_data)
         work_thread = threading.Thread(target = work)
         work_thread.start()
+        return work_thread
 
     def render_raids_work(self, raid_block_data: RaidBlock):
         """Threading work to render raids"""
@@ -304,7 +317,7 @@ class Application(customtkinter.CTk):
         self.read_raids_button.configure(require_redraw = True, state = "disabled")
         count = 0
 
-        # popup display of marker info for both shiny alerts and on_click events
+        # popup display of marker info for on_click events
         def popup_display_builder(raid: TeraRaid, _ = None):
             self.widget_message_window(
                 f"Shiny {raid.species.name.title()} ★"
@@ -367,9 +380,6 @@ class Application(customtkinter.CTk):
                     fg_color = customtkinter.ThemeManager.theme["color"]["frame_low"],
                 )
                 popup_display = partial(popup_display_builder, raid)
-
-                if raid.is_shiny:
-                    popup_display()
                 self.raid_info_widgets.append(info_widget)
                 count += 1
                 if raid.id_str in self.den_locations:
@@ -402,6 +412,7 @@ class Application(customtkinter.CTk):
         self.connect_button.configure(require_redraw = True, state = "normal")
         self.position_button.configure(require_redraw = True, state = "normal")
         self.read_raids_button.configure(require_redraw = True, state = "normal")
+        self.render_thread = None
         sys.exit()
 
     def toggle_position_work(self):
