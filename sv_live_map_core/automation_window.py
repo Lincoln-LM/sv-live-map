@@ -1,12 +1,21 @@
 """Automation window"""
 
 import customtkinter
+from .application import Application
 
 class AutomationWindow(customtkinter.CTkToplevel):
     """Automation window"""
-    def __init__(self, settings: dict, *args, fg_color="default_theme", **kwargs):
-        self.settings: dict = settings
-        super().__init__(*args, fg_color=fg_color, **kwargs)
+    def __init__(
+        self,
+        *args,
+        settings: dict = None,
+        master: Application = None,
+        fg_color="default_theme",
+        **kwargs
+    ):
+        self.settings: dict = settings or {}
+        super().__init__(*args, master = master, fg_color=fg_color, **kwargs)
+        self.master: Application
 
         self.title("Automation Customization")
         self.handle_close_events()
