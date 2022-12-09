@@ -1,15 +1,47 @@
 """Simplified class to read information from sys-botbase
    https://github.com/Lincoln-LM/PyNXReader"""
+
+import struct
 import socket
 import binascii
 from time import sleep
+import usb.core
+import usb.util
+
+class USBError(Exception):
+    """Error to be raised for usb connections"""
 
 class NXReader:
     """Simplified class to read information from sys-botbase"""
-    def __init__(self, ip_address: str, port: int = 6000) -> None:
-        self.socket: socket.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.socket.settimeout(1)
-        self.socket.connect((ip_address, port))
+    def __init__(
+        self,
+        ip_address: str = None,
+        port: int = 6000,
+        usb_connection: bool = False
+    ) -> None:
+        assert usb_connection or ip_address is not None
+        self.usb_connection = usb_connection
+        if self.usb_connection:
+            # nintendo switch vendor and product
+            self.global_dev = usb.core.find(idVendor = 0x057E, idProduct = 0x3000)
+            if self.global_dev is None:
+                raise USBError("Unable to find switch usb connection")
+            self.global_dev.set_configuration()
+            descriptor = self.global_dev.get_active_configuration()[(0,0)]
+            self.global_out = usb.util.find_descriptor(
+                descriptor,
+                custom_match =
+                  lambda e: usb.util.endpoint_direction(e.bEndpointAddress) == usb.util.ENDPOINT_OUT
+            )
+            self.global_in = usb.util.find_descriptor(
+                descriptor,
+                custom_match =
+                  lambda e: usb.util.endpoint_direction(e.bEndpointAddress) == usb.util.ENDPOINT_IN
+            )
+        else:
+            self.socket: socket.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.socket.settimeout(1)
+            self.socket.connect((ip_address, port))
         print('Connected')
         self.ls_lastx: int = 0
         self.ls_lasty: int = 0
@@ -19,22 +51,47 @@ class NXReader:
 
     def _send_command(self, content: str) -> None:
         """Send a command to sys-botbase on the switch"""
-        content += '\r\n' # important for the parser on the switch side
-        self.socket.sendall(content.encode())
+        if self.usb_connection:
+            self.global_out.write(struct.pack("<I", len(content) + 2))
+            self.global_out.write(content)
+        else:
+            content += '\r\n' # important for the parser on the switch side
+            self.socket.sendall(content.encode())
 
     def _configure(self) -> None:
         self._send_command('configure echoCommands 0')
 
     def _recv(self, size: int) -> bytes:
         """Receive response from sys-botbase"""
-        return binascii.unhexlify(self.socket.recv(2 * size + 1)[:-1])
+        if not self.usb_connection:
+            return binascii.unhexlify(self.socket.recv(2 * size + 1)[:-1])
+        size = int(struct.unpack("<L", self.global_in.read(4, timeout = 0).tobytes())[0])
+        data = [0 for _ in range(size)]
+        if size > 4080:
+            i = 0
+            while i < size:
+                chunk_size = 4080
+                if size - i < 4080:
+                    chunk_size = size - i
+                read_data = self.global_in.read(chunk_size, timeout = 0).tobytes()
+                for byte in read_data:
+                    data[i] = int(byte)
+                    i += 1
+        else:
+            read_data = self.global_in.read(size, timeout = 0).tobytes()
+            for i, byte in enumerate(read_data):
+                data[i] = byte
+        return bytes(data)
 
     def close(self) -> None:
         """Close connection to switch"""
         print("Exiting...")
         self.pause(0.5)
-        self.socket.shutdown(socket.SHUT_RDWR)
-        self.socket.close()
+        if self.usb_connection:
+            self.global_dev.reset()
+        else:
+            self.socket.shutdown(socket.SHUT_RDWR)
+            self.socket.close()
         print('Disconnected')
 
     def click(self, button: str) -> None:

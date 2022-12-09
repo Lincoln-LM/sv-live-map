@@ -22,10 +22,11 @@ class RaidReader(NXReader):
         self,
         ip_address: str = None,
         port: int = 6000,
+        usb_connection: bool = False,
         read_safety: bool = False,
         raid_enemy_table_arrays: tuple[RaidEnemyTableArray, 7] = None,
     ):
-        super().__init__(ip_address, port)
+        super().__init__(ip_address, port, usb_connection)
         self.read_safety = read_safety
         self.raid_enemy_table_arrays: tuple[RaidEnemyTableArray, 7] = \
             raid_enemy_table_arrays or self.read_raid_enemy_table_arrays()
@@ -142,21 +143,21 @@ class RaidReader(NXReader):
                 self.socket.recv(0x8000)
 
     def read(self, address, size):
-        if self.read_safety:
+        if self.read_safety and not self.usb_connection:
             self.clear_all_data()
         return super().read(address, size)
 
     def read_absolute(self, address, size):
-        if self.read_safety:
+        if self.read_safety and not self.usb_connection:
             self.clear_all_data()
         return super().read_absolute(address, size)
 
     def read_main(self, address, size):
-        if self.read_safety:
+        if self.read_safety and not self.usb_connection:
             self.clear_all_data()
         return super().read_main(address, size)
 
     def read_pointer(self, pointer, size):
-        if self.read_safety:
+        if self.read_safety and not self.usb_connection:
             self.clear_all_data()
         return super().read_pointer(pointer, size)
