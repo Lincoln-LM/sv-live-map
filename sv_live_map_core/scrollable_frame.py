@@ -1,4 +1,5 @@
 """Scrollable customtkinter Frame"""
+
 import customtkinter
 
 class ScrollableFrame(customtkinter.CTkFrame):

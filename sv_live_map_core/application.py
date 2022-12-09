@@ -132,11 +132,16 @@ class Application(customtkinter.CTk):
         self.ip_entry.grid(row = 0, column = 1, pady = 5)
         self.ip_entry.insert(0, self.settings.get("IP", self.DEFAULT_IP))
 
+        self.usb_check = customtkinter.CTkCheckBox(master = self.settings_frame, text = "USB")
+        self.usb_check.grid(row = 1, column = 0, columnspan = 2, pady = 5)
+        if self.settings.get("USB", False):
+            self.usb_check.select()
+
         self.use_cached_tables = customtkinter.CTkCheckBox(
             master = self.settings_frame,
             text = "Use Cached Tables"
         )
-        self.use_cached_tables.grid(row = 1, column = 0, columnspan = 2, padx = 10, pady = 5)
+        self.use_cached_tables.grid(row = 2, column = 0, columnspan = 2, padx = 10, pady = 5)
         if self.settings.get("UseCachedTables", False):
             self.use_cached_tables.select()
 
@@ -146,7 +151,7 @@ class Application(customtkinter.CTk):
             width = 300,
             command = self.toggle_connection
         )
-        self.connect_button.grid(row = 2, column = 0, columnspan = 2, padx = 10, pady = 5)
+        self.connect_button.grid(row = 3, column = 0, columnspan = 2, padx = 10, pady = 5)
 
         self.position_button = customtkinter.CTkButton(
             master = self.settings_frame,
@@ -154,7 +159,7 @@ class Application(customtkinter.CTk):
             width = 300,
             command = self.toggle_position_work
         )
-        self.position_button.grid(row = 3, column = 0, columnspan = 2, padx = 10, pady = 5)
+        self.position_button.grid(row = 4, column = 0, columnspan = 2, padx = 10, pady = 5)
 
         self.read_raids_button = customtkinter.CTkButton(
             master = self.settings_frame,
@@ -162,13 +167,13 @@ class Application(customtkinter.CTk):
             width = 300,
             command = self.read_all_raids
         )
-        self.read_raids_button.grid(row = 4, column = 0, columnspan = 2, padx = 10, pady = 5)
+        self.read_raids_button.grid(row = 5, column = 0, columnspan = 2, padx = 10, pady = 5)
 
         self.raid_progress = customtkinter.CTkProgressBar(
             master = self.settings_frame,
             width = 300
         )
-        self.raid_progress.grid(row = 5, column = 0, columnspan = 2, padx = 10, pady = 5)
+        self.raid_progress.grid(row = 6, column = 0, columnspan = 2, padx = 10, pady = 5)
         self.raid_progress.set(0)
 
         self.automation_button = customtkinter.CTkButton(
@@ -231,6 +236,7 @@ class Application(customtkinter.CTk):
                 self.reader = RaidReader(
                     self.ip_entry.get(),
                     read_safety = False,
+                    usb_connection = self.usb_check.get(),
                     raid_enemy_table_arrays = cached_tables
                 )
                 if len(self.reader.raid_enemy_table_arrays[0].raid_enemy_tables) == 0:
@@ -239,7 +245,11 @@ class Application(customtkinter.CTk):
                     )
 
             else:
-                self.reader = RaidReader(self.ip_entry.get(), read_safety = True)
+                self.reader = RaidReader(
+                    self.ip_entry.get(),
+                    usb_connection = self.usb_check.get(),
+                    read_safety = True
+                )
                 # disable after the tables are read
                 self.reader.read_safety = False
                 if len(self.reader.raid_enemy_table_arrays[0].raid_enemy_tables) == 0:
@@ -504,6 +514,7 @@ class Application(customtkinter.CTk):
         with open("settings.json", "w+", encoding = "utf-8") as settings_file:
             self.settings['IP'] = self.ip_entry.get()
             self.settings['UseCachedTables'] = self.use_cached_tables.get()
+            self.settings['USB'] = self.usb_check.get()
             json.dump(self.settings, settings_file)
 
         # close reader on termination
