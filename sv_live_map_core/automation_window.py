@@ -78,7 +78,7 @@ class AutomationWindow(customtkinter.CTkToplevel):
             if self.master.reader:
                 self.full_dateskip()
 
-                total_raid_count, total_reset_count, raid_block = \
+                total_raid_count, total_reset_count, last_seed, raid_block = \
                     self.read_raids(total_raid_count, total_reset_count, last_seed)
 
                 popup_display_builder, webhook_display_builder = self.define_builders()
@@ -95,7 +95,7 @@ class AutomationWindow(customtkinter.CTkToplevel):
         total_raid_count: int,
         total_reset_count: int,
         last_seed: int
-    ) -> tuple[int, int, TeraRaid]:
+    ) -> tuple[int, int, int, RaidBlock]:
         """Read and parse raids"""
         raid_block = self.master.read_all_raids(self.map_render_check.get())
         if raid_block.current_seed != last_seed:
@@ -112,7 +112,7 @@ class AutomationWindow(customtkinter.CTkToplevel):
         # wait until rendering is done
         while self.master.render_thread is not None:
             self.master.reader.pause(0.2)
-        return total_raid_count, total_reset_count, raid_block
+        return total_raid_count, total_reset_count, last_seed, raid_block
 
     def define_builders(self) -> tuple[Callable, Callable]:
         """Define popup and webhook display builders"""
