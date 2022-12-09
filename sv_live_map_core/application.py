@@ -320,8 +320,8 @@ class Application(customtkinter.CTk):
         # popup display of marker info for on_click events
         def popup_display_builder(raid: TeraRaid, _ = None):
             self.widget_message_window(
-                f"Shiny {raid.species.name.replace('_', ' ').title()} ★"
-                  if raid.is_shiny else raid.species.name.replace('_', ' ').title(),
+                f"Shiny {raid.species} ★"
+                  if raid.is_shiny else str(raid.species),
                 RaidInfoWidget,
                 poke_sprite_handler = self.sprite_handler,
                 raid_data = raid,

@@ -11,7 +11,10 @@ from PIL import ImageGrab, ImageTk
 import customtkinter
 import discord_webhook
 from .raid_info_widget import RaidInfoWidget
-from .sv_enums import Species
+from .raid_filter import RaidFilter
+from .iv_filter_widget import IVFilterWidget
+from .sv_enums import Nature, AbilityIndex, Gender, Species
+from .checked_combobox import CheckedCombobox
 
 if TYPE_CHECKING:
     from typing import Type
@@ -37,7 +40,7 @@ class AutomationWindow(customtkinter.CTkToplevel):
         self.automation_thread: Thread = None
         self.update_check = None
 
-        self.title("Automation Customization")
+        self.title("Automation Settings")
         self.handle_close_events()
 
         self.draw_filter_frame()
@@ -133,8 +136,8 @@ class AutomationWindow(customtkinter.CTkToplevel):
                     _ = None
                 ) -> tuple[customtkinter.CTkToplevel, Type[customtkinter.CTkBaseClass]]:
                     return self.master.widget_message_window(
-                        f"Shiny {raid.species.name.replace('_', ' ').title()} ★"
-                        if raid.is_shiny else raid.replace('_', ' ').title(),
+                        f"Shiny {raid.species} ★"
+                        if raid.is_shiny else raid.species,
                         RaidInfoWidget,
                         poke_sprite_handler = self.master.sprite_handler,
                         raid_data = raid,
@@ -149,13 +152,13 @@ class AutomationWindow(customtkinter.CTkToplevel):
                             content = f"<@{self.ping_entry.get()}>"
                         )
                         embed = discord_webhook.webhook.DiscordEmbed(
-                            title = f"Shiny {raid.species.name.replace('_', ' ').title()} ★"
-                                if raid.is_shiny else raid.species.name.replace('_', ' ').title(),
+                            title = f"Shiny {raid.species} ★"
+                                if raid.is_shiny else raid.species,
                             color = 0xF8C8DC
                         )
                         embed.set_image("attachment://poke.png")
                         embed.set_author(
-                            f"{raid.tera_type.name.title()} Tera Type",
+                            f"{raid.tera_type} Tera Type",
                             icon_url = "attachment://tera.png"
                         )
                         dummy_widget = RaidInfoWidget(
@@ -207,12 +210,25 @@ class AutomationWindow(customtkinter.CTkToplevel):
                             webhook.add_file(img.read(), "img.png")
                             webhook.execute()
 
+                raid_filter = RaidFilter(
+                    hp_filter = self.hp_filter.get(),
+                    atk_filter = self.atk_filter.get(),
+                    def_filter = self.def_filter.get(),
+                    spa_filter = self.spa_filter.get(),
+                    spd_filter = self.spd_filter.get(),
+                    spe_filter = self.spe_filter.get(),
+                    ability_filter = self.ability_filter.get(),
+                    gender_filter = self.gender_filter.get(),
+                    nature_filter = self.nature_filter.get(),
+                    species_filter = self.species_filter.get(),
+                    shiny_filter = self.shiny_filter.get()
+                )
+
                 for raid in raid_block.raids:
                     if not raid.is_enabled:
                         continue
 
-                    # TODO: filters
-                    matches_filters = raid.is_shiny
+                    matches_filters = raid_filter.compare(raid)
                     self.target_found |= matches_filters
 
                     if matches_filters:
@@ -233,12 +249,12 @@ class AutomationWindow(customtkinter.CTkToplevel):
 
     def draw_start_button_frame(self):
         """Draw start button frame"""
-        self.start_button_frame = customtkinter.CTkFrame(master = self, width = 800)
+        self.start_button_frame = customtkinter.CTkFrame(master = self, width = 850)
         self.start_button_frame.grid(row = 1, column = 0, columnspan = 4, sticky = "nwse")
         self.start_button = customtkinter.CTkButton(
             master = self.start_button_frame,
             text = "Start Automation",
-            width = 800,
+            width = 850,
             command = self.start_automation
         )
         self.start_button.grid(
@@ -371,4 +387,73 @@ class AutomationWindow(customtkinter.CTkToplevel):
         """Draw frame with filter information"""
         self.filter_frame = customtkinter.CTkFrame(master = self, width = 400)
         self.filter_frame.grid(row = 0, column = 0, columnspan = 2, sticky = "nsew")
-        self.grid_columnconfigure(0, minsize = 400)
+        self.grid_columnconfigure(0, minsize = 450)
+
+        self.hp_filter = IVFilterWidget(self.filter_frame, title = "HP")
+        self.hp_filter.grid(row = 0, column = 0, padx = 10, pady = (10, 0))
+
+        self.atk_filter = IVFilterWidget(self.filter_frame, title = "ATK")
+        self.atk_filter.grid(row = 1, column = 0, padx = 10)
+
+        self.def_filter = IVFilterWidget(self.filter_frame, title = "DEF")
+        self.def_filter.grid(row = 2, column = 0, padx = 10)
+
+        self.spa_filter = IVFilterWidget(self.filter_frame, title = "SPA")
+        self.spa_filter.grid(row = 3, column = 0, padx = 10)
+
+        self.spd_filter = IVFilterWidget(self.filter_frame, title = "SPD")
+        self.spd_filter.grid(row = 4, column = 0, padx = 10)
+
+        self.spe_filter = IVFilterWidget(self.filter_frame, title = "SPE")
+        self.spe_filter.grid(row = 5, column = 0, padx = 10)
+
+        self.nature_label = customtkinter.CTkLabel(
+            self.filter_frame,
+            text = "Nature:"
+        )
+        self.nature_label.grid(row = 0, column = 1, pady = (10, 0))
+
+        self.nature_filter = CheckedCombobox(
+            self.filter_frame,
+            values = list(Nature)
+        )
+        self.nature_filter.grid(row = 0, column = 2, padx = 10, pady = (10, 0))
+
+        self.ability_label = customtkinter.CTkLabel(
+            self.filter_frame,
+            text = "Ability:"
+        )
+        self.ability_label.grid(row = 1, column = 1)
+
+        self.ability_filter = CheckedCombobox(
+            self.filter_frame,
+            values = list(AbilityIndex)
+        )
+        self.ability_filter.grid(row = 1, column = 2, padx = 10)
+
+        self.gender_label = customtkinter.CTkLabel(
+            self.filter_frame,
+            text = "Gender:"
+        )
+        self.gender_label.grid(row = 2, column = 1)
+
+        self.gender_filter = CheckedCombobox(
+            self.filter_frame,
+            values = list(Gender)
+        )
+        self.gender_filter.grid(row = 2, column = 2, padx = 10)
+
+        self.species_label = customtkinter.CTkLabel(
+            self.filter_frame,
+            text = "Species:"
+        )
+        self.species_label.grid(row = 3, column = 1)
+
+        self.species_filter = CheckedCombobox(
+            self.filter_frame,
+            values = sorted(list(Species), key = lambda species: species.name)
+        )
+        self.species_filter.grid(row = 3, column = 2, padx = 10)
+
+        self.shiny_filter = customtkinter.CTkCheckBox(self.filter_frame, text = "Shiny Only")
+        self.shiny_filter.grid(row = 4, column = 1, columnspan = 2)

@@ -34,7 +34,7 @@ class PokeSpriteHandler:
         if form == 0:
             form = None
         if (species, form, female) not in self.cache:
-            title = f"{species}"
+            title = f"{species.value}"
             if form:
                 title += f"-{form}"
             if female:

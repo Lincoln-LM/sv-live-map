@@ -21,6 +21,7 @@ from .sv_enums import (
     Game,
     Ability,
     Gender,
+    AbilityIndex,
 )
 from .raid_enemy_table_array import RaidEnemyTableArray, RaidEnemyTable, RaidEnemyInfo
 from .personal_data_handler import PersonalDataHandler
@@ -156,6 +157,7 @@ class TeraRaid:
         self.ivs: tuple[int, 6] = None
 
         self.ability: Ability = None
+        self.ability_index: AbilityIndex = None
         self.gender: Gender = None
 
         self.nature: Nature = None
@@ -188,7 +190,7 @@ class TeraRaid:
         self.pid = rng.rand()
         self.is_shiny = is_shiny(raid_enemy_info.boss_poke_para.rare_type, self.pid, self.sidtid)
         self.ivs = self.rand_ivs(rng)
-        self.ability = self.rand_ability(rng)
+        self.ability_index, self.ability = self.rand_ability(rng)
         self.gender = self.rand_gender(rng)
         self.nature = self.rand_nature(rng)
         self.height = self.rand_size(rng)
@@ -231,19 +233,39 @@ class TeraRaid:
                     self.raid_enemy_info.boss_poke_para.talent_value.spe
                 )
 
-    def rand_ability(self, rng: Xoroshiro128Plus) -> Ability:
+    def rand_ability(self, rng: Xoroshiro128Plus) -> tuple[AbilityIndex, Ability]:
         """Generate ability"""
         raid_fixed_ability = self.raid_enemy_info.boss_poke_para.tokusei
         match raid_fixed_ability:
             case AbilityGeneration.RANDOM_12 | None:
-                return PersonalDataHandler.get_ability(self.species, self.form, rng.rand(2))
+                index = rng.rand(2)
+                return (
+                    index,
+                    PersonalDataHandler.get_ability(
+                        self.species,
+                        self.form,
+                        index
+                    )
+                )
             case AbilityGeneration.RANDOM_12HA:
-                return PersonalDataHandler.get_ability(self.species, self.form, rng.rand(3))
+                index = rng.rand(3)
+                return (
+                    index,
+                    PersonalDataHandler.get_ability(
+                        self.species,
+                        self.form,
+                        index
+                    )
+                )
             case _:
-                return PersonalDataHandler.get_ability(
-                    self.species,
-                    self.form,
-                    raid_fixed_ability.to_ability_index()
+                index = raid_fixed_ability.to_ability_index()
+                return (
+                    index,
+                    PersonalDataHandler.get_ability(
+                        self.species,
+                        self.form,
+                        index
+                    )
                 )
 
     def rand_gender(self, rng: Xoroshiro128Plus) -> Gender:
@@ -389,13 +411,13 @@ class TeraRaid:
         shiny_str = "Shiny " if self.is_shiny else ""
         event_str = "Event " if self.is_event else ""
         star_str = "★" * (self.difficulty + 1)
-        return f"{self.species.name.replace('_', ' ').title()}{form_str}\n" \
+        return f"{self.species}{form_str}\n" \
                f"{shiny_str}{event_str}{star_str}\n" \
                f"IVs: {'/'.join(map(str, self.ivs))}\n" \
-               f"Nature: {self.nature.name.title()}\n" \
-               f"Ability: {self.ability.name.replace('_', ' ').title()}\n" \
-               f"Gender: {self.gender.name.title()}\n" \
-               f"Tera Type: {self.tera_type.name.title()}\n" \
+               f"Nature: {self.nature}\n" \
+               f"Ability: {self.ability}\n" \
+               f"Gender: {self.gender}\n" \
+               f"Tera Type: {self.tera_type}\n" \
                f"Location: {self.id_str}\n" \
                f"Seed: {self.seed:08X} EC: {self.encryption_constant:08X}\n" \
                f"PID: {self.pid:08X} SIDTID: {self.sidtid:08X}\n"
