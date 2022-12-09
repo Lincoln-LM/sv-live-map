@@ -67,4 +67,4 @@ class RaidFilter:
         if raid.species not in self.species_filter:
             return False
 
-        return not self.shiny_filter or not raid.is_shiny
+        return bool(not self.shiny_filter or raid.is_shiny)
