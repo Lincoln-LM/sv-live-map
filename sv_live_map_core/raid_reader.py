@@ -53,7 +53,8 @@ class RaidReader(NXReader):
         if star_level == StarLevel.EVENT:
             return ("[[[[[[main+4384A50]+30]+288]+290]+280]+28]+414", 0x7530)
         return (
-            f"[[[[[[[[main+43A7560]+138]+43C0]]]+{0x48 + star_level * 0xC0:X}]+10]+1C0]",
+            # TODO: find a more stable pointer for scarlet and violet
+            f"[[[[[[[[main+43A78D8]+C0]+E8]]+10]+4A8]+{0xD0 + star_level * 0xB0:X}]+1E8]",
             RaidReader.RAID_BINARY_SIZES[star_level]
         )
 
