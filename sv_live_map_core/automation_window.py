@@ -137,7 +137,7 @@ class AutomationWindow(customtkinter.CTkToplevel):
                 ) -> tuple[customtkinter.CTkToplevel, Type[customtkinter.CTkBaseClass]]:
                     return self.master.widget_message_window(
                         f"Shiny {raid.species} ★"
-                        if raid.is_shiny else raid.species,
+                        if raid.is_shiny else str(raid.species),
                         RaidInfoWidget,
                         poke_sprite_handler = self.master.sprite_handler,
                         raid_data = raid,
@@ -153,7 +153,7 @@ class AutomationWindow(customtkinter.CTkToplevel):
                         )
                         embed = discord_webhook.webhook.DiscordEmbed(
                             title = f"Shiny {raid.species} ★"
-                                if raid.is_shiny else raid.species,
+                                if raid.is_shiny else str(raid.species),
                             color = 0xF8C8DC
                         )
                         embed.set_image("attachment://poke.png")
