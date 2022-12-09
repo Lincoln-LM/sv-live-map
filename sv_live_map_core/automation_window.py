@@ -84,6 +84,9 @@ class AutomationWindow(customtkinter.CTkToplevel):
                 popup_display_builder, webhook_display_builder = self.define_builders()
 
                 self.filter_raids(raid_block, popup_display_builder, webhook_display_builder)
+            else:
+                self.master.connection_error("Not connected to switch.")
+                self.target_found = True
         self.target_found = True
         sys.exit()
 
@@ -310,7 +313,7 @@ class AutomationWindow(customtkinter.CTkToplevel):
         if not self.target_found:
             self.after(1000, self.check_on_automation)
         else:
-            print("TARGET FOUND")
+            print("Automation ending.")
             self.stop_automation()
 
     def draw_start_button_frame(self):
