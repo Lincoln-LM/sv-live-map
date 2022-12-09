@@ -17,6 +17,9 @@ class StoryProgress(IntEnum):
         """Convert StoryProgress to the highest StarLevel it unlocks (excl SEVEN_STAR)"""
         return StarLevel(self + StarLevel.TWO_STAR)
 
+    def __str__(self) -> str:
+        return self.name.replace('_', ' ').title()
+
 class StarLevel(IntEnum):
     """Enum for the basic star levels"""
     ONE_STAR = 0
@@ -50,6 +53,9 @@ class StarLevel(IntEnum):
         # staggered unlocks
         return self <= story_progress.to_star_level()
 
+    def __str__(self) -> str:
+        return self.name.replace('_', ' ').title()
+
 class Game(IntEnum):
     """Enum for the game version"""
     BOTH = 0
@@ -61,6 +67,9 @@ class Game(IntEnum):
         """Convert game id to Game enum"""
         return Game(value - 49)
 
+    def __str__(self) -> str:
+        return self.name.replace('_', ' ').title()
+
 class Gender(IntEnum):
     """Enum for genders"""
     MALE = 0
@@ -71,6 +80,9 @@ class Gender(IntEnum):
     def from_generation(value: GenderGeneration) -> Self:
         """Convert from GenderGeneration"""
         return Gender(value - 1)
+
+    def __str__(self) -> str:
+        return self.name.replace('_', ' ').title()
 
 class Ability(IntEnum):
     """Enum for pokemon abilities"""
@@ -373,6 +385,9 @@ class Ability(IntEnum):
     ARMOR_TAIL = 296
     EARTH_EATER = 297
     MYCELIUM_MIGHT = 298
+
+    def __str__(self) -> str:
+        return self.name.replace('_', ' ').title()
 
 class Move(IntEnum):
     """Enum for pokemon moves"""
@@ -1277,6 +1292,9 @@ class Move(IntEnum):
     NOXIOUS_TORQUE = 898
     COMBAT_TORQUE = 899
     MAGICAL_TORQUE = 900
+
+    def __str__(self) -> str:
+        return self.name.replace('_', ' ').title()
 
 class Species(IntEnum):
     """Enum for pokemon species"""
@@ -2292,12 +2310,18 @@ class Species(IntEnum):
     CLODSIRE = 1009
     ANNIHILAPE = 1010
 
+    def __str__(self) -> str:
+        return self.name.replace('_', ' ').title()
+
 class GenderGeneration(IntEnum):
     """Enum for pokemon gender generation"""
     RANDOM_GENDER = 0
     MALE = 1
     FEMALE = 2
     GENDERLESS = 3
+
+    def __str__(self) -> str:
+        return self.name.replace('_', ' ').title()
 
 class NatureGeneration(IntEnum):
     """Enum for pokemon nature generation"""
@@ -2327,6 +2351,9 @@ class NatureGeneration(IntEnum):
     SASSY = 23
     CAREFUL = 24
     QUIRKY = 25
+
+    def __str__(self) -> str:
+        return self.name.replace('_', ' ').title()
 
 class Nature(IntEnum):
     """Enum for Pokemon nature"""
@@ -2360,6 +2387,9 @@ class Nature(IntEnum):
     def from_generation(generation: NatureGeneration) -> Nature:
         """Convert from NatureGeneration"""
         return Nature(generation - 1)
+
+    def __str__(self) -> str:
+        return self.name.replace('_', ' ').title()
 
 class Item(IntEnum):
     """Enum for pokemon items"""
@@ -4551,6 +4581,9 @@ class Item(IntEnum):
     WHITE_DISH = 2399
     YELLOW_DISH = 2400
 
+    def __str__(self) -> str:
+        return self.name.replace('_', ' ').title()
+
 class TeraTypeGeneration(IntEnum):
     """Enum for pokemon tera type generation"""
     NONE = 0
@@ -4574,6 +4607,8 @@ class TeraTypeGeneration(IntEnum):
     DARK = 18
     FAIRY = 19
 
+    def __str__(self) -> str:
+        return self.name.replace('_', ' ').title()
 
 class PokemonType(IntEnum):
     """Enum for pokemon type"""
@@ -4595,6 +4630,9 @@ class PokemonType(IntEnum):
     DRAGON = 15
     DARK = 16
     FAIRY = 17
+
+    def __str__(self) -> str:
+        return self.name.replace('_', ' ').title()
 
 class TeraType(IntEnum):
     """Enum for pokemon tera type"""
@@ -4622,6 +4660,18 @@ class TeraType(IntEnum):
         """Convert from TeraTypeGeneration"""
         return TeraType(generation - 2)
 
+    def __str__(self) -> str:
+        return self.name.replace('_', ' ').title()
+
+class AbilityIndex(IntEnum):
+    """Enum for pokemon ability index"""
+    ABILITY_1 = 0
+    ABILITY_2 = 1
+    ABILITY_HA = 2
+
+    def __str__(self) -> str:
+        return self.name.replace('_', ' ').title().replace("Ha", "HA")
+
 class AbilityGeneration(IntEnum):
     """Enum for pokemon ability generation"""
     RANDOM_12 = 0
@@ -4630,9 +4680,12 @@ class AbilityGeneration(IntEnum):
     ABILITY_2 = 3
     ABILITY_HA = 4
 
-    def to_ability_index(self) -> int:
+    def to_ability_index(self) -> AbilityIndex:
         """Convert to ability index"""
-        return self.value - AbilityGeneration.ABILITY_1
+        return AbilityIndex(self.value - AbilityGeneration.ABILITY_1)
+
+    def __str__(self) -> str:
+        return self.name.replace('_', ' ').title().replace("Ha", "HA")
 
 class Ball(IntEnum):
     """Enum for pokemon balls"""
@@ -4664,17 +4717,26 @@ class Ball(IntEnum):
     DREAM_BALL = 25
     BEAST_BALL = 26
 
+    def __str__(self) -> str:
+        return self.name.replace('_', ' ').title()
+
 class IVGeneration(IntEnum):
     """Enum for pokemon IV generation"""
     RANDOM_IVS = 0
     SET_GUARANTEED_IVS = 1
     SET_IVS = 2
 
+    def __str__(self) -> str:
+        return self.name.replace('_', ' ').title()
+
 class ShinyGeneration(IntEnum):
     """Enum for pokemon shininess generation"""
     RANDOM_SHININESS = 0
     SHINY_LOCKED = 1
     FORCED_SHINY = 2
+
+    def __str__(self) -> str:
+        return self.name.replace('_', ' ').title()
 
 class SizeGeneration(IntEnum):
     """Enum for pokemon size generation"""
@@ -4686,10 +4748,16 @@ class SizeGeneration(IntEnum):
     XL = 5
     SET_VALUE = 6
 
+    def __str__(self) -> str:
+        return self.name.replace('_', ' ').title()
+
 class MovesetType(IntEnum):
     """Enum for pokemon moveset generation"""
     AUTO = 0
     SET = 1
+
+    def __str__(self) -> str:
+        return self.name.replace('_', ' ').title()
 
 class ExtraActType(IntEnum):
     """Enum for raid boss extra act type"""
@@ -4699,8 +4767,14 @@ class ExtraActType(IntEnum):
     MOVE = 3
     GEM_COUNT = 4
 
+    def __str__(self) -> str:
+        return self.name.replace('_', ' ').title()
+
 class ExtraTimingType(IntEnum):
     """Enum for raid boss extra timing type"""
     NONE = 0
     TIME = 1
     HP = 2
+
+    def __str__(self) -> str:
+        return self.name.replace('_', ' ').title()

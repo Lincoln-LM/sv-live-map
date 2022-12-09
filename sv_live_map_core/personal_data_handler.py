@@ -20,7 +20,7 @@ class PersonalDataHandler:
         """Get personal data of a mon"""
         if form is None:
             form = 0
-        return PersonalDataHandler._personal_data[f"{species}-{form}"]
+        return PersonalDataHandler._personal_data[f"{species.value}-{form}"]
 
     @staticmethod
     def fixed_gender(species: Species, form: int) -> GenderGeneration:
