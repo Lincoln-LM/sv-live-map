@@ -17,10 +17,10 @@ from .sv_enums import Nature, AbilityIndex, Gender, Species
 from .checked_combobox import CheckedCombobox
 
 if TYPE_CHECKING:
-    from typing import Type
+    from typing import Type, Callable
     from PIL import Image
     from .application import Application
-    from .raid_block import TeraRaid
+    from .raid_block import TeraRaid, RaidBlock
 
 class AutomationWindow(customtkinter.CTkToplevel):
     """Automation window"""
@@ -76,168 +76,234 @@ class AutomationWindow(customtkinter.CTkToplevel):
         last_seed = None
         while not self.target_found:
             if self.master.reader:
-                # TODO: extract methods + clean + check for target_found between commands
-                self.master.reader.click("HOME")
-                self.master.reader.click("HOME")
-                self.master.reader.click("HOME")
-                self.master.reader.pause(1)
-                self.master.reader.touch_hold(845, 545, 50)
-                self.master.reader.touch_hold(845, 545, 50)
-                self.master.reader.touch_hold(845, 545, 50)
-                self.master.reader.pause(1.5)
-                self.master.reader.press("DDOWN")
-                self.master.reader.press("DDOWN")
-                self.master.reader.press("DDOWN")
-                self.master.reader.pause(2.5)
-                self.master.reader.release("DDOWN")
-                self.master.reader.press("A")
-                self.master.reader.pause(0.1)
-                self.master.reader.release("A")
-                self.master.reader.press("DDOWN")
-                self.master.reader.pause(0.825)
-                self.master.reader.release("DDOWN")
-                self.master.reader.press("A")
-                self.master.reader.pause(0.1)
-                self.master.reader.release("A")
-                self.master.reader.pause(0.4)
-                self.master.reader.touch_hold(1006, 386, 50)
-                self.master.reader.pause(0.2)
-                self.master.reader.touch_hold(151, 470, 50)
-                self.master.reader.pause(0.2)
-                self.master.reader.touch_hold(1102, 470, 50)
-                self.master.reader.pause(0.2)
-                self.master.reader.press("HOME")
-                self.master.reader.pause(0.1)
-                self.master.reader.release("HOME")
-                self.master.reader.pause(0.8)
-                self.master.reader.press("HOME")
-                self.master.reader.pause(0.1)
-                self.master.reader.release("HOME")
-                self.master.reader.pause(5)
-                raid_block = self.master.read_all_raids(self.map_render_check.get())
-                if raid_block.current_seed != last_seed:
-                    last_seed = raid_block.current_seed
-                    total_reset_count += 1
-                    total_raid_count += 69
-                else:
-                    print("WARNING raid seed is a duplicate of the previous day")
-                print(
-                    f"RAIDS PROCESSED {total_reset_count=} "
-                    f"{total_raid_count=} "
-                    f"{raid_block.current_seed=:X}"
-                )
-                # wait until rendering is done
-                while self.master.render_thread is not None:
-                    self.master.reader.pause(0.2)
+                self.full_dateskip()
 
-                # popup display of marker info for alers
-                def popup_display_builder(
-                    raid: TeraRaid,
-                    _ = None
-                ) -> tuple[customtkinter.CTkToplevel, Type[customtkinter.CTkBaseClass]]:
-                    return self.master.widget_message_window(
-                        f"Shiny {raid.species} ★"
-                        if raid.is_shiny else str(raid.species),
-                        RaidInfoWidget,
-                        poke_sprite_handler = self.master.sprite_handler,
-                        raid_data = raid,
-                        fg_color = customtkinter.ThemeManager.theme["color"]["frame_low"],
-                    )
+                total_raid_count, total_reset_count, raid_block = \
+                    self.read_raids(total_raid_count, total_reset_count, last_seed)
 
-                # webhook display of info
-                def webhook_display_builder(raid: TeraRaid, _ = None):
-                    if self.embed_select.get():
-                        webhook = discord_webhook.webhook.DiscordWebhook(
-                            url = self.webhook_entry.get(),
-                            content = f"<@{self.ping_entry.get()}>"
-                        )
-                        embed = discord_webhook.webhook.DiscordEmbed(
-                            title = f"Shiny {raid.species} ★"
-                                if raid.is_shiny else str(raid.species),
-                            color = 0xF8C8DC
-                        )
-                        embed.set_image("attachment://poke.png")
-                        embed.set_author(
-                            f"{raid.tera_type} Tera Type",
-                            icon_url = "attachment://tera.png"
-                        )
-                        dummy_widget = RaidInfoWidget(
-                            poke_sprite_handler = self.master.sprite_handler,
-                            raid_data = raid
-                        )
+                popup_display_builder, webhook_display_builder = self.define_builders()
 
-                        poke_sprite_img: Image = ImageTk.getimage(dummy_widget.poke_sprite)
-                        with io.BytesIO() as poke_sprite_bytes:
-                            poke_sprite_img.save(poke_sprite_bytes, format = "PNG")
-                            webhook.add_file(
-                                poke_sprite_bytes.getvalue(),
-                                "poke.png"
-                            )
-
-                        tera_sprite_img: Image = ImageTk.getimage(dummy_widget.tera_sprite)
-                        with io.BytesIO() as tera_sprite_bytes:
-                            tera_sprite_img.save(tera_sprite_bytes, format = "PNG")
-                            webhook.add_file(
-                                tera_sprite_bytes.getvalue(),
-                                "tera.png"
-                            )
-                        embed.add_embed_field("Info", str(dummy_widget.info_display.text))
-
-                        webhook.add_embed(embed)
-                        webhook.execute()
-                    else:
-                        popup_window, _ = popup_display_builder(raid)
-                        x_pos, y_pos = popup_window.winfo_x() + 8, popup_window.winfo_y() + 5
-                        time.sleep(1)
-                        img = ImageGrab.grab(
-                            (
-                                x_pos,
-                                y_pos,
-                                x_pos + popup_window.winfo_width(),
-                                y_pos + popup_window.winfo_height() + 23
-                            )
-                        )
-                        time.sleep(1)
-                        popup_window.destroy()
-                        if not os.path.exists("./found_screenshots/"):
-                            os.mkdir("./found_screenshots/")
-                        img.save(f"./found_screenshots/{raid.seed}.png")
-                        with open(f"./found_screenshots/{raid.seed}.png", "rb") as img:
-                            webhook = discord_webhook.webhook.DiscordWebhook(
-                                url = self.webhook_entry.get(),
-                                content = f"<@{self.ping_entry.get()}>"
-                            )
-                            webhook.add_file(img.read(), "img.png")
-                            webhook.execute()
-
-                raid_filter = RaidFilter(
-                    hp_filter = self.hp_filter.get(),
-                    atk_filter = self.atk_filter.get(),
-                    def_filter = self.def_filter.get(),
-                    spa_filter = self.spa_filter.get(),
-                    spd_filter = self.spd_filter.get(),
-                    spe_filter = self.spe_filter.get(),
-                    ability_filter = self.ability_filter.get(),
-                    gender_filter = self.gender_filter.get(),
-                    nature_filter = self.nature_filter.get(),
-                    species_filter = self.species_filter.get(),
-                    shiny_filter = self.shiny_filter.get()
-                )
-
-                for raid in raid_block.raids:
-                    if not raid.is_enabled:
-                        continue
-
-                    matches_filters = raid_filter.compare(raid)
-                    self.target_found |= matches_filters
-
-                    if matches_filters:
-                        if self.popup_check.get():
-                            popup_display_builder(raid)
-                        if self.webhook_check.get():
-                            webhook_display_builder(raid)
+                self.filter_raids(raid_block, popup_display_builder, webhook_display_builder)
         self.target_found = True
         sys.exit()
+
+    def read_raids(
+        self,
+        total_raid_count: int,
+        total_reset_count: int,
+        last_seed: int
+    ) -> tuple[int, int, TeraRaid]:
+        """Read and parse raids"""
+        raid_block = self.master.read_all_raids(self.map_render_check.get())
+        if raid_block.current_seed != last_seed:
+            last_seed = raid_block.current_seed
+            total_reset_count += 1
+            total_raid_count += 69
+        else:
+            print("WARNING raid seed is a duplicate of the previous day")
+        print(
+            f"RAIDS PROCESSED {total_reset_count=} "
+            f"{total_raid_count=} "
+            f"{raid_block.current_seed=:X}"
+        )
+        # wait until rendering is done
+        while self.master.render_thread is not None:
+            self.master.reader.pause(0.2)
+        return total_raid_count, total_reset_count, raid_block
+
+    def define_builders(self) -> tuple[Callable, Callable]:
+        """Define popup and webhook display builders"""
+        # popup display of marker info for alerts
+        def popup_display_builder(
+            raid: TeraRaid,
+            _ = None
+        ) -> tuple[customtkinter.CTkToplevel, Type[customtkinter.CTkBaseClass]]:
+            return self.master.widget_message_window(
+                f"Shiny {raid.species} ★"
+                if raid.is_shiny else str(raid.species),
+                RaidInfoWidget,
+                poke_sprite_handler = self.master.sprite_handler,
+                raid_data = raid,
+                fg_color = customtkinter.ThemeManager.theme["color"]["frame_low"],
+            )
+
+        # webhook display of info
+        def webhook_display_builder(raid: TeraRaid, _ = None):
+            if self.embed_select.get():
+                webhook = discord_webhook.webhook.DiscordWebhook(
+                    url = self.webhook_entry.get(),
+                    content = f"<@{self.ping_entry.get()}>"
+                )
+                embed = discord_webhook.webhook.DiscordEmbed(
+                    title = f"Shiny {raid.species} ★"
+                        if raid.is_shiny else str(raid.species),
+                    color = 0xF8C8DC
+                )
+                embed.set_image("attachment://poke.png")
+                embed.set_author(
+                    f"{raid.tera_type} Tera Type",
+                    icon_url = "attachment://tera.png"
+                )
+                dummy_widget = RaidInfoWidget(
+                    poke_sprite_handler = self.master.sprite_handler,
+                    raid_data = raid
+                )
+
+                poke_sprite_img: Image = ImageTk.getimage(dummy_widget.poke_sprite)
+                with io.BytesIO() as poke_sprite_bytes:
+                    poke_sprite_img.save(poke_sprite_bytes, format = "PNG")
+                    webhook.add_file(
+                        poke_sprite_bytes.getvalue(),
+                        "poke.png"
+                    )
+
+                tera_sprite_img: Image = ImageTk.getimage(dummy_widget.tera_sprite)
+                with io.BytesIO() as tera_sprite_bytes:
+                    tera_sprite_img.save(tera_sprite_bytes, format = "PNG")
+                    webhook.add_file(
+                        tera_sprite_bytes.getvalue(),
+                        "tera.png"
+                    )
+                embed.add_embed_field("Info", str(dummy_widget.info_display.text))
+
+                webhook.add_embed(embed)
+                webhook.execute()
+            else:
+                popup_window, _ = popup_display_builder(raid)
+                x_pos, y_pos = popup_window.winfo_x() + 8, popup_window.winfo_y() + 5
+                time.sleep(1)
+                img = ImageGrab.grab(
+                    (
+                        x_pos,
+                        y_pos,
+                        x_pos + popup_window.winfo_width(),
+                        y_pos + popup_window.winfo_height() + 23
+                    )
+                )
+                time.sleep(1)
+                popup_window.destroy()
+                if not os.path.exists("./found_screenshots/"):
+                    os.mkdir("./found_screenshots/")
+                img.save(f"./found_screenshots/{raid.seed}.png")
+                with open(f"./found_screenshots/{raid.seed}.png", "rb") as img:
+                    webhook = discord_webhook.webhook.DiscordWebhook(
+                        url = self.webhook_entry.get(),
+                        content = f"<@{self.ping_entry.get()}>"
+                    )
+                    webhook.add_file(img.read(), "img.png")
+                    webhook.execute()
+        return popup_display_builder, webhook_display_builder
+
+    def filter_raids(
+        self,
+        raid_block: RaidBlock,
+        popup_display_builder: Callable,
+        webhook_display_builder: Callable
+    ):
+        """Filter through all raids"""
+        raid_filter = RaidFilter(
+            hp_filter = self.hp_filter.get(),
+            atk_filter = self.atk_filter.get(),
+            def_filter = self.def_filter.get(),
+            spa_filter = self.spa_filter.get(),
+            spd_filter = self.spd_filter.get(),
+            spe_filter = self.spe_filter.get(),
+            ability_filter = self.ability_filter.get(),
+            gender_filter = self.gender_filter.get(),
+            nature_filter = self.nature_filter.get(),
+            species_filter = self.species_filter.get(),
+            shiny_filter = self.shiny_filter.get()
+        )
+
+        for raid in raid_block.raids:
+            if not raid.is_enabled:
+                continue
+
+            matches_filters = raid_filter.compare(raid)
+            self.target_found |= matches_filters
+
+            self.handle_displays(
+                popup_display_builder,
+                webhook_display_builder,
+                raid,
+                matches_filters
+            )
+
+    def handle_displays(
+        self,
+        popup_display_builder: Callable,
+        webhook_display_builder: Callable,
+        raid: TeraRaid,
+        matches_filters: bool
+    ):
+        """Handle popup and webhooks"""
+        if matches_filters:
+            if self.popup_check.get():
+                popup_display_builder(raid)
+            if self.webhook_check.get():
+                webhook_display_builder(raid)
+
+    def full_dateskip(self):
+        """Full process of dateskipping w/checks for target_found"""
+        self.leave_to_home()
+        if self.target_found:
+            return
+        self.open_settings()
+        if self.target_found:
+            return
+        self.open_datetime()
+        if self.target_found:
+            return
+        self.skip_date()
+        if self.target_found:
+            return
+        self.reopen_game()
+
+    def reopen_game(self):
+        """Reopen game from datetime menu"""
+        # go back to game
+        self.master.reader.manual_click("HOME")
+        self.master.reader.pause(0.8)
+        self.master.reader.manual_click("HOME")
+        self.master.reader.pause(5)
+
+    def skip_date(self):
+        """Skip date with touch screen"""
+        # deselect month (day for non-america) (neccesary for skip to be registered)
+        self.master.reader.touch_hold(151, 470, 50)
+        self.master.reader.pause(0.2)
+        # confirm date
+        self.master.reader.touch_hold(1102, 470, 50)
+        self.master.reader.pause(0.2)
+
+    def open_datetime(self):
+        """Scroll down and open the date change menu"""
+        # scroll down to System
+        self.master.reader.manual_click("DDOWN", 2.5, 3)
+        self.master.reader.manual_click("A")
+        # scroll down to datetime, this is not fully consistent but will not break execution
+        self.master.reader.manual_click("DDOWN", 0.825)
+        self.master.reader.manual_click("A")
+        self.master.reader.pause(0.4)
+        # select Date and Time
+        self.master.reader.touch_hold(1006, 386, 50)
+        self.master.reader.pause(0.2)
+
+    def open_settings(self):
+        """Open settings with touch screen"""
+        # select settings icon -> open settings + a third press to be safe
+        # touch screen is much faster than dpad
+        for _ in range(3):
+            self.master.reader.touch_hold(845, 545, 50)
+        self.master.reader.pause(1.5)
+
+    def leave_to_home(self):
+        """Leave the game to the home menu"""
+        # home button struggles to be recognized
+        # this is why zoom must be disabled
+        for _ in range(3):
+            self.master.reader.click("HOME")
+        self.master.reader.pause(1)
 
     def check_on_automation(self):
         """Check on the progress of automation"""

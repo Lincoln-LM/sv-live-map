@@ -55,6 +55,13 @@ class NXReader:
         """Release held button"""
         self._send_command(f'release {button}')
 
+    def manual_click(self, button: str, delay: float = 0.1, init_count = 1):
+        """Manually press and release button"""
+        for _ in range(init_count):
+            self.press(button)
+        self.pause(delay)
+        self.release(button)
+
     def touch_hold(self, x_val: int, y_val: int, delay_ms: int) -> None:
         """Hold the touch screen at (x, y) for delay ms"""
         self._send_command(f"touchHold {x_val} {y_val} {delay_ms}")
