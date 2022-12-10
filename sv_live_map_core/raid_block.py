@@ -239,34 +239,18 @@ class TeraRaid:
         match raid_fixed_ability:
             case AbilityGeneration.RANDOM_12 | None:
                 index = AbilityIndex(rng.rand(2))
-                return (
-                    index,
-                    PersonalDataHandler.get_ability(
-                        self.species,
-                        self.form,
-                        index
-                    )
-                )
             case AbilityGeneration.RANDOM_12HA:
                 index = AbilityIndex(rng.rand(3))
-                return (
-                    index,
-                    PersonalDataHandler.get_ability(
-                        self.species,
-                        self.form,
-                        index
-                    )
-                )
             case _:
                 index = raid_fixed_ability.to_ability_index()
-                return (
-                    index,
-                    PersonalDataHandler.get_ability(
-                        self.species,
-                        self.form,
-                        index
-                    )
-                )
+        return (
+            index,
+            PersonalDataHandler.get_ability(
+                self.species,
+                self.form,
+                index
+            )
+        )
 
     def rand_gender(self, rng: Xoroshiro128Plus) -> Gender:
         """Generate gender"""
