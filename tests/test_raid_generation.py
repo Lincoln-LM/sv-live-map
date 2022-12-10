@@ -28,7 +28,7 @@ class MockParamSet:
         spa: int,
         spd: int,
         spe: int
-    ):
+    ) -> None:
         self.hp = hp
         self.atk = atk
         self.def_ = def_
