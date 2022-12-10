@@ -1,7 +1,7 @@
 """Get data from personal_data"""
 
 import json
-from .sv_enums import Ability, Gender, GenderGeneration, Species
+from .sv_enums import Ability, AbilityIndex, Gender, GenderGeneration, Species
 
 class PersonalDataHandler:
     """Get data from personal_data"""
@@ -33,6 +33,6 @@ class PersonalDataHandler:
         return Gender(gender_rand < PersonalDataHandler.get_data(species, form)["gender_ratio"])
 
     @staticmethod
-    def get_ability(species: Species, form: int, ability: int) -> Ability:
+    def get_ability(species: Species, form: int, ability: AbilityIndex) -> Ability:
         """Get a mon's ability based on its index"""
         return Ability(PersonalDataHandler.get_data(species, form)["abilities"][ability])
