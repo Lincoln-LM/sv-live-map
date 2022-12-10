@@ -99,8 +99,8 @@ class CorrectedMarker(CanvasPositionMarker):
             if self.scale_with_zoom:
                 img = img.resize(
                     (
-                        round(self.image.width() * max(1, self.last_zoom / 2)),
-                        round(self.image.height() * max(1, self.last_zoom / 2))
+                        round(self.image.width() * min(1, max(5/8, self.last_zoom / 4))),
+                        round(self.image.height() * min(1, max(5/8, self.last_zoom / 4)))
                     ),
                     Image.LANCZOS
                 )
@@ -148,8 +148,8 @@ class CorrectedMarker(CanvasPositionMarker):
             if self.scale_with_zoom:
                 img = img.resize(
                     (
-                        round(self.icon.width() * max(1, self.last_zoom / 2)),
-                        round(self.icon.height() * max(1, self.last_zoom / 2))
+                        round(self.icon.width() * min(1, max(5/8, self.last_zoom / 4))),
+                        round(self.icon.height() * min(1, max(5/8, self.last_zoom / 4)))
                     ),
                     Image.LANCZOS
                 )

@@ -159,7 +159,7 @@ class Application(customtkinter.CTk):
             text = "Scale images with zoom"
         )
         self.scale_sprites_check.grid(row = 3, column = 0, columnspan = 2, padx = 10, pady = 5)
-        if self.settings.get("ScaleImages", False):
+        if self.settings.get("ScaleImages", True):
             self.scale_sprites_check.select()
 
         self.connect_button = customtkinter.CTkButton(
@@ -423,12 +423,6 @@ class Application(customtkinter.CTk):
                     )
                     # TODO: event/shiny icons
                     tera_sprite: Image.Image = ImageTk.getimage(info_widget.tera_sprite)
-                    tera_sprite = tera_sprite.resize(
-                        (
-                            tera_sprite.height // 2,
-                            tera_sprite.width // 2
-                        )
-                    )
                     tera_sprite = ImageTk.PhotoImage(tera_sprite)
                     poke_sprite = ImageTk.getimage(info_widget.poke_sprite)
                     poke_sprite = ImageTk.PhotoImage(poke_sprite)
