@@ -238,7 +238,7 @@ class TeraRaid:
         raid_fixed_ability = self.raid_enemy_info.boss_poke_para.tokusei
         match raid_fixed_ability:
             case AbilityGeneration.RANDOM_12 | None:
-                index = rng.rand(2)
+                index = AbilityIndex(rng.rand(2))
                 return (
                     index,
                     PersonalDataHandler.get_ability(
@@ -248,7 +248,7 @@ class TeraRaid:
                     )
                 )
             case AbilityGeneration.RANDOM_12HA:
-                index = rng.rand(3)
+                index = AbilityIndex(rng.rand(3))
                 return (
                     index,
                     PersonalDataHandler.get_ability(
