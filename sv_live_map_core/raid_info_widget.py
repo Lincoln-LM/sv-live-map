@@ -62,8 +62,8 @@ class RaidInfoWidget(customtkinter.CTkFrame):
 
     def initialize_components(self, raid_data: TeraRaid, has_alternate_location: bool):
         """Draw all components of the widget"""
-        self.poke_sprite = self.grab_poke_sprite()
         self.cache_sprites()
+        self.poke_sprite = self.grab_poke_sprite()
         self.tera_sprite = self.grab_tera_sprite(raid_data)
 
         if not self.is_popup:
