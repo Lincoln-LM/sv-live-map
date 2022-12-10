@@ -1,6 +1,5 @@
 """customtkinter widget for displaying raid info"""
 
-import os
 from typing import Callable
 import customtkinter
 from PIL import Image, ImageTk
@@ -8,6 +7,7 @@ from sv_live_map_core.raid_block import TeraRaid
 from sv_live_map_core.poke_sprite_handler import PokeSpriteHandler
 from sv_live_map_core.image_widget import ImageWidget
 from sv_live_map_core.sv_enums import TeraType, Gender
+from sv_live_map_core.path_handler import get_path
 
 # type union not yet supported by pylint
 # pylint: disable=unsupported-binary-operation
@@ -167,15 +167,7 @@ class RaidInfoWidget(customtkinter.CTkFrame):
             RaidInfoWidget.TERA_SPRITES = [
                 ImageTk.PhotoImage(
                     Image.open(
-                        os.path.join(
-                            os.path.abspath(
-                                os.path.join(
-                                    os.path.dirname(__file__),
-                                    '..'
-                                )
-                            ),
-                            f"./resources/gem/{tera_type.name}.png"
-                        )
+                        get_path(f"./resources/gem/{tera_type.name}.png")
                     )
                 )
                 for tera_type in TeraType
@@ -183,43 +175,19 @@ class RaidInfoWidget(customtkinter.CTkFrame):
         if RaidInfoWidget.EMPTY_SPRITE is None:
             RaidInfoWidget.EMPTY_SPRITE = ImageTk.PhotoImage(
                 Image.open(
-                    os.path.join(
-                        os.path.abspath(
-                            os.path.join(
-                                os.path.dirname(__file__),
-                                '..'
-                            )
-                        ),
-                        "./resources/info_icons/empty.png"
-                    )
+                    get_path("./resources/info_icons/empty.png")
                 )
             )
         if RaidInfoWidget.EVENT_SPRITE is None:
             RaidInfoWidget.EVENT_SPRITE = ImageTk.PhotoImage(
                 Image.open(
-                    os.path.join(
-                        os.path.abspath(
-                            os.path.join(
-                                os.path.dirname(__file__),
-                                '..'
-                            )
-                        ),
-                        "./resources/info_icons/event.png"
-                    )
+                    get_path("./resources/info_icons/event.png")
                 )
             )
         if RaidInfoWidget.SHINY_SPRITE is None:
             RaidInfoWidget.SHINY_SPRITE = ImageTk.PhotoImage(
                 Image.open(
-                    os.path.join(
-                        os.path.abspath(
-                            os.path.join(
-                                os.path.dirname(__file__),
-                                '..'
-                            )
-                        ),
-                        "./resources/info_icons/shiny.png"
-                    )
+                    get_path("./resources/info_icons/shiny.png")
                 )
             )
 

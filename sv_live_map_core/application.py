@@ -23,6 +23,7 @@ from sv_live_map_core.raid_block import RaidBlock, TeraRaid
 from sv_live_map_core.corrected_marker import CorrectedMarker
 from sv_live_map_core.personal_data_handler import PersonalDataHandler
 from sv_live_map_core.automation_window import AutomationWindow
+from sv_live_map_core.path_handler import get_path
 
 customtkinter.set_default_color_theme("blue")
 customtkinter.set_appearance_mode("dark")
@@ -70,15 +71,7 @@ class Application(customtkinter.CTk):
                 self.settings = json.load(settings_file)
 
         with open(
-            os.path.join(
-                os.path.abspath(
-                    os.path.join(
-                        os.path.dirname(__file__),
-                        '..'
-                    )
-                ),
-                "./resources/den_locations.json"
-            ),
+            get_path("./resources/den_locations.json"),
             "r",
             encoding = "utf-8"
         ) as location_file:
@@ -218,15 +211,7 @@ class Application(customtkinter.CTk):
             True,
             ImageTk.PhotoImage(
                 Image.open(
-                    os.path.join(
-                        os.path.abspath(
-                            os.path.join(
-                                os.path.dirname(__file__),
-                                '..'
-                            )
-                        ),
-                        self.ICON_PATH
-                    )
+                    get_path(self.ICON_PATH)
                 )
             )
         )
