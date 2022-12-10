@@ -1,3 +1,5 @@
+"""Test TeraRaid generation"""
+# pylint: disable=import-error
 from sv_live_map_core.raid_block import TeraRaid
 from sv_live_map_core.sv_enums import (
     StarLevel,
@@ -17,6 +19,7 @@ from sv_live_map_core.sv_enums import (
 from sv_live_map_core.personal_data_handler import PersonalDataHandler
 
 class MockParamSet:
+    """Mock version of ParamSet"""
     def __init__(
         self,
         hp: int,
@@ -34,18 +37,19 @@ class MockParamSet:
         self.spe = spe
 
 class MockPokeDataBattle:
+    """Mock version of PokeDataBattle"""
     def __init__(
         self,
         dev_id: Species,
         form_id: int,
-        sex: GenderGeneration,
-        gem_type: TeraTypeGeneration,
-        seikaku: NatureGeneration,
-        tokusei: AbilityGeneration,
-        talent_type: IVGeneration,
-        talent_value: MockParamSet,
-        talent_vnum: int,
-        rare_type: ShinyGeneration,
+        sex: GenderGeneration = GenderGeneration.RANDOM_GENDER,
+        gem_type: TeraTypeGeneration = TeraTypeGeneration.RANDOM,
+        seikaku: NatureGeneration = NatureGeneration.NONE,
+        tokusei: AbilityGeneration = AbilityGeneration.RANDOM_12,
+        talent_type: IVGeneration = IVGeneration.SET_GUARANTEED_IVS,
+        talent_value: MockParamSet = MockParamSet(0, 0, 0, 0, 0, 0),
+        talent_vnum: int = 0,
+        rare_type: ShinyGeneration = ShinyGeneration.RANDOM_SHININESS,
     ) -> None:
         self.dev_id = dev_id
         self.form_id = form_id
@@ -59,40 +63,25 @@ class MockPokeDataBattle:
         self.rare_type = rare_type
 
 class MockRaidEnemyInfo:
+    """Mock version of RaidEnemyInfo"""
     def __init__(
         self,
-        dev_id: Species,
-        form_id: int,
-        sex: GenderGeneration = GenderGeneration.RANDOM_GENDER,
-        gem_type: TeraTypeGeneration = TeraTypeGeneration.RANDOM,
-        seikaku: NatureGeneration = NatureGeneration.NONE,
-        tokusei: AbilityGeneration = AbilityGeneration.RANDOM_12,
-        talent_type: IVGeneration = IVGeneration.SET_GUARANTEED_IVS,
-        talent_value: MockParamSet = MockParamSet(0, 0, 0, 0, 0, 0),
-        talent_vnum: int = 0,
-        rare_type: ShinyGeneration = ShinyGeneration.RANDOM_SHININESS,
+        boss_poke_para: MockPokeDataBattle,
         difficulty: StarLevel = None,
     ) -> None:
         self.difficulty = difficulty
-        self.boss_poke_para = MockPokeDataBattle(
-            dev_id = dev_id,
-            form_id = form_id,
-            sex = sex,
-            gem_type = gem_type,
-            seikaku = seikaku,
-            tokusei = tokusei,
-            talent_type = talent_type,
-            talent_value = talent_value,
-            talent_vnum = talent_vnum,
-            rare_type = rare_type
-        )
+        self.boss_poke_para = boss_poke_para
 
-def test_generation():
+def test_basic_generation():
+    """Basic test of tera raid generation"""
     PersonalDataHandler()
     seed = 0x11223344
-    mock_info = MockRaidEnemyInfo(
+    mock_boss_poke_para = MockPokeDataBattle(
         dev_id = Species.PIKACHU,
         form_id = 0
+    )
+    mock_info = MockRaidEnemyInfo(
+        boss_poke_para = mock_boss_poke_para
     )
     dummy_raid = TeraRaid(
         is_enabled = 1,
@@ -105,11 +94,12 @@ def test_generation():
         collected_league_points = 0,
     )
     dummy_raid.generate_pokemon(mock_info)
+
     assert dummy_raid.tera_type == TeraType.ROCK
     assert dummy_raid.encryption_constant == 0x33bf9d9f
     assert dummy_raid.pid == 0x982d1248
     assert dummy_raid.sidtid == 0x82f687c5
-    assert dummy_raid.is_shiny == False
+    assert not dummy_raid.is_shiny
     assert dummy_raid.ivs == (1, 0, 20, 14, 3, 11)
     assert dummy_raid.ability == Ability.STATIC
     assert dummy_raid.ability_index == AbilityIndex.ABILITY_2
@@ -118,3 +108,117 @@ def test_generation():
     assert dummy_raid.height == 124
     assert dummy_raid.weight == 205
     assert dummy_raid.scale == 94
+
+def test_guaranteed_iv_generation():
+    """Test tera raid generation with guaranteed ivs"""
+    PersonalDataHandler()
+    seed = 0x88776655
+    mock_boss_poke_para = MockPokeDataBattle(
+        dev_id = Species.MAUSHOLD,
+        form_id = 0,
+        talent_vnum = 3,
+    )
+    mock_info = MockRaidEnemyInfo(
+        boss_poke_para = mock_boss_poke_para
+    )
+    dummy_raid = TeraRaid(
+        is_enabled = 1,
+        area_id = 0,
+        display_type = 0,
+        den_id = 0,
+        seed = seed,
+        _unused_14 = 0,
+        content = 0,
+        collected_league_points = 0,
+    )
+    dummy_raid.generate_pokemon(mock_info)
+
+    assert dummy_raid.tera_type == TeraType.DARK
+    assert dummy_raid.encryption_constant == 0xab14d0b0
+    assert dummy_raid.pid == 0x4f18230b
+    assert dummy_raid.sidtid == 0x483a3ac3
+    assert not dummy_raid.is_shiny
+    assert dummy_raid.ivs == (26, 31, 31, 7, 15, 31)
+    assert dummy_raid.ability == Ability.CHEEK_POUCH
+    assert dummy_raid.ability_index == AbilityIndex.ABILITY_2
+    assert dummy_raid.gender == Gender.GENDERLESS
+    assert dummy_raid.nature == Nature.RELAXED
+    assert dummy_raid.height == 47
+    assert dummy_raid.weight == 113
+    assert dummy_raid.scale == 57
+
+def test_toxtricity_0_generation():
+    """Test tera raid generation of Toxtricity-0"""
+    PersonalDataHandler()
+    seed = 0xDEADBEEF
+    mock_boss_poke_para = MockPokeDataBattle(
+        dev_id = Species.TOXTRICITY,
+        form_id = 0,
+        talent_vnum = 3,
+    )
+    mock_info = MockRaidEnemyInfo(
+        boss_poke_para = mock_boss_poke_para
+    )
+    dummy_raid = TeraRaid(
+        is_enabled = 1,
+        area_id = 0,
+        display_type = 0,
+        den_id = 0,
+        seed = seed,
+        _unused_14 = 0,
+        content = 0,
+        collected_league_points = 0,
+    )
+    dummy_raid.generate_pokemon(mock_info)
+
+    assert dummy_raid.tera_type == TeraType.WATER
+    assert dummy_raid.encryption_constant == 0x14b294a
+    assert dummy_raid.pid == 0x8059c15d
+    assert dummy_raid.sidtid == 0x1bdb0373
+    assert not dummy_raid.is_shiny
+    assert dummy_raid.ivs == (31, 7, 31, 31, 28, 22)
+    assert dummy_raid.ability == Ability.PLUS
+    assert dummy_raid.ability_index == AbilityIndex.ABILITY_2
+    assert dummy_raid.gender == Gender.FEMALE
+    assert dummy_raid.nature == Nature.BRAVE
+    assert dummy_raid.height == 140
+    assert dummy_raid.weight == 128
+    assert dummy_raid.scale == 155
+
+def test_toxtricity_1_generation():
+    """Test tera raid generation of Toxtricity-1"""
+    PersonalDataHandler()
+    seed = 0xDEADBEEF
+    mock_boss_poke_para = MockPokeDataBattle(
+        dev_id = Species.TOXTRICITY,
+        form_id = 1,
+        talent_vnum = 3,
+    )
+    mock_info = MockRaidEnemyInfo(
+        boss_poke_para = mock_boss_poke_para
+    )
+    dummy_raid = TeraRaid(
+        is_enabled = 1,
+        area_id = 0,
+        display_type = 0,
+        den_id = 0,
+        seed = seed,
+        _unused_14 = 0,
+        content = 0,
+        collected_league_points = 0,
+    )
+    dummy_raid.generate_pokemon(mock_info)
+
+    assert dummy_raid.tera_type == TeraType.WATER
+    assert dummy_raid.encryption_constant == 0x14b294a
+    assert dummy_raid.pid == 0x8059c15d
+    assert dummy_raid.sidtid == 0x1bdb0373
+    assert not dummy_raid.is_shiny
+    assert dummy_raid.ivs == (31, 7, 31, 31, 28, 22)
+    assert dummy_raid.ability == Ability.MINUS
+    assert dummy_raid.ability_index == AbilityIndex.ABILITY_2
+    assert dummy_raid.gender == Gender.FEMALE
+    assert dummy_raid.nature == Nature.RELAXED
+    assert dummy_raid.height == 140
+    assert dummy_raid.weight == 128
+    assert dummy_raid.scale == 155
