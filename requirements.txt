@@ -8,3 +8,4 @@ numpy==1.23.5
 pyinstaller==5.6.2
 discord-webhook==1.0.0
 pyusb==1.2.1
+pytest==7.2.0

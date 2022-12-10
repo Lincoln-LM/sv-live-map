@@ -7,6 +7,7 @@ from sv_live_map_core.raid_block import TeraRaid
 from sv_live_map_core.poke_sprite_handler import PokeSpriteHandler
 from sv_live_map_core.image_widget import ImageWidget
 from sv_live_map_core.sv_enums import TeraType, Gender
+from sv_live_map_core.path_handler import get_path
 
 # type union not yet supported by pylint
 # pylint: disable=unsupported-binary-operation
@@ -165,21 +166,29 @@ class RaidInfoWidget(customtkinter.CTkFrame):
         if len(RaidInfoWidget.TERA_SPRITES) == 0:
             RaidInfoWidget.TERA_SPRITES = [
                 ImageTk.PhotoImage(
-                    Image.open(f"./resources/gem/{tera_type.name}.png")
+                    Image.open(
+                        get_path(f"./resources/gem/{tera_type.name}.png")
+                    )
                 )
                 for tera_type in TeraType
             ]
         if RaidInfoWidget.EMPTY_SPRITE is None:
             RaidInfoWidget.EMPTY_SPRITE = ImageTk.PhotoImage(
-                Image.open("./resources/info_icons/empty.png")
+                Image.open(
+                    get_path("./resources/info_icons/empty.png")
+                )
             )
         if RaidInfoWidget.EVENT_SPRITE is None:
             RaidInfoWidget.EVENT_SPRITE = ImageTk.PhotoImage(
-                Image.open("./resources/info_icons/event.png")
+                Image.open(
+                    get_path("./resources/info_icons/event.png")
+                )
             )
         if RaidInfoWidget.SHINY_SPRITE is None:
             RaidInfoWidget.SHINY_SPRITE = ImageTk.PhotoImage(
-                Image.open("./resources/info_icons/shiny.png")
+                Image.open(
+                    get_path("./resources/info_icons/shiny.png")
+                )
             )
 
     def grab_poke_sprite(self) -> Image:

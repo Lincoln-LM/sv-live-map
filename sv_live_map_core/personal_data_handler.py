@@ -2,13 +2,14 @@
 
 import json
 from .sv_enums import Ability, AbilityIndex, Gender, GenderGeneration, Species
+from .path_handler import get_path
 
 class PersonalDataHandler:
     """Get data from personal_data"""
     _personal_data: dict[str, dict] = None
     def __init__(self) -> None:
         with open(
-            "./resources/personal_data_partial.json",
+            get_path("./resources/personal_data_partial.json"),
             "r",
             encoding = "utf-8"
         ) as personal_data_json:

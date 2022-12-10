@@ -23,6 +23,7 @@ from sv_live_map_core.raid_block import RaidBlock, TeraRaid
 from sv_live_map_core.corrected_marker import CorrectedMarker
 from sv_live_map_core.personal_data_handler import PersonalDataHandler
 from sv_live_map_core.automation_window import AutomationWindow
+from sv_live_map_core.path_handler import get_path
 
 customtkinter.set_default_color_theme("blue")
 customtkinter.set_appearance_mode("dark")
@@ -69,7 +70,11 @@ class Application(customtkinter.CTk):
             with open("settings.json", "r", encoding = "utf-8") as settings_file:
                 self.settings = json.load(settings_file)
 
-        with open("./resources/den_locations.json", "r", encoding = "utf-8") as location_file:
+        with open(
+            get_path("./resources/den_locations.json"),
+            "r",
+            encoding = "utf-8"
+        ) as location_file:
             self.den_locations: dict[str, list[int, int, int]] = json.load(location_file)
 
         # ensure personal data is loaded
@@ -202,7 +207,14 @@ class Application(customtkinter.CTk):
         self.title(self.APP_NAME)
         self.geometry(f"{self.WIDTH}x{self.HEIGHT}")
         self.minsize(self.WIDTH, self.HEIGHT)
-        self.iconphoto(True, ImageTk.PhotoImage(Image.open(self.ICON_PATH)))
+        self.iconphoto(
+            True,
+            ImageTk.PhotoImage(
+                Image.open(
+                    get_path(self.ICON_PATH)
+                )
+            )
+        )
 
     def read_cached_tables(self) -> tuple[RaidEnemyTableArray]:
         """Read cached encounter tables"""
