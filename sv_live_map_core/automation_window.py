@@ -76,14 +76,17 @@ class AutomationWindow(customtkinter.CTkToplevel):
         last_seed = None
         while not self.target_found:
             if self.master.reader:
-                self.full_dateskip()
-
                 total_raid_count, total_reset_count, last_seed, raid_block = \
                     self.read_raids(total_raid_count, total_reset_count, last_seed)
 
                 popup_display_builder, webhook_display_builder = self.define_builders()
 
                 self.filter_raids(raid_block, popup_display_builder, webhook_display_builder)
+
+                if self.target_found:
+                    break
+
+                self.full_dateskip()
             else:
                 self.master.connection_error("Not connected to switch.")
                 self.target_found = True
@@ -231,6 +234,12 @@ class AutomationWindow(customtkinter.CTkToplevel):
                 raid,
                 matches_filters
             )
+        # render map if target found
+        if self.target_found:
+            self.master.read_all_raids(True)
+            # wait until rendering is done
+            while self.master.render_thread is not None:
+                self.master.reader.pause(0.2)
 
     def handle_displays(
         self,
