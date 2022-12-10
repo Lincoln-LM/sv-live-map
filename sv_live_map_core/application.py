@@ -108,6 +108,10 @@ class Application(customtkinter.CTk):
                 height = 5,
                 bd = 0
             )
+        self.draw_seperator()
+
+    def draw_seperator(self):
+        """Grid the Raid Info horizontal seperator"""
         self.info_frame_horizontal_separator.grid(
             row = 1,
             column = 0,
@@ -150,13 +154,21 @@ class Application(customtkinter.CTk):
         if self.settings.get("UseCachedTables", False):
             self.use_cached_tables.select()
 
+        self.scale_sprites_check = customtkinter.CTkCheckBox(
+            master = self.settings_frame,
+            text = "Scale images with zoom"
+        )
+        self.scale_sprites_check.grid(row = 3, column = 0, columnspan = 2, padx = 10, pady = 5)
+        if self.settings.get("ScaleImages", False):
+            self.scale_sprites_check.select()
+
         self.connect_button = customtkinter.CTkButton(
             master = self.settings_frame,
             text = "Connect!",
             width = 300,
             command = self.toggle_connection
         )
-        self.connect_button.grid(row = 3, column = 0, columnspan = 2, padx = 10, pady = 5)
+        self.connect_button.grid(row = 4, column = 0, columnspan = 2, padx = 10, pady = 5)
 
         self.position_button = customtkinter.CTkButton(
             master = self.settings_frame,
@@ -164,7 +176,7 @@ class Application(customtkinter.CTk):
             width = 300,
             command = self.toggle_position_work
         )
-        self.position_button.grid(row = 4, column = 0, columnspan = 2, padx = 10, pady = 5)
+        self.position_button.grid(row = 5, column = 0, columnspan = 2, padx = 10, pady = 5)
 
         self.read_raids_button = customtkinter.CTkButton(
             master = self.settings_frame,
@@ -172,13 +184,13 @@ class Application(customtkinter.CTk):
             width = 300,
             command = self.read_all_raids
         )
-        self.read_raids_button.grid(row = 5, column = 0, columnspan = 2, padx = 10, pady = 5)
+        self.read_raids_button.grid(row = 6, column = 0, columnspan = 2, padx = 10, pady = 5)
 
         self.raid_progress = customtkinter.CTkProgressBar(
             master = self.settings_frame,
             width = 300
         )
-        self.raid_progress.grid(row = 6, column = 0, columnspan = 2, padx = 10, pady = 5)
+        self.raid_progress.grid(row = 7, column = 0, columnspan = 2, padx = 10, pady = 5)
         self.raid_progress.set(0)
 
         self.automation_button = customtkinter.CTkButton(
@@ -187,7 +199,7 @@ class Application(customtkinter.CTk):
             width = 300,
             command = self.open_automation_window
         )
-        self.automation_button.grid(row = 6, column = 0, columnspan = 2, padx = 10, pady = 5)
+        self.automation_button.grid(row = 8, column = 0, columnspan = 2, padx = 10, pady = 5)
 
     def open_automation_window(self):
         """Open Automation Window"""
@@ -309,6 +321,7 @@ class Application(customtkinter.CTk):
                             raise error
                 self.reader.read_safety = False
                 if render:
+                    self.info_frame_horizontal_separator.grid_forget()
                     self.render_thread = self.render_raids(raid_block_data)
                 return raid_block_data
             except (TimeoutError, struct.error, binascii.Error) as error:
@@ -425,7 +438,8 @@ class Application(customtkinter.CTk):
                         pos_y,
                         icon = tera_sprite,
                         image = poke_sprite,
-                        command = popup_display
+                        command = popup_display,
+                        scale_with_zoom = self.scale_sprites_check.get()
                     )
                 else:
                     print(f"WARNING den {raid.id_str} location not present")
@@ -527,6 +541,7 @@ class Application(customtkinter.CTk):
             self.settings['IP'] = self.ip_entry.get()
             self.settings['UseCachedTables'] = self.use_cached_tables.get()
             self.settings['USB'] = self.usb_check.get()
+            self.settings['ScaleImages'] = self.scale_sprites_check.get()
             json.dump(self.settings, settings_file)
 
         # close reader on termination

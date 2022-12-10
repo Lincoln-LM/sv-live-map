@@ -9,11 +9,11 @@ def get_path(local_path: str) -> str:
     file_path = sys.executable if is_frozen else __file__
     path_addition = '.' if is_frozen else '..'
     return os.path.join(
-            os.path.abspath(
-                os.path.join(
-                    os.path.dirname(file_path),
-                    path_addition
-                )
-            ),
-            local_path
-        )
+        os.path.abspath(
+            os.path.join(
+                os.path.dirname(file_path),
+                path_addition
+            )
+        ),
+        local_path
+    )

@@ -6,7 +6,7 @@ from PIL import Image, ImageTk
 from sv_live_map_core.raid_block import TeraRaid
 from sv_live_map_core.poke_sprite_handler import PokeSpriteHandler
 from sv_live_map_core.image_widget import ImageWidget
-from sv_live_map_core.sv_enums import TeraType, Gender
+from sv_live_map_core.sv_enums import TeraType, Gender, StarLevel
 from sv_live_map_core.path_handler import get_path
 
 # type union not yet supported by pylint
@@ -15,10 +15,12 @@ from sv_live_map_core.path_handler import get_path
 class RaidInfoWidget(customtkinter.CTkFrame):
     """customtkinter widget for displaying raid info"""
     # pylint: disable=too-many-instance-attributes, too-many-ancestors
-    EMPTY_SPRITE: ImageTk.PhotoImage = None
-    EVENT_SPRITE: ImageTk.PhotoImage = None
-    SHINY_SPRITE: ImageTk.PhotoImage = None
+    STAR_UNDERLAY: ImageTk.PhotoImage = None
+    EVENT_UNDERLAY: ImageTk.PhotoImage = None
+    SHINY_OVERLAY: ImageTk.PhotoImage = None
     TERA_SPRITES: list[ImageTk.PhotoImage] = []
+    TERA_6_SPRITES: list[ImageTk.PhotoImage] = []
+    SEPARATOR_COLOR = "#949392"
 
     def __init__(
         self,
@@ -50,15 +52,11 @@ class RaidInfoWidget(customtkinter.CTkFrame):
 
         # pylint doesnt handle nested initialization well
         self.tera_sprite: ImageTk.PhotoImage
-        self.empty_sprite: ImageTk.PhotoImage
-        self.event_sprite: ImageTk.PhotoImage
-        self.shiny_sprite: ImageTk.PhotoImage
         self.tera_sprite_display: customtkinter.CTkButton | ImageWidget
         self.sprite_display: ImageWidget
         self.info_display: customtkinter.CTkLabel
-        self.event_sprite_display: ImageWidget
-        self.shiny_sprite_display: ImageWidget
         self.swap_location_button: customtkinter.CTkButton
+        self.horizontal_sep: customtkinter.CTkFrame
 
         self.initialize_components(raid_data, has_alternate_location)
 
@@ -66,15 +64,30 @@ class RaidInfoWidget(customtkinter.CTkFrame):
         """Draw all components of the widget"""
         self.poke_sprite = self.grab_poke_sprite()
         self.cache_sprites()
-        self.tera_sprite = RaidInfoWidget.TERA_SPRITES[raid_data.tera_type]
-        self.empty_sprite = RaidInfoWidget.EMPTY_SPRITE
-        self.event_sprite = RaidInfoWidget.EVENT_SPRITE
-        self.shiny_sprite = RaidInfoWidget.SHINY_SPRITE
+        self.tera_sprite = self.grab_tera_sprite(raid_data)
 
+        if not self.is_popup:
+            self.draw_horizontal_separator()
         self.draw_main_sprites()
         self.draw_info(raid_data)
         self.draw_action_buttons(has_alternate_location)
 
+    def draw_horizontal_separator(self):
+        """Draw horizontal separator"""
+        self.horizontal_sep = \
+            customtkinter.CTkFrame(
+                self,
+                bg_color = self.SEPARATOR_COLOR,
+                fg_color = customtkinter.ThemeManager.theme["color"]["frame_low"],
+                width = 500,
+                height = 5,
+                bd = 0
+            )
+        self.horizontal_sep.pack(
+            side = "top",
+            fill = "x",
+            pady = (0, 6)
+        )
     def draw_action_buttons(self, has_alternate_location: bool):
         """Draw swap button"""
         if not self.is_popup:
@@ -107,23 +120,6 @@ class RaidInfoWidget(customtkinter.CTkFrame):
             width = 200
         )
         self.info_display.pack(side = "left", fill = "x")
-        self.draw_info_sprites(raid_data)
-
-    def draw_info_sprites(self, raid_data: TeraRaid):
-        """Draw info sprites"""
-        self.event_sprite_display = ImageWidget(
-            master = self,
-            image = self.event_sprite if raid_data.is_event else self.empty_sprite,
-            fg_color = self.fg_color
-        )
-        self.event_sprite_display.pack(side = "left", fill = "y", pady = (20, 0))
-
-        self.shiny_sprite_display = ImageWidget(
-            master = self,
-            image = self.shiny_sprite if raid_data.is_shiny else self.empty_sprite,
-            fg_color = self.fg_color
-        )
-        self.shiny_sprite_display.pack(side = "left", fill = "y", pady = (20, 0))
 
     def draw_main_sprites(self):
         """Draw tera_sprite and poke_sprite"""
@@ -172,29 +168,61 @@ class RaidInfoWidget(customtkinter.CTkFrame):
                 )
                 for tera_type in TeraType
             ]
-        if RaidInfoWidget.EMPTY_SPRITE is None:
-            RaidInfoWidget.EMPTY_SPRITE = ImageTk.PhotoImage(
+        if len(RaidInfoWidget.TERA_6_SPRITES) == 0:
+            RaidInfoWidget.TERA_6_SPRITES = [
+                ImageTk.PhotoImage(
+                    Image.open(
+                        get_path(f"./resources/gem_6/{tera_type.name}.png")
+                    )
+                )
+                for tera_type in TeraType
+            ]
+        if RaidInfoWidget.SHINY_OVERLAY is None:
+            RaidInfoWidget.SHINY_OVERLAY = ImageTk.PhotoImage(
                 Image.open(
-                    get_path("./resources/info_icons/empty.png")
+                    get_path("./resources/overlay/shiny.png")
                 )
             )
-        if RaidInfoWidget.EVENT_SPRITE is None:
-            RaidInfoWidget.EVENT_SPRITE = ImageTk.PhotoImage(
+        if RaidInfoWidget.EVENT_UNDERLAY is None:
+            RaidInfoWidget.EVENT_UNDERLAY = ImageTk.PhotoImage(
                 Image.open(
-                    get_path("./resources/info_icons/event.png")
+                    get_path("./resources/overlay/event.png")
                 )
             )
-        if RaidInfoWidget.SHINY_SPRITE is None:
-            RaidInfoWidget.SHINY_SPRITE = ImageTk.PhotoImage(
+        if RaidInfoWidget.STAR_UNDERLAY is None:
+            RaidInfoWidget.STAR_UNDERLAY = ImageTk.PhotoImage(
                 Image.open(
-                    get_path("./resources/info_icons/shiny.png")
+                    get_path("./resources/overlay/star.png")
                 )
             )
 
+    def grab_tera_sprite(self, raid_data):
+        """Grab tera_sprite from cache"""
+        underlay = None
+        if self.raid_data.difficulty < StarLevel.SIX_STAR:
+            sprite = RaidInfoWidget.TERA_SPRITES[raid_data.tera_type]
+        else:
+            sprite = RaidInfoWidget.TERA_6_SPRITES[raid_data.tera_type]
+            underlay = ImageTk.getimage(self.STAR_UNDERLAY)
+        if self.raid_data.is_event:
+            underlay = underlay or ImageTk.getimage(self.EVENT_UNDERLAY)
+        if underlay:
+            basic_sprite: Image = ImageTk.getimage(sprite)
+            basic_sprite = basic_sprite.resize((basic_sprite.height - 4, basic_sprite.width - 4))
+            underlay.paste(im = basic_sprite, box = (2, 2), mask = basic_sprite)
+            sprite = ImageTk.PhotoImage(underlay)
+        return sprite
+
     def grab_poke_sprite(self) -> Image:
         """Grab poke_sprite from the sprite handler"""
-        return self.poke_sprite_handler.grab_sprite(
+        sprite = self.poke_sprite_handler.grab_sprite(
             self.raid_data.species,
             self.raid_data.form,
             self.raid_data.gender == Gender.FEMALE
         )
+        if self.raid_data.is_shiny:
+            basic_sprite: Image = ImageTk.getimage(sprite)
+            shiny_overlay = ImageTk.getimage(self.SHINY_OVERLAY)
+            basic_sprite.paste(im = shiny_overlay, box = (0, 0), mask = shiny_overlay)
+            sprite = ImageTk.PhotoImage(basic_sprite)
+        return sprite

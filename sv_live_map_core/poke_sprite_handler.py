@@ -29,7 +29,7 @@ class PokeSpriteHandler:
                 img = ImageTk.PhotoImage(img)
             self.cache[(species, form, female)] = img
 
-    def grab_sprite(self, species: Species, form: int, female: bool) -> Image.Image:
+    def grab_sprite(self, species: Species, form: int, female: bool) -> Image.Image | ImageTk.PhotoImage:
         """Grab a sprite from cache or request"""
         if form == 0:
             form = None

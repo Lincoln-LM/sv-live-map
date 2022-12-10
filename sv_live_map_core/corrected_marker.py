@@ -2,9 +2,19 @@
 
 import tkinter
 from tkintermapview.canvas_position_marker import CanvasPositionMarker
+from tkintermapview import TkinterMapView
+from PIL import Image, ImageTk
 
 class CorrectedMarker(CanvasPositionMarker):
     """CanvasPositionMarker that renders images correctly"""
+    def __init__(self, map_widget: TkinterMapView, position: tuple, scale_with_zoom = False, **kwargs):
+        super().__init__(map_widget, position, **kwargs)
+        self.scale_with_zoom = scale_with_zoom
+        self.last_zoom = self.map_widget.zoom
+        # tkinter images get garbage collected apparently?
+        self.image_copy = self.image
+        self.icon_copy = self.icon
+
     def bind_click(self, obj):
         """Bind click methods of a canvas object"""
         if self.command is not None:
@@ -41,6 +51,11 @@ class CorrectedMarker(CanvasPositionMarker):
             self.unrender()
             self.map_widget.manage_z_order()
             return
+
+        if self.last_zoom != self.map_widget.zoom:
+            # ensure icons are re-rendered when zoom changes
+            self.last_zoom = self.map_widget.zoom
+            self.unrender()
 
         canvas_pos_x, canvas_pos_y = self.get_canvas_pos(self.position)
 
@@ -80,11 +95,21 @@ class CorrectedMarker(CanvasPositionMarker):
         """Update canvas image"""
         # draw image
         if self.canvas_image is None:
+            img = ImageTk.getimage(self.image)
+            if self.scale_with_zoom:
+                img = img.resize(
+                    (
+                        round(self.image.width() * max(1, self.last_zoom / 2)),
+                        round(self.image.height() * max(1, self.last_zoom / 2))
+                    ),
+                    Image.LANCZOS
+                )
+            self.image_copy = ImageTk.PhotoImage(img)
             self.canvas_image = self.map_widget.canvas.create_image(
                 canvas_pos_x,
                 canvas_pos_y,
                 anchor = tkinter.S,
-                image = self.image,
+                image = self.image_copy,
                 tag = "marker"
             )
             self.bind_click(self.canvas_image)
@@ -119,13 +144,23 @@ class CorrectedMarker(CanvasPositionMarker):
         """Update icon built from image"""
         # draw icon
         if self.canvas_icon is None:
-            self.canvas_icon = self.map_widget.canvas.create_image(
-                    canvas_pos_x,
-                    canvas_pos_y,
-                    anchor = self.icon_anchor,
-                    image = self.icon,
-                    tag = "marker"
+            img = ImageTk.getimage(self.icon)
+            if self.scale_with_zoom:
+                img = img.resize(
+                    (
+                        round(self.icon.width() * max(1, self.last_zoom / 2)),
+                        round(self.icon.height() * max(1, self.last_zoom / 2))
+                    ),
+                    Image.LANCZOS
                 )
+            self.icon_copy = ImageTk.PhotoImage(img)
+            self.canvas_icon = self.map_widget.canvas.create_image(
+                canvas_pos_x,
+                canvas_pos_y,
+                anchor = self.icon_anchor,
+                image = self.icon_copy,
+                tag = "marker"
+            )
             self.bind_click(self.canvas_icon)
         # move icon
         else:
