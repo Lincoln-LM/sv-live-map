@@ -69,7 +69,19 @@ class Application(customtkinter.CTk):
             with open("settings.json", "r", encoding = "utf-8") as settings_file:
                 self.settings = json.load(settings_file)
 
-        with open("./resources/den_locations.json", "r", encoding = "utf-8") as location_file:
+        with open(
+            os.path.join(
+                os.path.abspath(
+                    os.path.join(
+                        os.path.dirname(__file__),
+                        '..'
+                    )
+                ),
+                "./resources/den_locations.json"
+            ),
+            "r",
+            encoding = "utf-8"
+        ) as location_file:
             self.den_locations: dict[str, list[int, int, int]] = json.load(location_file)
 
         # ensure personal data is loaded
@@ -202,7 +214,22 @@ class Application(customtkinter.CTk):
         self.title(self.APP_NAME)
         self.geometry(f"{self.WIDTH}x{self.HEIGHT}")
         self.minsize(self.WIDTH, self.HEIGHT)
-        self.iconphoto(True, ImageTk.PhotoImage(Image.open(self.ICON_PATH)))
+        self.iconphoto(
+            True,
+            ImageTk.PhotoImage(
+                Image.open(
+                    os.path.join(
+                        os.path.abspath(
+                            os.path.join(
+                                os.path.dirname(__file__),
+                                '..'
+                            )
+                        ),
+                        self.ICON_PATH
+                    )
+                )
+            )
+        )
 
     def read_cached_tables(self) -> tuple[RaidEnemyTableArray]:
         """Read cached encounter tables"""

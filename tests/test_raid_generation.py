@@ -1,7 +1,7 @@
 """Test TeraRaid generation"""
 # pylint: disable=import-error
-from sv_live_map_core.raid_block import TeraRaid
-from sv_live_map_core.sv_enums import (
+from .context import (
+    TeraRaid,
     StarLevel,
     Species,
     GenderGeneration,
@@ -16,7 +16,6 @@ from sv_live_map_core.sv_enums import (
     Gender,
     Nature
 )
-from sv_live_map_core.personal_data_handler import PersonalDataHandler
 
 class MockParamSet:
     """Mock version of ParamSet"""
@@ -74,7 +73,6 @@ class MockRaidEnemyInfo:
 
 def test_basic_generation():
     """Basic test of tera raid generation"""
-    PersonalDataHandler()
     seed = 0x11223344
     mock_boss_poke_para = MockPokeDataBattle(
         dev_id = Species.PIKACHU,
@@ -111,7 +109,6 @@ def test_basic_generation():
 
 def test_guaranteed_iv_generation():
     """Test tera raid generation with guaranteed ivs"""
-    PersonalDataHandler()
     seed = 0x88776655
     mock_boss_poke_para = MockPokeDataBattle(
         dev_id = Species.MAUSHOLD,
@@ -149,7 +146,6 @@ def test_guaranteed_iv_generation():
 
 def test_toxtricity_0_generation():
     """Test tera raid generation of Toxtricity-0"""
-    PersonalDataHandler()
     seed = 0xDEADBEEF
     mock_boss_poke_para = MockPokeDataBattle(
         dev_id = Species.TOXTRICITY,
@@ -187,7 +183,6 @@ def test_toxtricity_0_generation():
 
 def test_toxtricity_1_generation():
     """Test tera raid generation of Toxtricity-1"""
-    PersonalDataHandler()
     seed = 0xDEADBEEF
     mock_boss_poke_para = MockPokeDataBattle(
         dev_id = Species.TOXTRICITY,
