@@ -217,3 +217,46 @@ def test_toxtricity_1_generation():
     assert dummy_raid.height == 140
     assert dummy_raid.weight == 128
     assert dummy_raid.scale == 155
+
+def test_forced_generation():
+    """Test tera raid generation with forced info"""
+    seed = 0x66774455
+    mock_boss_poke_para = MockPokeDataBattle(
+        dev_id = Species.CHARIZARD,
+        form_id = 0,
+        talent_type = IVGeneration.SET_IVS,
+        talent_value = MockParamSet(31, 31, 31, 31, 31, 31),
+        sex = GenderGeneration.MALE,
+        seikaku = NatureGeneration.MODEST,
+        tokusei = AbilityGeneration.ABILITY_HA,
+        rare_type = ShinyGeneration.SHINY_LOCKED,
+        gem_type = TeraTypeGeneration.DRAGON
+    )
+    mock_info = MockRaidEnemyInfo(
+        boss_poke_para = mock_boss_poke_para
+    )
+    dummy_raid = TeraRaid(
+        is_enabled = 1,
+        area_id = 0,
+        display_type = 0,
+        den_id = 0,
+        seed = seed,
+        _unused_14 = 0,
+        content = 0,
+        collected_league_points = 0,
+    )
+    dummy_raid.generate_pokemon(mock_info)
+
+    assert dummy_raid.tera_type == TeraType.DRAGON
+    assert dummy_raid.encryption_constant == 0x8914aeb0
+    assert dummy_raid.pid == 0x43b01291
+    assert dummy_raid.sidtid == 0x943a5cb6
+    assert not dummy_raid.is_shiny
+    assert dummy_raid.ivs == (31, 31, 31, 31, 31, 31)
+    assert dummy_raid.ability == Ability.SOLAR_POWER
+    assert dummy_raid.ability_index == AbilityIndex.ABILITY_HA
+    assert dummy_raid.gender == Gender.MALE
+    assert dummy_raid.nature == Nature.MODEST
+    assert dummy_raid.height == 145
+    assert dummy_raid.weight == 157
+    assert dummy_raid.scale == 63
