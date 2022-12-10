@@ -112,7 +112,7 @@ def test_generation():
     assert dummy_raid.is_shiny == False
     assert dummy_raid.ivs == (1, 0, 20, 14, 3, 11)
     assert dummy_raid.ability == Ability.STATIC
-    assert dummy_raid.ability_index == AbilityIndex.ABILITY_1
+    assert dummy_raid.ability_index == AbilityIndex.ABILITY_2
     assert dummy_raid.gender == Gender.FEMALE
     assert dummy_raid.nature == Nature.LONELY
     assert dummy_raid.height == 124
