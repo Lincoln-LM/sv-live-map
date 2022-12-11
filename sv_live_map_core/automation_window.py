@@ -277,7 +277,7 @@ class AutomationWindow(customtkinter.CTkToplevel):
         self.master.reader.manual_click("HOME")
         self.master.reader.pause(0.8)
         self.master.reader.manual_click("HOME")
-        self.master.reader.pause(5)
+        self.master.reader.pause(3 if self.master.reader.usb_connection else 5)
 
     def skip_date(self):
         """Skip date with touch screen"""
@@ -294,7 +294,7 @@ class AutomationWindow(customtkinter.CTkToplevel):
         self.master.reader.manual_click("DDOWN", 2.5, 3)
         self.master.reader.manual_click("A")
         # scroll down to datetime, this is not fully consistent but will not break execution
-        self.master.reader.manual_click("DDOWN", 0.825)
+        self.master.reader.manual_click("DDOWN", 0.7 if self.master.reader.usb_connection else 0.825)
         self.master.reader.manual_click("A")
         self.master.reader.pause(0.4)
         # select Date and Time
@@ -307,7 +307,7 @@ class AutomationWindow(customtkinter.CTkToplevel):
         # touch screen is much faster than dpad
         for _ in range(3):
             self.master.reader.touch_hold(845, 545, 50)
-        self.master.reader.pause(1.5)
+        self.master.reader.pause(0.5 if self.master.reader.usb_connection else 1.5)
 
     def leave_to_home(self):
         """Leave the game to the home menu"""
