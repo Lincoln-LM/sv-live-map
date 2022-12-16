@@ -1,7 +1,7 @@
 """Filter for TeraRaids"""
 
 from .raid_block import TeraRaid
-from .sv_enums import AbilityIndex, Gender, Nature, Species
+from .sv_enums import AbilityIndex, Gender, Nature, Species, StarLevel
 
 class RaidFilter:
     """Filter for TeraRaids"""
@@ -10,6 +10,7 @@ class RaidFilter:
     ANY_GENDER = list(Gender)
     ANY_NATURE = list(Nature)
     ANY_SPECIES = list(Species)
+    ANY_DIFFICULTY = list(StarLevel)
 
     def __init__(
         self,
@@ -24,6 +25,7 @@ class RaidFilter:
         nature_filter: list[Nature] = None,
         species_filter: list[Species] = None,
         shiny_filter: bool = False,
+        star_filter: list[StarLevel] = None
     ) -> None:
         self.hp_filter = hp_filter or self.ANY_IV
         self.atk_filter = atk_filter or self.ANY_IV
@@ -36,6 +38,7 @@ class RaidFilter:
         self.nature_filter = nature_filter or self.ANY_NATURE.copy()
         self.species_filter = species_filter or self.ANY_SPECIES.copy()
         self.shiny_filter = shiny_filter
+        self.star_filter = star_filter or self.ANY_DIFFICULTY.copy()
 
     @property
     def iv_filters(self) -> list[range]:
@@ -65,6 +68,9 @@ class RaidFilter:
             return False
 
         if raid.species not in self.species_filter:
+            return False
+
+        if raid.difficulty not in self.star_filter:
             return False
 
         return bool(not self.shiny_filter or raid.is_shiny)

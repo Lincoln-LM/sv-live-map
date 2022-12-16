@@ -13,7 +13,7 @@ import discord_webhook
 from .raid_info_widget import RaidInfoWidget
 from .raid_filter import RaidFilter
 from .iv_filter_widget import IVFilterWidget
-from .sv_enums import Nature, AbilityIndex, Gender, Species
+from .sv_enums import Nature, AbilityIndex, Gender, Species, StarLevel
 from .checked_combobox import CheckedCombobox
 
 if TYPE_CHECKING:
@@ -218,7 +218,8 @@ class AutomationWindow(customtkinter.CTkToplevel):
             gender_filter = self.gender_filter.get(),
             nature_filter = self.nature_filter.get(),
             species_filter = self.species_filter.get(),
-            shiny_filter = self.shiny_filter.get()
+            shiny_filter = self.shiny_filter.get(),
+            star_filter = self.difficulty_filter.get()
         )
 
         for raid in raid_block.raids:
@@ -533,5 +534,17 @@ class AutomationWindow(customtkinter.CTkToplevel):
         )
         self.species_filter.grid(row = 3, column = 2, padx = 10)
 
+        self.difficulty_label = customtkinter.CTkLabel(
+            self.filter_frame,
+            text = "Difficulty:"
+        )
+        self.difficulty_label.grid(row = 4, column = 1)
+
+        self.difficulty_filter = CheckedCombobox(
+            self.filter_frame,
+            values = list(StarLevel)
+        )
+        self.difficulty_filter.grid(row = 4, column = 2, padx = 10)
+
         self.shiny_filter = customtkinter.CTkCheckBox(self.filter_frame, text = "Shiny Only")
-        self.shiny_filter.grid(row = 4, column = 1, columnspan = 2)
+        self.shiny_filter.grid(row = 5, column = 1, columnspan = 2)
