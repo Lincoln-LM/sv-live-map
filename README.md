@@ -1,6 +1,6 @@
 # sv-live-map
 [![GitHub License](https://img.shields.io/github/license/Lincoln-LM/sv-live-map?color=ff69b4)](https://github.com/Lincoln-LM/sv-live-map/blob/master/LICENSE)
-[![](https://img.shields.io/github/workflow/status/Lincoln-LM/sv-live-map/Package%20Application%20with%20PyInstaller?logo=github)](https://github.com/Lincoln-LM/sv-live-map/actions/workflows/main.yml)
+[![](https://img.shields.io/github/actions/workflow/status/Lincoln-LM/sv-live-map/main.yml?branch=master)](https://github.com/Lincoln-LM/sv-live-map/actions/workflows/main.yml)
 
 [![](https://img.shields.io/badge/Windows%20Executable-Direct%20Download-blue)](https://nightly.link/Lincoln-LM/sv-live-map/workflows/main/master/windows-build.zip)
 
