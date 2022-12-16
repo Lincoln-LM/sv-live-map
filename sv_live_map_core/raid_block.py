@@ -426,6 +426,8 @@ class RaidBlock:
             den_delivery_group_id = None
             for delivery_group_id, delivery_group_size in enumerate(delivery_raid_priority):
                 if i < delivery_group_size:
+                    if not self.validate_event_slots(raid_enemy_table_arrays, story_progress, game, delivery_group_id):
+                        continue
                     den_delivery_group_id = delivery_group_id
                     break
                 i -= delivery_group_size
@@ -435,6 +437,30 @@ class RaidBlock:
                 game,
                 den_delivery_group_id
             )
+
+    def validate_event_slots(
+        self,
+        raid_enemy_table_arrays: tuple[RaidEnemyTableArray],
+        story_progress: StoryProgress,
+        game: Game,
+        delivery_group_id: int
+    ):
+        """Check if a delivery group id has spawnable pokemon"""
+        dummy_raid = TeraRaid(
+            is_enabled = 1,
+            area_id = 0,
+            display_type = 0,
+            den_id = 0,
+            seed = 0,
+            _unused_14 = 0,
+            content = 0,
+            collected_league_points = 0,
+        )
+        dummy_raid.delivery_group_id = delivery_group_id
+        dummy_raid.is_event = True
+        dummy_raid.difficulty = StarLevel.EVENT
+        total = dummy_raid.build_encounter_table(raid_enemy_table_arrays, story_progress, game)[1]
+        return total != 0
 
 def process_raid_block(raid_block: bytes) -> RaidBlock:
     """Process raid block with bytechomp"""
