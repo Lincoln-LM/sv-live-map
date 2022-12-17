@@ -46,15 +46,19 @@ class FlatBufferObject:
 
     def read_int(self, _type: INT_TYPES, position: int, default = None):
         """Read value of _type at position"""
-        pos_offset = self._table.Offset(position)
-        if pos_offset:
+        if pos_offset := self._table.Offset(position):
             return self._table.Get(_type, pos_offset + self._offset)
         return default
 
-    def read_int_enum(self, _type: INT_TYPES, position: int, _enum: Type[IntEnum], default = None):
+    def read_int_enum(
+        self,
+        _type: INT_TYPES,
+        position: int,
+        _enum: Type[IntEnum] | Callable,
+        default = None
+    ):
         """Read value of _type at position as _enum"""
-        pos_offset = self._table.Offset(position)
-        if pos_offset:
+        if pos_offset := self._table.Offset(position):
             return _enum(self._table.Get(_type, pos_offset + self._offset))
         return default
 
@@ -74,8 +78,7 @@ class FlatBufferObject:
 
     def read_object(self, _object_type: Type[Self], position: int, default = None):
         """Read FlatBufferObject of _object_type at position"""
-        pos_offset = self._table.Offset(position)
-        if pos_offset:
+        if pos_offset := self._table.Offset(position):
             val_offset = self._table.Indirect(pos_offset + self._offset)
             return _object_type(
                 self._table.Bytes,
@@ -93,8 +96,7 @@ class FlatBufferObject:
     def read_object_array(self, _object_type: Type[Self], position: int):
         """Read an array of FlatBufferObjects of _object_type at position"""
         array = []
-        pos_offset = self._table.Offset(position)
-        if pos_offset:
+        if pos_offset := self._table.Offset(position):
             array_offset = self._table.Vector(pos_offset)
             array_len = self._table.VectorLen(pos_offset)
             for array_offset in range(array_offset, array_offset + array_len * 4, 4):

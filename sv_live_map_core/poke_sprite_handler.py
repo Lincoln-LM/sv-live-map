@@ -1,50 +1,44 @@
-"""Sprite handler to grab pokemon sprites from PKHex"""
+"""Sprite handler to grab pokemon sprites"""
 
-import requests
 import os
 from PIL import Image, ImageTk
 from .sv_enums import Species
+from .path_handler import get_path
 
 # type union not yet supported by pylint
 # pylint: disable=unsupported-binary-operation
 
 class PokeSpriteHandler:
-    """Sprite handler to grab pokemon sprites from PKHex"""
-    SPRITE_LINK = "https://raw.githubusercontent.com/kwsch/PKHeX/master/PKHeX.Drawing.PokeSprite/Resources/img/Artwork%20Pokemon%20Sprites/a_{title}.png"
+    """Sprite handler to grab pokemon sprites"""
     def __init__(self, tk_image = False):
         self.tk_image = tk_image
-        self.cache: dict[(Species, int), Image.Image | ImageTk.PhotoImage] = {}
-        if not os.path.exists("./cached_sprites/"):
-            os.mkdir("./cached_sprites/")
-        for file in os.listdir("./cached_sprites/"):
+        self.cache: dict[(Species, int, bool), Image.Image | ImageTk.PhotoImage] = {}
+        sprite_path = get_path("./resources/sprites/")
+        for file in os.listdir(sprite_path):
             title = file.split(".")[0]
             split = title.split("-")
-            species = Species(int(split[0]))
-            if "-" not in title:
-                form = None
-            else:
-                form = int(split[-1])
-            img = Image.open(f"./cached_sprites/{file}")
+            species = Species(int(split[0].replace("f", "")))
+            form = None if "-" not in title else int(split[-1].replace("f", ""))
+            female = title.endswith("f")
+            img = Image.open(f"{sprite_path}{file}")
             # convert to tk image for gui
             if self.tk_image:
                 img = ImageTk.PhotoImage(img)
-            self.cache[(species, form)] = img
+            self.cache[(species, form, female)] = img
 
-    def grab_sprite(self, species: Species, form: int) -> Image.Image:
-        """Grab a sprite from PKHex's github"""
+    def grab_sprite(
+        self,
+        species: Species,
+        form: int,
+        female: bool
+    ) -> Image.Image | ImageTk.PhotoImage:
+        """Grab a sprite from cache or request"""
         if form == 0:
             form = None
-        if (species, form) not in self.cache:
-            title = f"{species}"
-            if form:
-                title += f"-{form}"
-            sprite_location = self.SPRITE_LINK.replace("{title}", title)
-            req = requests.get(sprite_location, stream = True, timeout = 5.0)
-            img = Image.open(req.raw)
-            img.save(f"./cached_sprites/{title}.png")
-            # convert to tk image for gui
-            if self.tk_image:
-                img = ImageTk.PhotoImage(img)
-            self.cache[(species, form)] = img
-
-        return self.cache[(species, form)]
+        return self.cache.get(
+            (species, form, female),
+            self.cache.get(
+                (species, form, False),
+                None
+            )
+        )

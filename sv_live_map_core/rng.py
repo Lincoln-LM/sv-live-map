@@ -42,13 +42,14 @@ class Xoroshiro128Plus:
             mask |= mask >> (Xoroshiro128Plus._ONE << np.uint64(i))
         return mask
 
-    def rand(self, maximum: np.uint64) -> int:
+    def rand(self, maximum: np.uint64 = 0xFFFFFFFF) -> int:
         """Generate a pseudorandom number in range [0, maximum)"""
         assert maximum != self._ZERO
         # ensure integer inputs are casted to numpy ints
         maximum = np.uint64(maximum)
         mask = self.get_mask(maximum)
         # ensure loop is at least run once
+        # sourcery skip: use-assigned-variable
         result = maximum
         while result >= maximum:
             result = self.next() & mask

@@ -5,7 +5,7 @@ from .sv_enums import (
     Game,
     Move,
     Species,
-    Gender,
+    GenderGeneration,
     NatureGeneration,
     Item,
     TeraTypeGeneration,
@@ -42,6 +42,7 @@ class RaidEnemyTable(FlatBufferObject):
 
 class RaidEnemyInfo(FlatBufferObject):
     """Spawn info of raid pokemon"""
+    # pylint: disable=too-many-instance-attributes
     def __init__(self, buf: bytearray, offset: int):
         FlatBufferObject.__init__(self, buf, offset)
         self.rom_ver: Game = self.read_init_int_enum(I16, Game)
@@ -60,11 +61,12 @@ class RaidEnemyInfo(FlatBufferObject):
 
 class PokeDataBattle(FlatBufferObject):
     """Data that describes attributes of the pokemon itself"""
+    # pylint: disable=too-many-instance-attributes
     def __init__(self, buf: bytearray, offset: int):
         FlatBufferObject.__init__(self, buf, offset)
         self.dev_id: Species = self.read_init_int_enum(U16, Species)
         self.form_id: int = self.read_init_int(I16)
-        self.sex: Gender = self.read_init_int_enum(I32, Gender)
+        self.sex: GenderGeneration = self.read_init_int_enum(I32, GenderGeneration)
         self.item: Item = self.read_init_int_enum(I32, Item)
         self.level: int = self.read_init_int(I32)
         self.ball_id: Ball = self.read_init_int_enum(I32, Ball)
@@ -115,6 +117,7 @@ class RaidBossSizeData(FlatBufferObject):
 
 class RaidBossData(FlatBufferObject):
     """Data that describes raid boss behavior"""
+    # pylint: disable=too-many-instance-attributes
     def __init__(self, buf: bytearray, offset: int):
         FlatBufferObject.__init__(self, buf, offset)
         self.hp_coef: int = self.read_init_int(I16)
@@ -150,7 +153,7 @@ class RaidTimeData(FlatBufferObject):
     """Data that describes the timer during raid battle"""
     def __init__(self, buf: bytearray, offset: int):
         FlatBufferObject.__init__(self, buf, offset)
-        self.is_active: bool = self.read_init_int(U8)
+        self.is_active: bool = self.read_init_int_enum(U8, bool)
         self.game_limit: int = self.read_init_int(I32)
         self.client_limit: int = self.read_init_int(I32)
         self.command_limit: int = self.read_init_int(I32)
