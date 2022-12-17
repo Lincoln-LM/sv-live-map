@@ -80,6 +80,10 @@ def decrypt_array9(ek9: bytearray) -> bytearray:
 
     return unshuffled
 
+def is_shiny(pid, tid, sid):
+    """Calculate shiniess"""
+    return ((pid & 0xFFFF) ^ (pid >> 16) ^ tid ^ sid) < 0x10
+
 @dataclass
 class PK9:
     """Stored pokemon information"""
@@ -139,6 +143,7 @@ class PK9:
 
     def __post_init__(self):
         self.species: Species = Species(self._species)
+        self.is_shiny: bool = is_shiny(self.pid, self.tid, self.sid)
 
 @dataclass
 class EK9:
@@ -156,11 +161,6 @@ class EK9:
         # bytearray is dumb and wont use int()
         data = bytearray(int(x) for x in self._data)
         # should both be 0 if unencrypted
-        zeros = (
-            int.from_bytes(data[0x70:0x72], 'little'),
-            int.from_bytes(data[0x110:0x112], 'little')
-        )
-        # if encrypted
-        if 0 not in zeros:
+        if int.from_bytes(data[0x70:0x72], 'little') != 0 or int.from_bytes(data[0x110:0x112], 'little'):
             return decrypt_array9(data)
         return bytes(data)

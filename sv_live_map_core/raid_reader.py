@@ -31,9 +31,13 @@ class RaidReader(NXReader):
         usb_connection: bool = False,
         read_safety: bool = False,
         raid_enemy_table_arrays: tuple[RaidEnemyTableArray, 7] = None,
+        skip_tables = False,
     ):
         super().__init__(ip_address, port, usb_connection)
         self.read_safety = read_safety
+        if skip_tables:
+            print("WARNING: skipping reading raid tables!")
+            return
         self.raid_enemy_table_arrays: tuple[RaidEnemyTableArray, 7] = \
             raid_enemy_table_arrays or self.read_raid_enemy_table_arrays()
         # TODO: cache
