@@ -66,7 +66,7 @@ class RaidReader(NXReader):
         # for the sake of showing how to decrypt it this is not done
         progress = StoryProgress.SIX_STAR_UNLOCKED
         for offset in reversed(self.DIFFICULTY_FLAG_LOCATIONS):
-            if self.read_save_block_int(offset, 1) == 2:
+            if self.read_save_block_bool(offset):
                 return progress
             progress -= 1
         return StoryProgress.DEFAULT
@@ -85,9 +85,13 @@ class RaidReader(NXReader):
         assert reader.is_complete(), "Invalid data size"
         return reader.build()
 
-    def read_save_block_int(self, offset: int, size: int) -> int:
-        """Read decrypted save block int at offset"""
-        return int.from_bytes(self.read_save_block(offset, size), 'little')
+    def read_save_block_int(self, offset: int) -> int:
+        """Read decrypted save block u32 at offset"""
+        return int.from_bytes(self.read_save_block(offset, 5)[1:], 'little')
+
+    def read_save_block_bool(self, offset: int) -> int:
+        """Read decrypted save block boolean at offset"""
+        return int.from_bytes(self.read_save_block(offset, 1), 'little') == 2
 
     def read_save_block(self, offset: int, size: int) -> bytearray:
         """Read decrypted save block at offset"""
