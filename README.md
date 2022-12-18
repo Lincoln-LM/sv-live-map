@@ -8,7 +8,7 @@
 
 [![](https://img.shields.io/badge/Python%20Scripts-Direct%20Download-orange)](https://github.com/Lincoln-LM/sv-live-map/archive/refs/heads/master.zip)
 
-WIP GUI Map displaying information on Tera Raid Dens in Pokémon Scarlet and Violet
+GUI Map for displaying information on Tera Raid Dens in Pokémon Scarlet and Violet
 
 Spiritual sequel to [PLA-Live-Map](https://github.com/Lincoln-LM/PLA-Live-Map)
 
