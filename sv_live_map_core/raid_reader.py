@@ -2,8 +2,11 @@
 
 import contextlib
 import socket
+import io
+import struct
 from typing import Type
 import bytechomp
+from PIL import Image
 from sv_live_map_core.nxreader import NXReader
 from sv_live_map_core.sv_enums import StarLevel, StoryProgress, Game
 from sv_live_map_core.raid_enemy_table_array import RaidEnemyTableArray
@@ -98,6 +101,47 @@ class RaidReader(NXReader):
         key = self.read_pointer_int(f"{self.SAVE_BLOCK_PTR}+{offset:X}", 4)
         block = bytearray(self.read_pointer(f"[{self.SAVE_BLOCK_PTR}+{offset + 8:X}]", size))
         return self._decrypt_save_block(key, block)
+
+    def read_save_block_object(self, offset: int) -> bytearray:
+        """Read decrypted save block object at offset"""
+        key = self.read_pointer_int(f"{self.SAVE_BLOCK_PTR}+{offset:X}", 4)
+        header = bytearray(self.read_pointer(f"[{self.SAVE_BLOCK_PTR}+{offset + 8:X}]", 5))
+        header = self._decrypt_save_block(key, header)
+        # discard type byte
+        size = int.from_bytes(header[1:], 'little')
+        full_object = bytearray(
+            self.read_pointer(
+                f"[{self.SAVE_BLOCK_PTR}+{offset + 8:X}]",
+                5 + size
+            )
+        )
+        # discard type and size bytes
+        return self._decrypt_save_block(key, full_object)[5:]
+
+    def read_trainer_icon(self) -> Image:
+        """Read trainer icon as PIL image"""
+        # thanks NPO! https://github.com/NPO-197
+        def build_dxt1_header(width, height):
+            """Build DXT1 header"""
+            return b'\x44\x44\x53\x20\x7C\x00\x00\x00\x07\x10\x08\x00' \
+                + struct.pack("<II", height, width) \
+                + b'\x00\x7E\x09\x00\x00\x00\x00\x00\x01\x00\x00\x00' \
+                b'\x49\x4D\x41\x47\x45\x4D\x41\x47\x49\x43\x4B\x00' \
+                b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00' \
+                b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00' \
+                b'\x00\x00\x00\x00\x00\x00\x00\x00\x20\x00\x00\x00' \
+                b'\x04\x00\x00\x00\x44\x58\x54\x31\x00\x00\x00\x00' \
+                b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00' \
+                b'\x00\x00\x00\x00\x00\x10\x00\x00\x00\x00\x00\x00' \
+                b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
+        return Image.open(
+            io.BytesIO(
+                build_dxt1_header(
+                    self.read_save_block_int(0x1a3c0),
+                    self.read_save_block_int(0x1da0)
+                ) + self.read_save_block_object(0x273e0)
+            )
+        )
 
     def read_game_version(self) -> Game:
         """Read game version"""

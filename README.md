@@ -43,6 +43,7 @@ The main purpose of this project is to show off [elegant parsing of flatbuffer b
 * [Kaphotics/kwsch](https://github.com/kwsch) and the [PKHex](https://github.com/kwsch/PKHeX) dev contributors for their work on reverse-engineering and documentation
 * [EzPzStreamz/SteveCookTU](https://github.com/SteveCookTU) for help with game resources and direct aid in reverse engineering
 * [SkyLink98/Manu098vm](https://github.com/Manu098vm) for their early SV research along with documentation on memory pointers in [SVResearches](https://github.com/Manu098vm/SVResearches)
+* [NPO-197](https://github.com/NPO-197) for help with player icon save blocks
 
 ### Image Credits:
 * Icons in [icons8](./resources/icons8) folder provided by [icons8](https://icons8.com)
