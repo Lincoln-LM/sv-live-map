@@ -2,6 +2,8 @@
 
 import contextlib
 import socket
+from typing import Type
+import bytechomp
 from sv_live_map_core.nxreader import NXReader
 from sv_live_map_core.sv_enums import StarLevel, StoryProgress, Game
 from sv_live_map_core.raid_enemy_table_array import RaidEnemyTableArray
@@ -62,31 +64,36 @@ class RaidReader(NXReader):
         """Read and decrypt story progress from save blocks"""
         # each key remains constant and SCXorshift32(difficulty_{n}_key).next() can be precomputed
         # for the sake of showing how to decrypt it this is not done
-        loc = self.DIFFICULTY_FLAG_LOCATIONS[3]
-        difficulty_6_key = self.read_pointer_int(f"{self.SAVE_BLOCK_PTR}+{loc:X}", 4)
-        difficulty_6_val = self.read_pointer_int(f"[{self.SAVE_BLOCK_PTR}+{loc+8:X}]", 1) \
-            ^ SCXorshift32(difficulty_6_key).next()
-        if difficulty_6_val == 2:
-            return StoryProgress.SIX_STAR_UNLOCKED
-        loc = self.DIFFICULTY_FLAG_LOCATIONS[2]
-        difficulty_5_key = self.read_pointer_int(f"{self.SAVE_BLOCK_PTR}+{loc:X}", 4)
-        difficulty_5_val = self.read_pointer_int(f"[{self.SAVE_BLOCK_PTR}+{loc+8:X}]", 1) \
-            ^ SCXorshift32(difficulty_5_key).next()
-        if difficulty_5_val == 2:
-            return StoryProgress.FIVE_STAR_UNLOCKED
-        loc = self.DIFFICULTY_FLAG_LOCATIONS[1]
-        difficulty_4_key = self.read_pointer_int(f"{self.SAVE_BLOCK_PTR}+{loc:X}", 4)
-        difficulty_4_val = self.read_pointer_int(f"[{self.SAVE_BLOCK_PTR}+{loc+8:X}]", 1) \
-            ^ SCXorshift32(difficulty_4_key).next()
-        if difficulty_4_val == 2:
-            return StoryProgress.FOUR_STAR_UNLOCKED
-        loc = self.DIFFICULTY_FLAG_LOCATIONS[0]
-        difficulty_3_key = self.read_pointer_int(f"{self.SAVE_BLOCK_PTR}+{loc:X}", 4)
-        difficulty_3_val = self.read_pointer_int(f"[{self.SAVE_BLOCK_PTR}+{loc+8:X}]", 1) \
-            ^ SCXorshift32(difficulty_3_key).next()
-        if difficulty_3_val == 2:
-            return StoryProgress.THREE_STAR_UNLOCKED
+        progress = StoryProgress.SIX_STAR_UNLOCKED
+        for offset in reversed(self.DIFFICULTY_FLAG_LOCATIONS):
+            if self.read_save_block_int(offset, 1) == 2:
+                return progress
+            progress -= 1
         return StoryProgress.DEFAULT
+
+    @staticmethod
+    def _decrypt_save_block(key: int, block: bytearray) -> bytearray:
+        rng = SCXorshift32(key)
+        for i, byte in enumerate(block):
+            block[i] = byte ^ rng.next()
+        return block
+
+    def read_save_block_struct(self, offset: int, struct: Type):
+        """Read decrypted save block of bytechomp struct at offset"""
+        reader = bytechomp.Reader[struct](bytechomp.ByteOrder.LITTLE).allocate()
+        reader.feed(self.read_save_block(offset, reader.__struct.size))
+        assert reader.is_complete(), "Invalid data size"
+        return reader.build()
+
+    def read_save_block_int(self, offset: int, size: int) -> int:
+        """Read decrypted save block int at offset"""
+        return int.from_bytes(self.read_save_block(offset, size), 'little')
+
+    def read_save_block(self, offset: int, size: int) -> bytearray:
+        """Read decrypted save block at offset"""
+        key = self.read_pointer_int(f"{self.SAVE_BLOCK_PTR}+{offset:X}", 4)
+        block = bytearray(self.read_pointer(f"[{self.SAVE_BLOCK_PTR}+{offset + 8:X}]", size))
+        return self._decrypt_save_block(key, block)
 
     def read_game_version(self) -> Game:
         """Read game version"""
