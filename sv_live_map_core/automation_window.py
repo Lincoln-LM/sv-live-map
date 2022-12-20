@@ -138,7 +138,7 @@ class AutomationWindow(customtkinter.CTkToplevel):
                 RaidInfoWidget,
                 poke_sprite_handler = self.master.sprite_handler,
                 raid_data = raid,
-                hide_sensitive_info=self.hide_info_check.get(),
+                hide_sensitive_info=self.master.hide_info_check.get(),
                 fg_color = customtkinter.ThemeManager.theme["color"]["frame_low"],
             )
 
@@ -162,7 +162,7 @@ class AutomationWindow(customtkinter.CTkToplevel):
                 dummy_widget = RaidInfoWidget(
                     poke_sprite_handler = self.master.sprite_handler,
                     raid_data = raid,
-                    hide_sensitive_info=self.hide_info_check.get(),
+                    hide_sensitive_info=self.master.hide_info_check.get(),
                 )
 
                 poke_sprite_img: Image = ImageTk.getimage(dummy_widget.poke_sprite)
