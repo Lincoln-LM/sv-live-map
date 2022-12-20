@@ -339,14 +339,7 @@ class AutomationWindow(customtkinter.CTkToplevel):
     def draw_start_button_frame(self):
         """Draw start button frame"""
         self.start_button_frame = customtkinter.CTkFrame(master = self, width = 850)
-        self.advance_date_button = customtkinter.CTkButton(
-            master = self.start_button_frame,
-            text = "Advance Date",
-            width = 300,
-            command = self.advance_date
-        )
-        self.advance_date_button.grid(row = 1, column = 0, columnspan = 4, sticky = "nwse")
-        self.start_button_frame.grid(row = 2, column = 0, columnspan = 4, sticky = "nwse")
+        self.start_button_frame.grid(row = 1, column = 0, columnspan = 4, sticky = "nwse")
         self.start_button = customtkinter.CTkButton(
             master = self.start_button_frame,
             text = "Start Automation",
@@ -355,6 +348,20 @@ class AutomationWindow(customtkinter.CTkToplevel):
         )
         self.start_button.grid(
             row = 0,
+            column = 0,
+            columnspan = 4,
+            sticky = "nwse",
+            padx = 5,
+            pady = 0
+        )
+        self.advance_date_button = customtkinter.CTkButton(
+            master = self.start_button_frame,
+            text = "Advance Date",
+            width = 850,
+            command = self.advance_date
+        )
+        self.advance_date_button.grid(
+            row = 2,
             column = 0,
             columnspan = 4,
             sticky = "nwse",
