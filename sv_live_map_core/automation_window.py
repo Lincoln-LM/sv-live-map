@@ -93,6 +93,14 @@ class AutomationWindow(customtkinter.CTkToplevel):
         self.target_found = True
         sys.exit()
 
+    def advance_date(self):
+        """Full process of dateskipping w/o checks for target_found"""
+        self.leave_to_home()
+        self.open_settings()
+        self.open_datetime()
+        self.skip_date()
+        self.reopen_game()
+
     def read_raids(
         self,
         total_raid_count: int,
@@ -130,6 +138,7 @@ class AutomationWindow(customtkinter.CTkToplevel):
                 RaidInfoWidget,
                 poke_sprite_handler = self.master.sprite_handler,
                 raid_data = raid,
+                hide_sensitive_info=self.hide_info_check.get(),
                 fg_color = customtkinter.ThemeManager.theme["color"]["frame_low"],
             )
 
@@ -152,7 +161,8 @@ class AutomationWindow(customtkinter.CTkToplevel):
                 )
                 dummy_widget = RaidInfoWidget(
                     poke_sprite_handler = self.master.sprite_handler,
-                    raid_data = raid
+                    raid_data = raid,
+                    hide_sensitive_info=self.hide_info_check.get(),
                 )
 
                 poke_sprite_img: Image = ImageTk.getimage(dummy_widget.poke_sprite)
@@ -329,7 +339,14 @@ class AutomationWindow(customtkinter.CTkToplevel):
     def draw_start_button_frame(self):
         """Draw start button frame"""
         self.start_button_frame = customtkinter.CTkFrame(master = self, width = 850)
-        self.start_button_frame.grid(row = 1, column = 0, columnspan = 4, sticky = "nwse")
+        self.advance_date_button = customtkinter.CTkButton(
+            master = self.start_button_frame,
+            text = "Advance Date",
+            width = 300,
+            command = self.advance_date
+        )
+        self.advance_date_button.grid(row = 1, column = 0, columnspan = 4, sticky = "nwse")
+        self.start_button_frame.grid(row = 2, column = 0, columnspan = 4, sticky = "nwse")
         self.start_button = customtkinter.CTkButton(
             master = self.start_button_frame,
             text = "Start Automation",

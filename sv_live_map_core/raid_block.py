@@ -168,6 +168,8 @@ class TeraRaid:
         # for map display
         self.id_str: str = f"{self.area_id}-{self.den_id}"
 
+        self.hide_sensitive_info: bool = False # Default to false. Override later if needed
+
     def generate_pokemon(self, raid_enemy_info: RaidEnemyInfo):
         """Derive pokemon data from seed and slot"""
         self.raid_enemy_info = raid_enemy_info
@@ -395,16 +397,18 @@ class TeraRaid:
         shiny_str = "Shiny " if self.is_shiny else ""
         event_str = "Event " if self.is_event else ""
         star_str = "★" * (self.difficulty + 1)
-        return f"{self.species}{form_str}\n" \
-               f"{shiny_str}{event_str}{star_str}\n" \
-               f"IVs: {'/'.join(map(str, self.ivs))}\n" \
-               f"Nature: {self.nature}\n" \
-               f"Ability: {self.ability}\n" \
-               f"Gender: {self.gender}\n" \
-               f"Tera Type: {self.tera_type}\n" \
-               f"Location: {self.id_str}\n" \
-               f"Seed: {self.seed:08X} EC: {self.encryption_constant:08X}\n" \
-               f"PID: {self.pid:08X} SIDTID: {self.sidtid:08X}\n"
+        display = f"{self.species}{form_str}\n" \
+                    f"{shiny_str}{event_str}{star_str}\n" \
+                    f"IVs: {'/'.join(map(str, self.ivs))}\n" \
+                    f"Nature: {self.nature}\n" \
+                    f"Ability: {self.ability}\n" \
+                    f"Gender: {self.gender}\n" \
+                    f"Tera Type: {self.tera_type}\n" \
+                    f"Location: {self.id_str}\n"
+        if not self.hide_sensitive_info:
+            display += f"Seed: {self.seed:08X} EC: {self.encryption_constant:08X}\n" \
+                        f"PID: {self.pid:08X} SIDTID: {self.sidtid:08X}\n"
+        return display
 
 @dataclass
 class RaidBlock:
