@@ -156,7 +156,8 @@ class Application(customtkinter.CTk):
 
         self.hide_info_check = customtkinter.CTkCheckBox(
             master = self.settings_frame,
-            text = "Hide Sensitive Info"
+            text = "Hide Sensitive Info",
+            command = self.update_hide_info
         )
         self.hide_info_check.grid(row = 3, column = 0, columnspan = 2, padx = 10, pady = 5)
         if self.settings.get("HideSensitiveInfo", False):
