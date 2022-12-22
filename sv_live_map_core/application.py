@@ -209,6 +209,17 @@ class Application(customtkinter.CTk):
         )
         self.automation_button.grid(row = 9, column = 0, columnspan = 2, padx = 10, pady = 5)
 
+    def update_hide_info(self):
+        """Update all RaidInfoWidgets with hide_info"""
+        def search_children(widget):
+            if isinstance(widget, RaidInfoWidget):
+                widget.raid_data.hide_sensitive_info = self.hide_info_check.get()
+                widget.info_display.configure(text = widget.raid_data)
+                return
+            for child in widget.winfo_children():
+                search_children(child)
+        search_children(self)
+
     def open_automation_window(self):
         """Open Automation Window"""
         if self.automation_window is None:
