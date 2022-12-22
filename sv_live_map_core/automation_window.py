@@ -93,14 +93,6 @@ class AutomationWindow(customtkinter.CTkToplevel):
         self.target_found = True
         sys.exit()
 
-    def advance_date(self):
-        """Full process of dateskipping w/o checks for target_found"""
-        self.leave_to_home()
-        self.open_settings()
-        self.open_datetime()
-        self.skip_date()
-        self.reopen_game()
-
     def read_raids(
         self,
         total_raid_count: int,
@@ -266,21 +258,24 @@ class AutomationWindow(customtkinter.CTkToplevel):
             if self.webhook_check.get():
                 webhook_display_builder(raid)
 
-    def full_dateskip(self):
+    def full_dateskip(self, check_target_found=true):
         """Full process of dateskipping w/checks for target_found"""
         self.leave_to_home()
-        if self.target_found:
+        if check_target_found and self.target_found:
             return
         self.open_settings()
-        if self.target_found:
+        if check_target_found and self.target_found:
             return
         self.open_datetime()
-        if self.target_found:
+        if check_target_found and self.target_found:
             return
         self.skip_date()
-        if self.target_found:
+        if check_target_found and self.target_found:
             return
         self.reopen_game()
+        
+    def advance_date(self):
+        self.full_dateskip(check_target_found=false)
 
     def reopen_game(self):
         """Reopen game from datetime menu"""
