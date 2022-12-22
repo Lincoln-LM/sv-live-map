@@ -7,7 +7,7 @@ block_cipher = None
 a = Analysis(
     ['main_gui.py'],
     pathex=[],
-    binaries=[],
+    binaries=[('C:\\Windows\\System32\\libusb0.dll', '.')],
     datas=[('./resources/customtkinter', 'customtkinter/')],
     hiddenimports=['PIL._tkinter_finder'],
     hookspath=[],
