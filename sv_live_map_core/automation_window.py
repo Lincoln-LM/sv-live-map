@@ -105,7 +105,7 @@ class AutomationWindow(customtkinter.CTkToplevel):
                 if self.target_found:
                     break
 
-                self.full_dateskip()
+                self.full_dateskip(check_target_found = True)
             else:
                 self.master.connection_error("Not connected to switch.")
                 self.target_found = True
@@ -277,7 +277,7 @@ class AutomationWindow(customtkinter.CTkToplevel):
             if self.webhook_check.get():
                 webhook_display_builder(raid)
 
-    def full_dateskip(self, check_target_found=True):
+    def full_dateskip(self, check_target_found = False):
         """Full process of dateskipping w/checks for target_found"""
         self.leave_to_home()
         if check_target_found and self.target_found:
@@ -292,9 +292,6 @@ class AutomationWindow(customtkinter.CTkToplevel):
         if check_target_found and self.target_found:
             return
         self.reopen_game()
-        
-    def advance_date(self):
-        self.full_dateskip(check_target_found=False)
 
     def reopen_game(self):
         """Reopen game from datetime menu"""
@@ -372,7 +369,7 @@ class AutomationWindow(customtkinter.CTkToplevel):
             master = self.start_button_frame,
             text = "Advance Date",
             width = 850,
-            command = self.advance_date
+            command = self.full_dateskip
         )
         self.advance_date_button.grid(
             row = 2,
@@ -611,7 +608,10 @@ class AutomationWindow(customtkinter.CTkToplevel):
 
     def save_filter(self):
         """Save current filter to file"""
-        filename = filedialog.asksaveasfilename(filetypes = (("Filter Json", "*.json"),))
+        filename = filedialog.asksaveasfilename(
+            filetypes = (("Filter Json", "*.json"),),
+            initialdir = get_path("./resources/filter_settings/")
+        )
         if not filename:
             return
         if not filename.endswith(".json"):
@@ -641,7 +641,10 @@ class AutomationWindow(customtkinter.CTkToplevel):
 
     def load_filter(self):
         """Load filter from file"""
-        filename = filedialog.askopenfilename(filetypes = (("Filter Json", "*.json"),))
+        filename = filedialog.askopenfilename(
+            filetypes = (("Filter Json", "*.json"),),
+            initialdir = get_path("./resources/filter_settings/")
+        )
         if not filename:
             return
         if not filename.endswith(".json"):
@@ -689,7 +692,7 @@ class AutomationWindow(customtkinter.CTkToplevel):
         self.spd_filter.set_tuple(
             iv_filters[4]
         )
-        self.spd_filter.set_tuple(
+        self.spe_filter.set_tuple(
             iv_filters[5]
         )
 
