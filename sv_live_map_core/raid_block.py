@@ -92,8 +92,7 @@ def force_shininess(
                         (sidtid & 0xFFFF)
                         ^ (sidtid >> 16)
                         ^ (fake_pid & 0xFFFF)
-                        # retain xor?
-                        ^ shiny_xor(fake_pid, fake_sidtid)
+                        ^ bool(shiny_xor(fake_pid, fake_sidtid))
                     )
                     << 16
                 )
