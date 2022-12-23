@@ -1,0 +1,34 @@
+{
+  "IVFilter": [
+    [
+      0,
+      31
+    ],
+    [
+      0,
+      31
+    ],
+    [
+      0,
+      31
+    ],
+    [
+      0,
+      31
+    ],
+    [
+      0,
+      31
+    ],
+    [
+      0,
+      31
+    ]
+  ],
+  "NatureFilter": [],
+  "AbilityFilter": [],
+  "GenderFilter": [],
+  "SpeciesFilter": [],
+  "DifficultyFilter": [],
+  "ShinyFilter": 0
+}
