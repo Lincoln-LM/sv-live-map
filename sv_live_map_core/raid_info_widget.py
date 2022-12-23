@@ -33,6 +33,7 @@ class RaidInfoWidget(customtkinter.CTkFrame):
         has_alternate_location: bool = False,
         width: int = 200,
         height: int = 200,
+        hide_sensitive_info: bool = False,
         **kwargs
     ):
         super().__init__(
@@ -44,8 +45,10 @@ class RaidInfoWidget(customtkinter.CTkFrame):
         assert poke_sprite_handler is not None
         assert raid_data is not None
 
-        self.poke_sprite_handler = poke_sprite_handler
         self.raid_data = raid_data
+        self.raid_data.hide_sensitive_info = hide_sensitive_info
+
+        self.poke_sprite_handler = poke_sprite_handler
         self.is_popup = is_popup
         self.focus_command = focus_command
         self.swap_command = swap_command

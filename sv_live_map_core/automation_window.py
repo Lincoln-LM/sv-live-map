@@ -130,6 +130,7 @@ class AutomationWindow(customtkinter.CTkToplevel):
                 RaidInfoWidget,
                 poke_sprite_handler = self.master.sprite_handler,
                 raid_data = raid,
+                hide_sensitive_info=self.master.hide_info_check.get(),
                 fg_color = customtkinter.ThemeManager.theme["color"]["frame_low"],
             )
 
@@ -152,7 +153,8 @@ class AutomationWindow(customtkinter.CTkToplevel):
                 )
                 dummy_widget = RaidInfoWidget(
                     poke_sprite_handler = self.master.sprite_handler,
-                    raid_data = raid
+                    raid_data = raid,
+                    hide_sensitive_info=self.master.hide_info_check.get(),
                 )
 
                 poke_sprite_img: Image = ImageTk.getimage(dummy_widget.poke_sprite)
@@ -256,21 +258,24 @@ class AutomationWindow(customtkinter.CTkToplevel):
             if self.webhook_check.get():
                 webhook_display_builder(raid)
 
-    def full_dateskip(self):
+    def full_dateskip(self, check_target_found=True):
         """Full process of dateskipping w/checks for target_found"""
         self.leave_to_home()
-        if self.target_found:
+        if check_target_found and self.target_found:
             return
         self.open_settings()
-        if self.target_found:
+        if check_target_found and self.target_found:
             return
         self.open_datetime()
-        if self.target_found:
+        if check_target_found and self.target_found:
             return
         self.skip_date()
-        if self.target_found:
+        if check_target_found and self.target_found:
             return
         self.reopen_game()
+        
+    def advance_date(self):
+        self.full_dateskip(check_target_found=False)
 
     def reopen_game(self):
         """Reopen game from datetime menu"""
@@ -338,6 +343,20 @@ class AutomationWindow(customtkinter.CTkToplevel):
         )
         self.start_button.grid(
             row = 0,
+            column = 0,
+            columnspan = 4,
+            sticky = "nwse",
+            padx = 5,
+            pady = 0
+        )
+        self.advance_date_button = customtkinter.CTkButton(
+            master = self.start_button_frame,
+            text = "Advance Date",
+            width = 850,
+            command = self.advance_date
+        )
+        self.advance_date_button.grid(
+            row = 2,
             column = 0,
             columnspan = 4,
             sticky = "nwse",

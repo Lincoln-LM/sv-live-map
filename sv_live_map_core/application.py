@@ -154,11 +154,20 @@ class Application(customtkinter.CTk):
         if self.settings.get("UseCachedTables", False):
             self.use_cached_tables.select()
 
+        self.hide_info_check = customtkinter.CTkCheckBox(
+            master = self.settings_frame,
+            text = "Hide Sensitive Info",
+            command = self.update_hide_info
+        )
+        self.hide_info_check.grid(row = 3, column = 0, columnspan = 2, padx = 10, pady = 5)
+        if self.settings.get("HideSensitiveInfo", False):
+            self.hide_info_check.select()
+
         self.scale_sprites_check = customtkinter.CTkCheckBox(
             master = self.settings_frame,
             text = "Scale images with zoom"
         )
-        self.scale_sprites_check.grid(row = 3, column = 0, columnspan = 2, padx = 10, pady = 5)
+        self.scale_sprites_check.grid(row = 4, column = 0, columnspan = 2, padx = 10, pady = 5)
         if self.settings.get("ScaleImages", True):
             self.scale_sprites_check.select()
 
@@ -168,7 +177,7 @@ class Application(customtkinter.CTk):
             width = 300,
             command = self.toggle_connection
         )
-        self.connect_button.grid(row = 4, column = 0, columnspan = 2, padx = 10, pady = 5)
+        self.connect_button.grid(row = 5, column = 0, columnspan = 2, padx = 10, pady = 5)
 
         self.position_button = customtkinter.CTkButton(
             master = self.settings_frame,
@@ -176,7 +185,7 @@ class Application(customtkinter.CTk):
             width = 300,
             command = self.toggle_position_work
         )
-        self.position_button.grid(row = 5, column = 0, columnspan = 2, padx = 10, pady = 5)
+        self.position_button.grid(row = 6, column = 0, columnspan = 2, padx = 10, pady = 5)
 
         self.read_raids_button = customtkinter.CTkButton(
             master = self.settings_frame,
@@ -184,13 +193,13 @@ class Application(customtkinter.CTk):
             width = 300,
             command = self.read_all_raids
         )
-        self.read_raids_button.grid(row = 6, column = 0, columnspan = 2, padx = 10, pady = 5)
+        self.read_raids_button.grid(row = 7, column = 0, columnspan = 2, padx = 10, pady = 5)
 
         self.raid_progress = customtkinter.CTkProgressBar(
             master = self.settings_frame,
             width = 300
         )
-        self.raid_progress.grid(row = 7, column = 0, columnspan = 2, padx = 10, pady = 5)
+        self.raid_progress.grid(row = 8, column = 0, columnspan = 2, padx = 10, pady = 5)
         self.raid_progress.set(0)
 
         self.automation_button = customtkinter.CTkButton(
@@ -199,7 +208,18 @@ class Application(customtkinter.CTk):
             width = 300,
             command = self.open_automation_window
         )
-        self.automation_button.grid(row = 8, column = 0, columnspan = 2, padx = 10, pady = 5)
+        self.automation_button.grid(row = 9, column = 0, columnspan = 2, padx = 10, pady = 5)
+
+    def update_hide_info(self):
+        """Update all RaidInfoWidgets with hide_info"""
+        def search_children(widget):
+            if isinstance(widget, RaidInfoWidget):
+                widget.raid_data.hide_sensitive_info = self.hide_info_check.get()
+                widget.info_display.configure(text = widget.raid_data)
+                return
+            for child in widget.winfo_children():
+                search_children(child)
+        search_children(self)
 
     def open_automation_window(self):
         """Open Automation Window"""
@@ -368,6 +388,7 @@ class Application(customtkinter.CTk):
                 RaidInfoWidget,
                 poke_sprite_handler = self.sprite_handler,
                 raid_data = raid,
+                hide_sensitive_info=self.hide_info_check.get(),
                 fg_color = customtkinter.ThemeManager.theme["color"]["frame_low"],
             )
 
@@ -420,6 +441,7 @@ class Application(customtkinter.CTk):
                     focus_command = partial(focus_marker, raid),
                     swap_command = partial(swap_position, raid),
                     is_popup = False,
+                    hide_sensitive_info=self.hide_info_check.get(),
                     fg_color = customtkinter.ThemeManager.theme["color"]["frame_low"],
                 )
                 popup_display = partial(popup_display_builder, raid)
@@ -551,6 +573,7 @@ class Application(customtkinter.CTk):
             self.settings['UseCachedTables'] = self.use_cached_tables.get()
             self.settings['USB'] = self.usb_check.get()
             self.settings['ScaleImages'] = self.scale_sprites_check.get()
+            self.settings['HideSensitiveInfo'] = self.hide_info_check.get()
             json.dump(self.settings, settings_file)
 
         # close reader on termination
