@@ -209,10 +209,10 @@ class AutomationWindow(customtkinter.CTkToplevel):
                 )
                 time.sleep(1)
                 popup_window.destroy()
-                if not os.path.exists("./found_screenshots/"):
-                    os.mkdir("./found_screenshots/")
-                img.save(f"./found_screenshots/{raid.seed}.png")
-                with open(f"./found_screenshots/{raid.seed}.png", "rb") as img:
+                if not os.path.exists(get_path("./found_screenshots/")):
+                    os.mkdir(get_path("./found_screenshots/"))
+                img.save(get_path(f"./found_screenshots/{raid.seed}.png"))
+                with open(get_path(f"./found_screenshots/{raid.seed}.png"), "rb") as img:
                     webhook = discord_webhook.webhook.DiscordWebhook(
                         url = self.webhook_entry.get(),
                         content = f"<@{self.ping_entry.get()}>"

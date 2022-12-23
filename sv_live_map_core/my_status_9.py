@@ -10,7 +10,7 @@ class Character:
     """Character byte"""
     _value: U8
     def __str__(self):
-        return chr(self._value)
+        return chr(self._value) if self._value else ""
 
 @dataclass
 class UnusedByte:

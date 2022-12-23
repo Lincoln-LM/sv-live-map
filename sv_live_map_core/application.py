@@ -2,6 +2,7 @@
 
 import binascii
 from functools import partial
+import time
 import sys
 import pickle
 import os
@@ -216,6 +217,51 @@ class Application(customtkinter.CTk):
         )
         self.automation_button.grid(row = 10, column = 0, columnspan = 2, padx = 10, pady = 5)
 
+        self.dump_button = customtkinter.CTkButton(
+            master = self.settings_frame,
+            text = "Dump Raids",
+            width = 300,
+            command = self.dump_raids
+        )
+        self.dump_button.grid(row = 11, column = 0, columnspan = 2, padx = 10, pady = 5)
+
+    def dump_raids(self):
+        """Dump Raid Block"""
+        # json serialize objects, default to __dict__ excluding underscores
+        def serialize_default(obj):
+            # convert slots to dict
+            if hasattr(obj, "__slots__"):
+                return {
+                    k: getattr(obj, k)
+                    for k in obj.__slots__
+                    if hasattr(obj, k) and not k.startswith("_")
+                }
+            return {k: v for k,v in obj.__dict__.items() if not k.startswith("_")}
+
+        if not os.path.exists(get_path("./raid_dumps/")):
+            os.mkdir(get_path("./raid_dumps/"))
+        time_stamp = time.strftime("%Y%m%d-%H%M%S")
+        os.mkdir(get_path(f"./raid_dumps/{time_stamp}/"))
+
+        dump_path = f"./raid_dumps/{time_stamp}/raid_block"
+
+        raid_block = self.read_all_raids(render = False)
+        # dump raw raid block
+        with open(get_path(f"{dump_path}.bin"), "wb+") as binary_file:
+            binary_file.write(self.reader.read_pointer(*self.reader.RAID_BLOCK_PTR))
+        # dump json representation
+        with open(get_path(f"{dump_path}.json"), "w+", encoding = "utf-8") as json_file:
+            json.dump(raid_block.raids, json_file, default = serialize_default, indent = 2)
+        # dump string representation
+        with open(get_path(f"{dump_path}.txt"), "w+", encoding = "utf-8") as txt_file:
+            for raid in raid_block.raids:
+                txt_file.write(f"{raid}\n")
+        self.widget_message_window(
+            "Raids Dumped!",
+            customtkinter.CTkLabel,
+            text = f"Saved to ./raid_dumps/{time_stamp}/"
+        )
+
     def update_hide_info(self):
         """Update all RaidInfoWidgets with hide_info"""
         def search_children(widget):
@@ -270,8 +316,8 @@ class Application(customtkinter.CTk):
 
     def dump_cached_tables(self):
         """Dump cached encounter tables"""
-        if not os.path.exists("./cached_tables/"):
-            os.mkdir("./cached_tables/")
+        if not os.path.exists(get_path("./cached_tables/")):
+            os.mkdir(get_path("./cached_tables/"))
         for level in StarLevel:
             with open(f"./cached_tables/{level.name}.pkl", "wb+") as file:
                 pickle.dump(self.reader.raid_enemy_table_arrays[level], file)
