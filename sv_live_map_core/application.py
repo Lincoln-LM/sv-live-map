@@ -12,18 +12,18 @@ import json
 import struct
 from PIL import Image, ImageTk
 import customtkinter
-from sv_live_map_core.raid_reader import RaidReader
-from sv_live_map_core.paldea_map_view import PaldeaMapView
-from sv_live_map_core.poke_sprite_handler import PokeSpriteHandler
-from sv_live_map_core.scrollable_frame import ScrollableFrame
-from sv_live_map_core.raid_info_widget import RaidInfoWidget
-from sv_live_map_core.sv_enums import StarLevel
-from sv_live_map_core.raid_enemy_table_array import RaidEnemyTableArray
-from sv_live_map_core.raid_block import RaidBlock, TeraRaid
-from sv_live_map_core.corrected_marker import CorrectedMarker
-from sv_live_map_core.personal_data_handler import PersonalDataHandler
-from sv_live_map_core.automation_window import AutomationWindow
-from sv_live_map_core.path_handler import get_path
+from .raid_reader import RaidReader
+from .paldea_map_view import PaldeaMapView
+from .poke_sprite_handler import PokeSpriteHandler
+from .scrollable_frame import ScrollableFrame
+from .raid_info_widget import RaidInfoWidget
+from .sv_enums import StarLevel
+from .raid_enemy_table_array import RaidEnemyTableArray
+from .raid_block import RaidBlock, TeraRaid
+from .corrected_marker import CorrectedMarker
+from .personal_data_handler import PersonalDataHandler
+from .automation_window import AutomationWindow
+from .path_handler import get_path
 
 customtkinter.set_default_color_theme("blue")
 customtkinter.set_appearance_mode("dark")

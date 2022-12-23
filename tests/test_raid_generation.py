@@ -17,6 +17,13 @@ from .context import (
     Nature
 )
 
+class MockMyStatus9:
+    """Mock version of MyStatus9"""
+    def __init__(self, tid: int, sid: int):
+        self.tid = tid
+        self.sid = sid
+        self.full_id = (sid << 16) | tid
+
 class MockParamSet:
     """Mock version of ParamSet"""
     def __init__(
@@ -91,6 +98,7 @@ def test_basic_generation():
         content = 0,
         collected_league_points = 0,
     )
+    dummy_raid.my_status = MockMyStatus9(tid = 0, sid = 0)
     dummy_raid.generate_pokemon(mock_info)
 
     assert dummy_raid.tera_type == TeraType.ROCK
@@ -128,6 +136,7 @@ def test_guaranteed_iv_generation():
         content = 0,
         collected_league_points = 0,
     )
+    dummy_raid.my_status = MockMyStatus9(tid = 0, sid = 0)
     dummy_raid.generate_pokemon(mock_info)
 
     assert dummy_raid.tera_type == TeraType.DARK
@@ -165,6 +174,7 @@ def test_toxtricity_0_generation():
         content = 0,
         collected_league_points = 0,
     )
+    dummy_raid.my_status = MockMyStatus9(tid = 0, sid = 0)
     dummy_raid.generate_pokemon(mock_info)
 
     assert dummy_raid.tera_type == TeraType.WATER
@@ -202,6 +212,7 @@ def test_toxtricity_1_generation():
         content = 0,
         collected_league_points = 0,
     )
+    dummy_raid.my_status = MockMyStatus9(tid = 0, sid = 0)
     dummy_raid.generate_pokemon(mock_info)
 
     assert dummy_raid.tera_type == TeraType.WATER
@@ -245,11 +256,12 @@ def test_forced_generation():
         content = 0,
         collected_league_points = 0,
     )
+    dummy_raid.my_status = MockMyStatus9(tid = 17328, sid = 4753)
     dummy_raid.generate_pokemon(mock_info)
 
     assert dummy_raid.tera_type == TeraType.DRAGON
     assert dummy_raid.encryption_constant == 0x8914aeb0
-    assert dummy_raid.pid == 0x43b01291
+    assert dummy_raid.pid == 0x53B01291
     assert dummy_raid.sidtid == 0x943a5cb6
     assert not dummy_raid.is_shiny
     assert dummy_raid.ivs == (31, 31, 31, 31, 31, 31)

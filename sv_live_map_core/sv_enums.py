@@ -4778,3 +4778,20 @@ class ExtraTimingType(IntEnum):
 
     def __str__(self) -> str:
         return self.name.replace('_', ' ').title()
+
+class Language(IntEnum):
+    """Enum for save language"""
+    UNSET = 0
+    JAPANESE = 1
+    ENGLISH = 2
+    FRENCH = 3
+    ITALIAN = 4
+    GERMAN = 5
+    UNUSED_6 = 6
+    SPANISH = 7
+    KOREAN = 8
+    CHINESE_SIMPLIFIED = 9
+    CHINESE_TRADITIONAL = 10
+
+    def __str__(self) -> str:
+        return self.name.replace('_', '_').title()

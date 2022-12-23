@@ -7,12 +7,13 @@ import struct
 from typing import Type
 import bytechomp
 from PIL import Image
-from sv_live_map_core.nxreader import NXReader
-from sv_live_map_core.sv_enums import StarLevel, StoryProgress, Game
-from sv_live_map_core.raid_enemy_table_array import RaidEnemyTableArray
-from sv_live_map_core.delivery_raid_priority_array import DeliveryRaidPriorityArray
-from sv_live_map_core.raid_block import RaidBlock, process_raid_block
-from sv_live_map_core.rng import SCXorshift32
+from .nxreader import NXReader
+from .sv_enums import StarLevel, StoryProgress, Game
+from .raid_enemy_table_array import RaidEnemyTableArray
+from .delivery_raid_priority_array import DeliveryRaidPriorityArray
+from .raid_block import RaidBlock, process_raid_block
+from .rng import SCXorshift32
+from .my_status_9 import MyStatus9
 
 class RaidReader(NXReader):
     """Subclass of NXReader with functions specifically for raids"""
@@ -22,6 +23,7 @@ class RaidReader(NXReader):
     RAID_BLOCK_PTR = ("[[main+43A77C8]+160]+40", 0xC98) # ty skylink!
     SAVE_BLOCK_PTR = "[[[main+4385F30]+80]+8]"
     DIFFICULTY_FLAG_LOCATIONS = (0x2BF20, 0x1F400, 0x1B640, 0x13EC0)
+    MY_STATUS_LOCATION = 0x29F40
 
     def __init__(
         self,
@@ -39,6 +41,8 @@ class RaidReader(NXReader):
         self.delivery_raid_priority: tuple[int] = self.read_delivery_raid_priority()
         self.story_progress: StoryProgress = self.read_story_progess()
         self.game_version: Game = self.read_game_version()
+        self.my_status: MyStatus9 = self.read_my_status()
+        print(f"Trainer Info | {self.my_status}")
 
     def read_delivery_raid_priority(self) -> tuple[int]:
         """Read the delivery priority flatbuffer from memory"""
@@ -74,6 +78,10 @@ class RaidReader(NXReader):
             progress -= 1
         return StoryProgress.DEFAULT
 
+    def read_my_status(self) -> MyStatus9:
+        """Read trainer info"""
+        return self.read_save_block_struct(self.MY_STATUS_LOCATION, MyStatus9)
+
     @staticmethod
     def _decrypt_save_block(key: int, block: bytearray) -> bytearray:
         rng = SCXorshift32(key)
@@ -81,12 +89,12 @@ class RaidReader(NXReader):
             block[i] = byte ^ rng.next()
         return block
 
-    def read_save_block_struct(self, offset: int, struct: Type):
+    def read_save_block_struct(self, offset: int, _struct: Type):
         """Read decrypted save block of bytechomp struct at offset"""
-        reader = bytechomp.Reader[struct](bytechomp.ByteOrder.LITTLE).allocate()
-        reader.feed(self.read_save_block(offset, reader.__struct.size))
-        assert reader.is_complete(), "Invalid data size"
-        return reader.build()
+        byte_reader = bytechomp.Reader[_struct](bytechomp.ByteOrder.LITTLE).allocate()
+        byte_reader.feed(self.read_save_block_object(offset))
+        assert byte_reader.is_complete(), "Invalid data size"
+        return byte_reader.build()
 
     def read_save_block_int(self, offset: int) -> int:
         """Read decrypted save block u32 at offset"""
@@ -180,6 +188,7 @@ class RaidReader(NXReader):
             self.raid_enemy_table_arrays,
             self.story_progress,
             self.game_version,
+            self.my_status,
             self.delivery_raid_priority
         )
         return raid_block
