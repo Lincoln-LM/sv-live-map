@@ -2,6 +2,7 @@
 
 import binascii
 from functools import partial
+import time
 import sys
 import pickle
 import os
@@ -12,18 +13,18 @@ import json
 import struct
 from PIL import Image, ImageTk
 import customtkinter
-from sv_live_map_core.raid_reader import RaidReader
-from sv_live_map_core.paldea_map_view import PaldeaMapView
-from sv_live_map_core.poke_sprite_handler import PokeSpriteHandler
-from sv_live_map_core.scrollable_frame import ScrollableFrame
-from sv_live_map_core.raid_info_widget import RaidInfoWidget
-from sv_live_map_core.sv_enums import StarLevel
-from sv_live_map_core.raid_enemy_table_array import RaidEnemyTableArray
-from sv_live_map_core.raid_block import RaidBlock, TeraRaid
-from sv_live_map_core.corrected_marker import CorrectedMarker
-from sv_live_map_core.personal_data_handler import PersonalDataHandler
-from sv_live_map_core.automation_window import AutomationWindow
-from sv_live_map_core.path_handler import get_path
+from ..nxreader.raid_reader import RaidReader
+from ..widget.paldea_map_view import PaldeaMapView
+from ..util.poke_sprite_handler import PokeSpriteHandler
+from ..widget.scrollable_frame import ScrollableFrame
+from ..widget.raid_info_widget import RaidInfoWidget
+from ..enums import StarLevel
+from ..fbs.raid_enemy_table_array import RaidEnemyTableArray
+from ..structure.raid_block import RaidBlock, TeraRaid
+from ..widget.corrected_marker import CorrectedMarker
+from ..util.personal_data_handler import PersonalDataHandler
+from .automation_window import AutomationWindow
+from ..util.path_handler import get_path
 
 customtkinter.set_default_color_theme("blue")
 customtkinter.set_appearance_mode("dark")
@@ -154,13 +155,28 @@ class Application(customtkinter.CTk):
         if self.settings.get("UseCachedTables", False):
             self.use_cached_tables.select()
 
+        self.hide_info_check = customtkinter.CTkCheckBox(
+            master = self.settings_frame,
+            text = "Hide Sensitive Info",
+            command = self.update_hide_info
+        )
+        self.hide_info_check.grid(row = 3, column = 0, columnspan = 2, padx = 10, pady = 5)
+        if self.settings.get("HideSensitiveInfo", False):
+            self.hide_info_check.select()
+
         self.scale_sprites_check = customtkinter.CTkCheckBox(
             master = self.settings_frame,
             text = "Scale images with zoom"
         )
-        self.scale_sprites_check.grid(row = 3, column = 0, columnspan = 2, padx = 10, pady = 5)
+        self.scale_sprites_check.grid(row = 4, column = 0, columnspan = 2, padx = 10, pady = 5)
         if self.settings.get("ScaleImages", True):
             self.scale_sprites_check.select()
+
+        self.use_filter_check = customtkinter.CTkCheckBox(
+            master = self.settings_frame,
+            text = "Read with filters"
+        )
+        self.use_filter_check.grid(row = 5, column = 0, columnspan = 2, padx = 10, pady = 5)
 
         self.connect_button = customtkinter.CTkButton(
             master = self.settings_frame,
@@ -168,7 +184,7 @@ class Application(customtkinter.CTk):
             width = 300,
             command = self.toggle_connection
         )
-        self.connect_button.grid(row = 4, column = 0, columnspan = 2, padx = 10, pady = 5)
+        self.connect_button.grid(row = 6, column = 0, columnspan = 2, padx = 10, pady = 5)
 
         self.position_button = customtkinter.CTkButton(
             master = self.settings_frame,
@@ -176,7 +192,7 @@ class Application(customtkinter.CTk):
             width = 300,
             command = self.toggle_position_work
         )
-        self.position_button.grid(row = 5, column = 0, columnspan = 2, padx = 10, pady = 5)
+        self.position_button.grid(row = 7, column = 0, columnspan = 2, padx = 10, pady = 5)
 
         self.read_raids_button = customtkinter.CTkButton(
             master = self.settings_frame,
@@ -184,13 +200,13 @@ class Application(customtkinter.CTk):
             width = 300,
             command = self.read_all_raids
         )
-        self.read_raids_button.grid(row = 6, column = 0, columnspan = 2, padx = 10, pady = 5)
+        self.read_raids_button.grid(row = 8, column = 0, columnspan = 2, padx = 10, pady = 5)
 
         self.raid_progress = customtkinter.CTkProgressBar(
             master = self.settings_frame,
             width = 300
         )
-        self.raid_progress.grid(row = 7, column = 0, columnspan = 2, padx = 10, pady = 5)
+        self.raid_progress.grid(row = 9, column = 0, columnspan = 2, padx = 10, pady = 5)
         self.raid_progress.set(0)
 
         self.automation_button = customtkinter.CTkButton(
@@ -199,7 +215,63 @@ class Application(customtkinter.CTk):
             width = 300,
             command = self.open_automation_window
         )
-        self.automation_button.grid(row = 8, column = 0, columnspan = 2, padx = 10, pady = 5)
+        self.automation_button.grid(row = 10, column = 0, columnspan = 2, padx = 10, pady = 5)
+
+        self.dump_button = customtkinter.CTkButton(
+            master = self.settings_frame,
+            text = "Dump Raids",
+            width = 300,
+            command = self.dump_raids
+        )
+        self.dump_button.grid(row = 11, column = 0, columnspan = 2, padx = 10, pady = 5)
+
+    def dump_raids(self):
+        """Dump Raid Block"""
+        # json serialize objects, default to __dict__ excluding underscores
+        def serialize_default(obj):
+            # convert slots to dict
+            if hasattr(obj, "__slots__"):
+                return {
+                    k: getattr(obj, k)
+                    for k in obj.__slots__
+                    if hasattr(obj, k) and not k.startswith("_")
+                }
+            return {k: v for k,v in obj.__dict__.items() if not k.startswith("_")}
+
+        if not os.path.exists(get_path("./raid_dumps/")):
+            os.mkdir(get_path("./raid_dumps/"))
+        time_stamp = time.strftime("%Y%m%d-%H%M%S")
+        os.mkdir(get_path(f"./raid_dumps/{time_stamp}/"))
+
+        dump_path = f"./raid_dumps/{time_stamp}/raid_block"
+
+        raid_block = self.read_all_raids(render = False)
+        # dump raw raid block
+        with open(get_path(f"{dump_path}.bin"), "wb+") as binary_file:
+            binary_file.write(self.reader.read_pointer(*self.reader.RAID_BLOCK_PTR))
+        # dump json representation
+        with open(get_path(f"{dump_path}.json"), "w+", encoding = "utf-8") as json_file:
+            json.dump(raid_block.raids, json_file, default = serialize_default, indent = 2)
+        # dump string representation
+        with open(get_path(f"{dump_path}.txt"), "w+", encoding = "utf-8") as txt_file:
+            for raid in raid_block.raids:
+                txt_file.write(f"{raid}\n")
+        self.widget_message_window(
+            "Raids Dumped!",
+            customtkinter.CTkLabel,
+            text = f"Saved to ./raid_dumps/{time_stamp}/"
+        )
+
+    def update_hide_info(self):
+        """Update all RaidInfoWidgets with hide_info"""
+        def search_children(widget):
+            if isinstance(widget, RaidInfoWidget):
+                widget.raid_data.hide_sensitive_info = self.hide_info_check.get()
+                widget.info_display.configure(text = widget.raid_data)
+                return
+            for child in widget.winfo_children():
+                search_children(child)
+        search_children(self)
 
     def open_automation_window(self):
         """Open Automation Window"""
@@ -244,8 +316,8 @@ class Application(customtkinter.CTk):
 
     def dump_cached_tables(self):
         """Dump cached encounter tables"""
-        if not os.path.exists("./cached_tables/"):
-            os.mkdir("./cached_tables/")
+        if not os.path.exists(get_path("./cached_tables/")):
+            os.mkdir(get_path("./cached_tables/"))
         for level in StarLevel:
             with open(f"./cached_tables/{level.name}.pkl", "wb+") as file:
                 pickle.dump(self.reader.raid_enemy_table_arrays[level], file)
@@ -368,6 +440,7 @@ class Application(customtkinter.CTk):
                 RaidInfoWidget,
                 poke_sprite_handler = self.sprite_handler,
                 raid_data = raid,
+                hide_sensitive_info=self.hide_info_check.get(),
                 fg_color = customtkinter.ThemeManager.theme["color"]["frame_low"],
             )
 
@@ -405,8 +478,14 @@ class Application(customtkinter.CTk):
             self.map_widget.set_zoom(self.map_widget.max_zoom)
             self.map_widget.set_position(*self.raid_markers[raid.id_str].position)
 
+        raid_filter = None
+        if self.use_filter_check.get() and self.automation_window:
+            raid_filter = self.automation_window.build_filter()
+
         for raid in raid_block_data.raids:
             if raid.is_enabled:
+                if raid_filter and not raid_filter.compare(raid):
+                    continue
                 has_alternate_location = f"{raid.id_str}_" in self.den_locations
                 if raid.id_str in self.raid_markers:
                     print(f"WARNING duplicate raid id {raid.id_str} is treated as {raid.id_str}_")
@@ -420,6 +499,7 @@ class Application(customtkinter.CTk):
                     focus_command = partial(focus_marker, raid),
                     swap_command = partial(swap_position, raid),
                     is_popup = False,
+                    hide_sensitive_info=self.hide_info_check.get(),
                     fg_color = customtkinter.ThemeManager.theme["color"]["frame_low"],
                 )
                 popup_display = partial(popup_display_builder, raid)
@@ -545,12 +625,16 @@ class Application(customtkinter.CTk):
 
     def on_closing(self, _ = None):
         """Handle closing of the application"""
+        for child in self.winfo_children():
+            if isinstance(child, customtkinter.CTkToplevel) and hasattr(child, "on_closing"):
+                child.on_closing()
         # save settings on termination
         with open("settings.json", "w+", encoding = "utf-8") as settings_file:
             self.settings['IP'] = self.ip_entry.get()
             self.settings['UseCachedTables'] = self.use_cached_tables.get()
             self.settings['USB'] = self.usb_check.get()
             self.settings['ScaleImages'] = self.scale_sprites_check.get()
+            self.settings['HideSensitiveInfo'] = self.hide_info_check.get()
             json.dump(self.settings, settings_file)
 
         # close reader on termination

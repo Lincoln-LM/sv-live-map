@@ -161,5 +161,6 @@ cython_debug/
 
 misc_hidden/
 cached_tables/
+raid_dumps/
 found_screenshots/
 settings.json

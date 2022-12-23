@@ -5,25 +5,29 @@ import sys
 import os
 import io
 import time
+from tkinter import filedialog
 from threading import Thread
 from typing import TYPE_CHECKING
-from PIL import ImageGrab, ImageTk
+import json
+from PIL import ImageGrab, ImageTk, Image
 import customtkinter
 import discord_webhook
-from .raid_info_widget import RaidInfoWidget
-from .raid_filter import RaidFilter
-from .iv_filter_widget import IVFilterWidget
-from .sv_enums import Nature, AbilityIndex, Gender, Species, StarLevel
-from .checked_combobox import CheckedCombobox
+from ..widget.raid_info_widget import RaidInfoWidget
+from ..util.raid_filter import RaidFilter
+from ..widget.iv_filter_widget import IVFilterWidget
+from ..enums import Nature, AbilityIndex, Gender, Species, StarLevel
+from ..widget.checked_combobox import CheckedCombobox
+from ..util.path_handler import get_path
 
 if TYPE_CHECKING:
     from typing import Type, Callable
-    from PIL import Image
     from .application import Application
-    from .raid_block import TeraRaid, RaidBlock
+    from ..structure.raid_block import TeraRaid, RaidBlock
 
 class AutomationWindow(customtkinter.CTkToplevel):
     """Automation window"""
+    SAVE_IMAGE: ImageTk.PhotoImage = None
+    LOAD_IMAGE: ImageTk.PhotoImage = None
     def __init__(
         self,
         *args,
@@ -42,11 +46,26 @@ class AutomationWindow(customtkinter.CTkToplevel):
 
         self.title("Automation Settings")
         self.handle_close_events()
-
+        self.cache_images()
         self.draw_filter_frame()
         self.draw_settings_frame()
         self.draw_start_button_frame()
         self.parse_settings()
+
+    def cache_images(self):
+        """Cache GUI images"""
+        if AutomationWindow.SAVE_IMAGE is None:
+            AutomationWindow.SAVE_IMAGE = ImageTk.PhotoImage(
+                Image.open(
+                    get_path("./resources/icons8/save.png")
+                )
+            )
+        if AutomationWindow.LOAD_IMAGE is None:
+            AutomationWindow.LOAD_IMAGE = ImageTk.PhotoImage(
+                Image.open(
+                    get_path("./resources/icons8/load.png")
+                )
+            )
 
     def start_automation(self):
         """Start automation"""
@@ -86,7 +105,7 @@ class AutomationWindow(customtkinter.CTkToplevel):
                 if self.target_found:
                     break
 
-                self.full_dateskip()
+                self.full_dateskip(check_target_found = True)
             else:
                 self.master.connection_error("Not connected to switch.")
                 self.target_found = True
@@ -130,6 +149,7 @@ class AutomationWindow(customtkinter.CTkToplevel):
                 RaidInfoWidget,
                 poke_sprite_handler = self.master.sprite_handler,
                 raid_data = raid,
+                hide_sensitive_info=self.master.hide_info_check.get(),
                 fg_color = customtkinter.ThemeManager.theme["color"]["frame_low"],
             )
 
@@ -152,7 +172,8 @@ class AutomationWindow(customtkinter.CTkToplevel):
                 )
                 dummy_widget = RaidInfoWidget(
                     poke_sprite_handler = self.master.sprite_handler,
-                    raid_data = raid
+                    raid_data = raid,
+                    hide_sensitive_info=self.master.hide_info_check.get(),
                 )
 
                 poke_sprite_img: Image = ImageTk.getimage(dummy_widget.poke_sprite)
@@ -188,10 +209,10 @@ class AutomationWindow(customtkinter.CTkToplevel):
                 )
                 time.sleep(1)
                 popup_window.destroy()
-                if not os.path.exists("./found_screenshots/"):
-                    os.mkdir("./found_screenshots/")
-                img.save(f"./found_screenshots/{raid.seed}.png")
-                with open(f"./found_screenshots/{raid.seed}.png", "rb") as img:
+                if not os.path.exists(get_path("./found_screenshots/")):
+                    os.mkdir(get_path("./found_screenshots/"))
+                img.save(get_path(f"./found_screenshots/{raid.seed}.png"))
+                with open(get_path(f"./found_screenshots/{raid.seed}.png"), "rb") as img:
                     webhook = discord_webhook.webhook.DiscordWebhook(
                         url = self.webhook_entry.get(),
                         content = f"<@{self.ping_entry.get()}>"
@@ -207,20 +228,7 @@ class AutomationWindow(customtkinter.CTkToplevel):
         webhook_display_builder: Callable
     ):
         """Filter through all raids"""
-        raid_filter = RaidFilter(
-            hp_filter = self.hp_filter.get(),
-            atk_filter = self.atk_filter.get(),
-            def_filter = self.def_filter.get(),
-            spa_filter = self.spa_filter.get(),
-            spd_filter = self.spd_filter.get(),
-            spe_filter = self.spe_filter.get(),
-            ability_filter = self.ability_filter.get(),
-            gender_filter = self.gender_filter.get(),
-            nature_filter = self.nature_filter.get(),
-            species_filter = self.species_filter.get(),
-            shiny_filter = self.shiny_filter.get(),
-            star_filter = self.difficulty_filter.get()
-        )
+        raid_filter = self.build_filter()
 
         for raid in raid_block.raids:
             if not raid.is_enabled:
@@ -242,6 +250,23 @@ class AutomationWindow(customtkinter.CTkToplevel):
             while self.master.render_thread is not None:
                 self.master.reader.pause(0.2)
 
+    def build_filter(self) -> RaidFilter:
+        """Build RaidFilter"""
+        return RaidFilter(
+            hp_filter = self.hp_filter.get(),
+            atk_filter = self.atk_filter.get(),
+            def_filter = self.def_filter.get(),
+            spa_filter = self.spa_filter.get(),
+            spd_filter = self.spd_filter.get(),
+            spe_filter = self.spe_filter.get(),
+            ability_filter = self.ability_filter.get(),
+            gender_filter = self.gender_filter.get(),
+            nature_filter = self.nature_filter.get(),
+            species_filter = self.species_filter.get(),
+            shiny_filter = self.shiny_filter.get(),
+            star_filter = self.difficulty_filter.get()
+        )
+
     def handle_displays(
         self,
         popup_display_builder: Callable,
@@ -256,19 +281,19 @@ class AutomationWindow(customtkinter.CTkToplevel):
             if self.webhook_check.get():
                 webhook_display_builder(raid)
 
-    def full_dateskip(self):
+    def full_dateskip(self, check_target_found = False):
         """Full process of dateskipping w/checks for target_found"""
         self.leave_to_home()
-        if self.target_found:
+        if check_target_found and self.target_found:
             return
         self.open_settings()
-        if self.target_found:
+        if check_target_found and self.target_found:
             return
         self.open_datetime()
-        if self.target_found:
+        if check_target_found and self.target_found:
             return
         self.skip_date()
-        if self.target_found:
+        if check_target_found and self.target_found:
             return
         self.reopen_game()
 
@@ -338,6 +363,20 @@ class AutomationWindow(customtkinter.CTkToplevel):
         )
         self.start_button.grid(
             row = 0,
+            column = 0,
+            columnspan = 4,
+            sticky = "nwse",
+            padx = 5,
+            pady = 0
+        )
+        self.advance_date_button = customtkinter.CTkButton(
+            master = self.start_button_frame,
+            text = "Advance Date",
+            width = 850,
+            command = self.full_dateskip
+        )
+        self.advance_date_button.grid(
+            row = 2,
             column = 0,
             columnspan = 4,
             sticky = "nwse",
@@ -469,82 +508,205 @@ class AutomationWindow(customtkinter.CTkToplevel):
         self.grid_columnconfigure(0, minsize = 450)
 
         self.hp_filter = IVFilterWidget(self.filter_frame, title = "HP")
-        self.hp_filter.grid(row = 0, column = 0, padx = 10, pady = (10, 0))
+        self.hp_filter.grid(row = 0, column = 0, padx = 10, pady = (10, 0), columnspan = 2)
 
         self.atk_filter = IVFilterWidget(self.filter_frame, title = "ATK")
-        self.atk_filter.grid(row = 1, column = 0, padx = 10)
+        self.atk_filter.grid(row = 1, column = 0, padx = 10, columnspan = 2)
 
         self.def_filter = IVFilterWidget(self.filter_frame, title = "DEF")
-        self.def_filter.grid(row = 2, column = 0, padx = 10)
+        self.def_filter.grid(row = 2, column = 0, padx = 10, columnspan = 2)
 
         self.spa_filter = IVFilterWidget(self.filter_frame, title = "SPA")
-        self.spa_filter.grid(row = 3, column = 0, padx = 10)
+        self.spa_filter.grid(row = 3, column = 0, padx = 10, columnspan = 2)
 
         self.spd_filter = IVFilterWidget(self.filter_frame, title = "SPD")
-        self.spd_filter.grid(row = 4, column = 0, padx = 10)
+        self.spd_filter.grid(row = 4, column = 0, padx = 10, columnspan = 2)
 
         self.spe_filter = IVFilterWidget(self.filter_frame, title = "SPE")
-        self.spe_filter.grid(row = 5, column = 0, padx = 10)
+        self.spe_filter.grid(row = 5, column = 0, padx = 10, columnspan = 2)
 
         self.nature_label = customtkinter.CTkLabel(
             self.filter_frame,
             text = "Nature:"
         )
-        self.nature_label.grid(row = 0, column = 1, pady = (10, 0))
+        self.nature_label.grid(row = 0, column = 2, pady = (10, 0))
 
         self.nature_filter = CheckedCombobox(
             self.filter_frame,
             values = list(Nature)
         )
-        self.nature_filter.grid(row = 0, column = 2, padx = 10, pady = (10, 0))
+        self.nature_filter.grid(row = 0, column = 3, padx = 10, pady = (10, 0))
 
         self.ability_label = customtkinter.CTkLabel(
             self.filter_frame,
             text = "Ability:"
         )
-        self.ability_label.grid(row = 1, column = 1)
+        self.ability_label.grid(row = 1, column = 2)
 
         self.ability_filter = CheckedCombobox(
             self.filter_frame,
             values = list(AbilityIndex)
         )
-        self.ability_filter.grid(row = 1, column = 2, padx = 10)
+        self.ability_filter.grid(row = 1, column = 3, padx = 10)
 
         self.gender_label = customtkinter.CTkLabel(
             self.filter_frame,
             text = "Gender:"
         )
-        self.gender_label.grid(row = 2, column = 1)
+        self.gender_label.grid(row = 2, column = 2)
 
         self.gender_filter = CheckedCombobox(
             self.filter_frame,
             values = list(Gender)
         )
-        self.gender_filter.grid(row = 2, column = 2, padx = 10)
+        self.gender_filter.grid(row = 2, column = 3, padx = 10)
 
         self.species_label = customtkinter.CTkLabel(
             self.filter_frame,
             text = "Species:"
         )
-        self.species_label.grid(row = 3, column = 1)
+        self.species_label.grid(row = 3, column = 2)
 
         self.species_filter = CheckedCombobox(
             self.filter_frame,
             values = sorted(list(Species), key = lambda species: species.name)
         )
-        self.species_filter.grid(row = 3, column = 2, padx = 10)
+        self.species_filter.grid(row = 3, column = 3, padx = 10)
 
         self.difficulty_label = customtkinter.CTkLabel(
             self.filter_frame,
             text = "Difficulty:"
         )
-        self.difficulty_label.grid(row = 4, column = 1)
+        self.difficulty_label.grid(row = 4, column = 2)
 
         self.difficulty_filter = CheckedCombobox(
             self.filter_frame,
             values = list(StarLevel)
         )
-        self.difficulty_filter.grid(row = 4, column = 2, padx = 10)
+        self.difficulty_filter.grid(row = 4, column = 3, padx = 10)
 
         self.shiny_filter = customtkinter.CTkCheckBox(self.filter_frame, text = "Shiny Only")
-        self.shiny_filter.grid(row = 5, column = 1, columnspan = 2)
+        self.shiny_filter.grid(row = 5, column = 2, columnspan = 2)
+
+        self.save_filter_button = customtkinter.CTkButton(
+            self.filter_frame,
+            text = "",
+            image = self.SAVE_IMAGE,
+            fg_color = customtkinter.ThemeManager.theme["color"]["frame_low"],
+            width = self.SAVE_IMAGE.width(),
+            height = self.SAVE_IMAGE.height(),
+            command = self.save_filter
+        )
+        self.save_filter_button.grid(row = 6, column = 0, padx = 5, pady = (45, 5))
+
+        self.load_filter_button = customtkinter.CTkButton(
+            self.filter_frame,
+            text = "",
+            image = self.LOAD_IMAGE,
+            fg_color = customtkinter.ThemeManager.theme["color"]["frame_low"],
+            width = self.LOAD_IMAGE.width(),
+            height = self.LOAD_IMAGE.height(),
+            command = self.load_filter
+        )
+        self.load_filter_button.grid(row = 6, column = 1, padx = 5, pady = (45, 5))
+
+    def save_filter(self):
+        """Save current filter to file"""
+        filename = filedialog.asksaveasfilename(
+            filetypes = (("Filter Json", "*.json"),),
+            initialdir = get_path("./resources/filter_settings/")
+        )
+        if not filename:
+            return
+        if not filename.endswith(".json"):
+            filename = f"{filename}.json"
+        filter_json = self.build_filter_json()
+        with open(filename, "w+", encoding = "utf-8") as filter_json_file:
+            json.dump(filter_json, filter_json_file, indent = 2)
+
+    def build_filter_json(self):
+        """Build filter json"""
+        return {
+            "IVFilter": [
+                self.hp_filter.get_tuple(),
+                self.atk_filter.get_tuple(),
+                self.def_filter.get_tuple(),
+                self.spa_filter.get_tuple(),
+                self.spd_filter.get_tuple(),
+                self.spe_filter.get_tuple()
+            ],
+            "NatureFilter": self.nature_filter.get(),
+            "AbilityFilter": self.ability_filter.get(),
+            "GenderFilter": self.gender_filter.get(),
+            "SpeciesFilter": self.species_filter.get(),
+            "DifficultyFilter": self.difficulty_filter.get(),
+            "ShinyFilter": self.shiny_filter.get(),
+        }
+
+    def load_filter(self):
+        """Load filter from file"""
+        filename = filedialog.askopenfilename(
+            filetypes = (("Filter Json", "*.json"),),
+            initialdir = get_path("./resources/filter_settings/")
+        )
+        if not filename:
+            return
+        if not filename.endswith(".json"):
+            filename = f"{filename}.json"
+        with open(filename, "r", encoding = "utf-8") as filter_json_file:
+            filter_json: dict = json.load(filter_json_file)
+        self.read_filter_json(filter_json)
+
+    def read_filter_json(self, filter_json):
+        """Read filter json"""
+        self.load_iv_filter(filter_json)
+        self.load_combobox(self.nature_filter, filter_json, "NatureFilter")
+        self.load_combobox(self.ability_filter, filter_json, "AbilityFilter")
+        self.load_combobox(self.gender_filter, filter_json, "GenderFilter")
+        self.load_combobox(self.species_filter, filter_json, "SpeciesFilter")
+        self.load_combobox(self.difficulty_filter, filter_json, "DifficultyFilter")
+        if filter_json.get("ShinyFilter", False):
+            self.shiny_filter.select()
+
+    def load_iv_filter(self, filter_json: dict):
+        """Load iv filter from filter_json"""
+        iv_filters = filter_json.get(
+            "IVFilter",
+            [
+                (0, 31),
+                (0, 31),
+                (0, 31),
+                (0, 31),
+                (0, 31),
+                (0, 31),
+            ]
+        )
+        self.hp_filter.set_tuple(
+            iv_filters[0]
+        )
+        self.atk_filter.set_tuple(
+            iv_filters[1]
+        )
+        self.def_filter.set_tuple(
+            iv_filters[2]
+        )
+        self.spa_filter.set_tuple(
+            iv_filters[3]
+        )
+        self.spd_filter.set_tuple(
+            iv_filters[4]
+        )
+        self.spe_filter.set_tuple(
+            iv_filters[5]
+        )
+
+    @staticmethod
+    def load_combobox(combobox: CheckedCombobox, filter_json: dict, key: str):
+        """Load combobox from filter_json"""
+        filter_data = filter_json.get(key, [])
+        for variable, value in zip(
+            combobox.dropdown_menu.variables,
+            combobox.dropdown_menu.values
+        ):
+            variable.set(value in filter_data)
+        combobox.dropdown_callback()

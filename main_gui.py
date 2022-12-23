@@ -1,6 +1,6 @@
 """Run Map GUI"""
 
-from sv_live_map_core.application import Application
+from sv_live_map_core.window.application import Application
 
 def main():
     """Main function of the appliation"""

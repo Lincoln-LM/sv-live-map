@@ -1,6 +1,6 @@
 """Array of RaidEnemyInfoTable"""
 
-from .sv_enums import (
+from ..enums import (
     StarLevel,
     Game,
     Move,
