@@ -74,7 +74,7 @@ class RaidReader(NXReader):
         progress = StoryProgress.SIX_STAR_UNLOCKED
         for offset in reversed(self.DIFFICULTY_FLAG_LOCATIONS):
             if self.read_save_block_bool(offset):
-                return progress
+                return StoryProgress(progress)
             progress -= 1
         return StoryProgress.DEFAULT
 
