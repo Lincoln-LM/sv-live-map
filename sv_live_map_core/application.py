@@ -171,13 +171,19 @@ class Application(customtkinter.CTk):
         if self.settings.get("ScaleImages", True):
             self.scale_sprites_check.select()
 
+        self.use_filter_check = customtkinter.CTkCheckBox(
+            master = self.settings_frame,
+            text = "Read with filters"
+        )
+        self.use_filter_check.grid(row = 5, column = 0, columnspan = 2, padx = 10, pady = 5)
+
         self.connect_button = customtkinter.CTkButton(
             master = self.settings_frame,
             text = "Connect!",
             width = 300,
             command = self.toggle_connection
         )
-        self.connect_button.grid(row = 5, column = 0, columnspan = 2, padx = 10, pady = 5)
+        self.connect_button.grid(row = 6, column = 0, columnspan = 2, padx = 10, pady = 5)
 
         self.position_button = customtkinter.CTkButton(
             master = self.settings_frame,
@@ -185,7 +191,7 @@ class Application(customtkinter.CTk):
             width = 300,
             command = self.toggle_position_work
         )
-        self.position_button.grid(row = 6, column = 0, columnspan = 2, padx = 10, pady = 5)
+        self.position_button.grid(row = 7, column = 0, columnspan = 2, padx = 10, pady = 5)
 
         self.read_raids_button = customtkinter.CTkButton(
             master = self.settings_frame,
@@ -193,13 +199,13 @@ class Application(customtkinter.CTk):
             width = 300,
             command = self.read_all_raids
         )
-        self.read_raids_button.grid(row = 7, column = 0, columnspan = 2, padx = 10, pady = 5)
+        self.read_raids_button.grid(row = 8, column = 0, columnspan = 2, padx = 10, pady = 5)
 
         self.raid_progress = customtkinter.CTkProgressBar(
             master = self.settings_frame,
             width = 300
         )
-        self.raid_progress.grid(row = 8, column = 0, columnspan = 2, padx = 10, pady = 5)
+        self.raid_progress.grid(row = 9, column = 0, columnspan = 2, padx = 10, pady = 5)
         self.raid_progress.set(0)
 
         self.automation_button = customtkinter.CTkButton(
@@ -208,7 +214,7 @@ class Application(customtkinter.CTk):
             width = 300,
             command = self.open_automation_window
         )
-        self.automation_button.grid(row = 9, column = 0, columnspan = 2, padx = 10, pady = 5)
+        self.automation_button.grid(row = 10, column = 0, columnspan = 2, padx = 10, pady = 5)
 
     def update_hide_info(self):
         """Update all RaidInfoWidgets with hide_info"""
@@ -426,8 +432,14 @@ class Application(customtkinter.CTk):
             self.map_widget.set_zoom(self.map_widget.max_zoom)
             self.map_widget.set_position(*self.raid_markers[raid.id_str].position)
 
+        raid_filter = None
+        if self.use_filter_check.get() and self.automation_window:
+            raid_filter = self.automation_window.build_filter()
+
         for raid in raid_block_data.raids:
             if raid.is_enabled:
+                if raid_filter and not raid_filter.compare(raid):
+                    continue
                 has_alternate_location = f"{raid.id_str}_" in self.den_locations
                 if raid.id_str in self.raid_markers:
                     print(f"WARNING duplicate raid id {raid.id_str} is treated as {raid.id_str}_")

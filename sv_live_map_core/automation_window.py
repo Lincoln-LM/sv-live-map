@@ -228,20 +228,7 @@ class AutomationWindow(customtkinter.CTkToplevel):
         webhook_display_builder: Callable
     ):
         """Filter through all raids"""
-        raid_filter = RaidFilter(
-            hp_filter = self.hp_filter.get(),
-            atk_filter = self.atk_filter.get(),
-            def_filter = self.def_filter.get(),
-            spa_filter = self.spa_filter.get(),
-            spd_filter = self.spd_filter.get(),
-            spe_filter = self.spe_filter.get(),
-            ability_filter = self.ability_filter.get(),
-            gender_filter = self.gender_filter.get(),
-            nature_filter = self.nature_filter.get(),
-            species_filter = self.species_filter.get(),
-            shiny_filter = self.shiny_filter.get(),
-            star_filter = self.difficulty_filter.get()
-        )
+        raid_filter = self.build_filter()
 
         for raid in raid_block.raids:
             if not raid.is_enabled:
@@ -262,6 +249,23 @@ class AutomationWindow(customtkinter.CTkToplevel):
             # wait until rendering is done
             while self.master.render_thread is not None:
                 self.master.reader.pause(0.2)
+
+    def build_filter(self) -> RaidFilter:
+        """Build RaidFilter"""
+        return RaidFilter(
+            hp_filter = self.hp_filter.get(),
+            atk_filter = self.atk_filter.get(),
+            def_filter = self.def_filter.get(),
+            spa_filter = self.spa_filter.get(),
+            spd_filter = self.spd_filter.get(),
+            spe_filter = self.spe_filter.get(),
+            ability_filter = self.ability_filter.get(),
+            gender_filter = self.gender_filter.get(),
+            nature_filter = self.nature_filter.get(),
+            species_filter = self.species_filter.get(),
+            shiny_filter = self.shiny_filter.get(),
+            star_filter = self.difficulty_filter.get()
+        )
 
     def handle_displays(
         self,
