@@ -110,6 +110,18 @@ class RaidInfoWidget(customtkinter.CTkFrame):
                     width = 50
                 )
             self.swap_location_button.pack(side = "left", padx = (0, 15))
+        self.copy_info_button = customtkinter.CTkButton(
+            master = self,
+            text = "Copy Info",
+            width = 50,
+            command = self.copy_info
+        )
+        self.copy_info_button.pack(side = "left", padx = (0, 15))
+
+    def copy_info(self):
+        """Copy info to clipboard"""
+        self.master.clipboard_clear()
+        self.master.clipboard_append(self.raid_data)
 
     def draw_info(self, raid_data: TeraRaid):
         """Draw pokemon info display"""
