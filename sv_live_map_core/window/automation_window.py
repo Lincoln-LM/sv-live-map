@@ -12,17 +12,17 @@ import json
 from PIL import ImageGrab, ImageTk, Image
 import customtkinter
 import discord_webhook
-from .raid_info_widget import RaidInfoWidget
-from .raid_filter import RaidFilter
-from .iv_filter_widget import IVFilterWidget
-from .sv_enums import Nature, AbilityIndex, Gender, Species, StarLevel
-from .checked_combobox import CheckedCombobox
-from .path_handler import get_path
+from ..widget.raid_info_widget import RaidInfoWidget
+from ..util.raid_filter import RaidFilter
+from ..widget.iv_filter_widget import IVFilterWidget
+from ..enums import Nature, AbilityIndex, Gender, Species, StarLevel
+from ..widget.checked_combobox import CheckedCombobox
+from ..util.path_handler import get_path
 
 if TYPE_CHECKING:
     from typing import Type, Callable
     from .application import Application
-    from .raid_block import TeraRaid, RaidBlock
+    from ..structure.raid_block import TeraRaid, RaidBlock
 
 class AutomationWindow(customtkinter.CTkToplevel):
     """Automation window"""

@@ -13,18 +13,18 @@ import json
 import struct
 from PIL import Image, ImageTk
 import customtkinter
-from .raid_reader import RaidReader
-from .paldea_map_view import PaldeaMapView
-from .poke_sprite_handler import PokeSpriteHandler
-from .scrollable_frame import ScrollableFrame
-from .raid_info_widget import RaidInfoWidget
-from .sv_enums import StarLevel
-from .raid_enemy_table_array import RaidEnemyTableArray
-from .raid_block import RaidBlock, TeraRaid
-from .corrected_marker import CorrectedMarker
-from .personal_data_handler import PersonalDataHandler
+from ..nxreader.raid_reader import RaidReader
+from ..widget.paldea_map_view import PaldeaMapView
+from ..util.poke_sprite_handler import PokeSpriteHandler
+from ..widget.scrollable_frame import ScrollableFrame
+from ..widget.raid_info_widget import RaidInfoWidget
+from ..enums import StarLevel
+from ..fbs.raid_enemy_table_array import RaidEnemyTableArray
+from ..structure.raid_block import RaidBlock, TeraRaid
+from ..widget.corrected_marker import CorrectedMarker
+from ..util.personal_data_handler import PersonalDataHandler
 from .automation_window import AutomationWindow
-from .path_handler import get_path
+from ..util.path_handler import get_path
 
 customtkinter.set_default_color_theme("blue")
 customtkinter.set_appearance_mode("dark")

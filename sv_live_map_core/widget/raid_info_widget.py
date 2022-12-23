@@ -3,11 +3,11 @@
 from typing import Callable
 import customtkinter
 from PIL import Image, ImageTk
-from .raid_block import TeraRaid
-from .poke_sprite_handler import PokeSpriteHandler
+from ..structure.raid_block import TeraRaid
+from ..util.poke_sprite_handler import PokeSpriteHandler
 from .image_widget import ImageWidget
-from .sv_enums import TeraType, Gender, StarLevel
-from .path_handler import get_path
+from ..enums import TeraType, Gender, StarLevel
+from ..util.path_handler import get_path
 
 # type union not yet supported by pylint
 # pylint: disable=unsupported-binary-operation

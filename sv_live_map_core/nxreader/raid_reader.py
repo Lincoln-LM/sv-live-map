@@ -8,12 +8,12 @@ from typing import Type
 import bytechomp
 from PIL import Image
 from .nxreader import NXReader
-from .sv_enums import StarLevel, StoryProgress, Game
-from .raid_enemy_table_array import RaidEnemyTableArray
-from .delivery_raid_priority_array import DeliveryRaidPriorityArray
-from .raid_block import RaidBlock, process_raid_block
-from .rng import SCXorshift32
-from .my_status_9 import MyStatus9
+from ..enums import StarLevel, StoryProgress, Game
+from ..fbs.raid_enemy_table_array import RaidEnemyTableArray
+from ..fbs.delivery_raid_priority_array import DeliveryRaidPriorityArray
+from ..structure.raid_block import RaidBlock, process_raid_block
+from ..rng import SCXorshift32
+from ..structure.my_status_9 import MyStatus9
 
 class RaidReader(NXReader):
     """Subclass of NXReader with functions specifically for raids"""

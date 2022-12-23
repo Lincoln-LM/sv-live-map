@@ -2,8 +2,8 @@ import os
 import sys
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from sv_live_map_core.raid_block import TeraRaid
-from sv_live_map_core.sv_enums import (
+from sv_live_map_core.structure.raid_block import TeraRaid
+from sv_live_map_core.enums import (
     StarLevel,
     Species,
     GenderGeneration,
@@ -18,6 +18,6 @@ from sv_live_map_core.sv_enums import (
     Gender,
     Nature
 )
-from sv_live_map_core.personal_data_handler import PersonalDataHandler
+from sv_live_map_core.util.personal_data_handler import PersonalDataHandler
 
 PersonalDataHandler()

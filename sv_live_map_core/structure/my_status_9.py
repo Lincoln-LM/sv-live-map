@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 from bytechomp.datatypes import U16, U8
 from bytechomp import Annotated
-from .sv_enums import Game, Gender, Language
+from ..enums import Game, Gender, Language
 
 @dataclass
 class Character:

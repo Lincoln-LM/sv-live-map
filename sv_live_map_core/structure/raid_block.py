@@ -5,8 +5,8 @@
 from dataclasses import dataclass
 from bytechomp import Annotated, ByteOrder, Reader
 from bytechomp.datatypes import U32, U64
-from .rng import Xoroshiro128Plus
-from .sv_enums import (
+from ..rng import Xoroshiro128Plus
+from ..enums import (
     StoryProgress,
     StarLevel,
     TeraType,
@@ -23,8 +23,8 @@ from .sv_enums import (
     Gender,
     AbilityIndex,
 )
-from .raid_enemy_table_array import RaidEnemyTableArray, RaidEnemyTable, RaidEnemyInfo
-from .personal_data_handler import PersonalDataHandler
+from ..fbs.raid_enemy_table_array import RaidEnemyTableArray, RaidEnemyTable, RaidEnemyInfo
+from ..util.personal_data_handler import PersonalDataHandler
 from .my_status_9 import MyStatus9
 
 RAID_COUNT = 72
