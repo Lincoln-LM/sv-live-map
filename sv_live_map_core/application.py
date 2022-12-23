@@ -567,6 +567,9 @@ class Application(customtkinter.CTk):
 
     def on_closing(self, _ = None):
         """Handle closing of the application"""
+        for child in self.winfo_children():
+            if isinstance(child, customtkinter.CTkToplevel) and hasattr(child, "on_closing"):
+                child.on_closing()
         # save settings on termination
         with open("settings.json", "w+", encoding = "utf-8") as settings_file:
             self.settings['IP'] = self.ip_entry.get()
