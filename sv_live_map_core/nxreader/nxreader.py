@@ -5,8 +5,12 @@ import struct
 import socket
 import binascii
 from time import sleep
+import libusb_package
 import usb.core
 import usb.util
+import usb.backend.libusb1
+
+LIBUSB1_BACKEND = usb.backend.libusb1.get_backend(find_library=libusb_package.find_library)
 
 class USBError(Exception):
     """Error to be raised for usb connections"""
@@ -23,7 +27,11 @@ class NXReader:
         self.usb_connection = usb_connection
         if self.usb_connection:
             # nintendo switch vendor and product
-            self.global_dev = usb.core.find(idVendor = 0x057E, idProduct = 0x3000)
+            self.global_dev = usb.core.find(
+                idVendor = 0x057E,
+                idProduct = 0x3000,
+                backend = LIBUSB1_BACKEND
+            )
             if self.global_dev is None:
                 raise USBError("Unable to find switch usb connection")
             self.global_dev.set_configuration()
