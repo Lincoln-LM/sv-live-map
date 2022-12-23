@@ -18,6 +18,7 @@ class RaidInfoWidget(customtkinter.CTkFrame):
     STAR_UNDERLAY: ImageTk.PhotoImage = None
     EVENT_UNDERLAY: ImageTk.PhotoImage = None
     SHINY_OVERLAY: ImageTk.PhotoImage = None
+    COPY_IMAGE: ImageTk.PhotoImage = None
     TERA_SPRITES: list[ImageTk.PhotoImage] = []
     TERA_6_SPRITES: list[ImageTk.PhotoImage] = []
     SEPARATOR_COLOR = "#949392"
@@ -59,6 +60,7 @@ class RaidInfoWidget(customtkinter.CTkFrame):
         self.sprite_display: ImageWidget
         self.info_display: customtkinter.CTkLabel
         self.swap_location_button: customtkinter.CTkButton
+        self.copy_info_button: customtkinter.CTkButton
         self.horizontal_sep: customtkinter.CTkFrame
 
         self.initialize_components(raid_data, has_alternate_location)
@@ -117,6 +119,22 @@ class RaidInfoWidget(customtkinter.CTkFrame):
             command = self.copy_info
         )
         self.copy_info_button.pack(side = "left", padx = (0, 15))
+
+    def copy_info(self):
+        """Copy info to clipboard"""
+        self.master.clipboard_clear()
+        self.master.clipboard_append(self.raid_data)
+
+        self.copy_info_button = customtkinter.CTkButton(
+            master = self,
+            text = "",
+            width = self.COPY_IMAGE.width(),
+            height = self.COPY_IMAGE.height(),
+            image = self.COPY_IMAGE,
+            command = self.copy_info,
+            fg_color = self.fg_color
+        )
+        self.copy_info_button.pack(side = "left", padx = (0, 15), fill = "y")
 
     def copy_info(self):
         """Copy info to clipboard"""
@@ -208,6 +226,12 @@ class RaidInfoWidget(customtkinter.CTkFrame):
             RaidInfoWidget.STAR_UNDERLAY = ImageTk.PhotoImage(
                 Image.open(
                     get_path("./resources/overlay/star.png")
+                )
+            )
+        if RaidInfoWidget.COPY_IMAGE is None:
+            RaidInfoWidget.COPY_IMAGE = ImageTk.PhotoImage(
+                Image.open(
+                    get_path("./resources/icons8/clipboard.png")
                 )
             )
 
