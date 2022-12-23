@@ -25,6 +25,7 @@ from .sv_enums import (
 )
 from .raid_enemy_table_array import RaidEnemyTableArray, RaidEnemyTable, RaidEnemyInfo
 from .personal_data_handler import PersonalDataHandler
+from .my_status_9 import MyStatus9
 
 RAID_COUNT = 72
 TOXTRICITY_AMPED_NATURES = (
@@ -57,16 +58,51 @@ TOXTRICITY_LOWKEY_NATURES = (
     Nature.CAREFUL,
 )
 
-def is_shiny(shiny_generation: ShinyGeneration, pid: int, sidtid: int) -> bool:
+def shiny_xor(pid: int, sidtid: int) -> int:
+    """Get shiny XOR"""
+    temp = pid ^ sidtid
+    return (temp & 0xFFFF) ^ (temp >> 16)
+
+def is_shiny(pid: int, sidtid: int) -> bool:
     """Check if a given pid is shiny"""
-    match shiny_generation:
-        case ShinyGeneration.RANDOM_SHININESS | None:
-            temp = pid ^ sidtid
-            return ((temp & 0xFFFF) ^ (temp >> 16)) < 0x10
-        case ShinyGeneration.FORCED_SHINY:
-            return True
-        case ShinyGeneration.SHINY_LOCKED:
-            return False
+    return shiny_xor(pid, sidtid) < 0x10
+
+def force_shininess(
+    lock_type: ShinyGeneration,
+    fake_pid: int,
+    fake_sidtid: int,
+    sidtid: int
+) -> int:
+    """Force a pid to be shiny/non shiny if applicable"""
+    # if pokemon is supposed to be shiny for the trainer
+    if (
+        # naturally rolled shiny
+        (lock_type in (None, ShinyGeneration.RANDOM_SHININESS) and is_shiny(fake_pid, fake_sidtid))
+        # or forced to be shiny
+        or lock_type == ShinyGeneration.FORCED_SHINY
+    ):
+        return (
+            # if fake pid happens to be shiny for trainer
+            fake_pid
+            if is_shiny(fake_pid, sidtid)
+            # otherwise force shiny
+            else (
+                (
+                    (
+                        (sidtid & 0xFFFF)
+                        ^ (sidtid >> 16)
+                        ^ (fake_pid & 0xFFFF)
+                        # retain xor?
+                        ^ shiny_xor(fake_pid, fake_sidtid)
+                    )
+                    << 16
+                )
+                | (fake_pid & 0xFFFF)
+            )
+        )
+    # pokemon is not supposed to be shiny for trainer, correct it if it is
+    return fake_pid ^ 0x10000000 if is_shiny(fake_pid, sidtid) else fake_pid
+
 
 def calc_difficulty(story_progress: StoryProgress, difficulty_rand: int) -> StarLevel:
     """Calculate raid difficulty from story progress and difficulty rand"""
@@ -168,6 +204,9 @@ class TeraRaid:
         # for map display
         self.id_str: str = f"{self.area_id}-{self.den_id}"
 
+        # tid/sid used for pid generation
+        self.my_status: MyStatus9 = None
+
         self.hide_sensitive_info: bool = False # Default to false. Override later if needed
 
     def generate_pokemon(self, raid_enemy_info: RaidEnemyInfo):
@@ -189,8 +228,8 @@ class TeraRaid:
         rng = Xoroshiro128Plus(self.seed)
         self.encryption_constant = rng.rand()
         self.sidtid = rng.rand()
-        self.pid = rng.rand()
-        self.is_shiny = is_shiny(raid_enemy_info.boss_poke_para.rare_type, self.pid, self.sidtid)
+        self.pid = self.rand_pid(rng)
+        self.is_shiny = is_shiny(self.pid, self.my_status.full_id)
         self.ivs = self.rand_ivs(rng)
         self.ability_index, self.ability = self.rand_ability(rng)
         self.gender = self.rand_gender(rng)
@@ -198,6 +237,15 @@ class TeraRaid:
         self.height = self.rand_size(rng)
         self.weight = self.rand_size(rng)
         self.scale = self.rand_size(rng)
+
+    def rand_pid(self, rng: Xoroshiro128Plus) -> int:
+        """Generate shiny-corrected pid"""
+        return force_shininess(
+            self.raid_enemy_info.boss_poke_para.rare_type,
+            rng.rand(),
+            self.sidtid,
+            self.my_status.full_id
+        )
 
     def rand_tera_type(self) -> TeraType:
         """Generate tera type"""
@@ -297,12 +345,16 @@ class TeraRaid:
         raid_enemy_table_arrays: tuple[RaidEnemyTableArray],
         story_progress: StoryProgress,
         game: Game,
+        my_status: MyStatus9,
         delivery_group_id: int
     ):
         """Initialize raid with derived information"""
         # based on position in full raid list
         self.delivery_group_id = delivery_group_id
         self.is_event = self.content >= 2
+
+        # tid/sid used for pid generation
+        self.my_status = my_status
 
         # rng object used for difficulty and slot
         rng_slot = Xoroshiro128Plus(self.seed)
@@ -422,6 +474,7 @@ class RaidBlock:
         raid_enemy_table_arrays: tuple[RaidEnemyTableArray],
         story_progress: StoryProgress,
         game: Game,
+        my_status: MyStatus9,
         delivery_raid_priority: tuple[int]
     ) -> None:
         """Initialize each raid with derived information"""
@@ -430,7 +483,12 @@ class RaidBlock:
             den_delivery_group_id = None
             for delivery_group_id, delivery_group_size in enumerate(delivery_raid_priority):
                 if i < delivery_group_size:
-                    if not self.validate_event_slots(raid_enemy_table_arrays, story_progress, game, delivery_group_id):
+                    if not self.validate_event_slots(
+                        raid_enemy_table_arrays,
+                        story_progress,
+                        game,
+                        delivery_group_id
+                    ):
                         continue
                     den_delivery_group_id = delivery_group_id
                     break
@@ -439,6 +497,7 @@ class RaidBlock:
                 raid_enemy_table_arrays,
                 story_progress,
                 game,
+                my_status,
                 den_delivery_group_id
             )
 

@@ -188,6 +188,7 @@ class RaidReader(NXReader):
             self.raid_enemy_table_arrays,
             self.story_progress,
             self.game_version,
+            self.my_status,
             self.delivery_raid_priority
         )
         return raid_block
