@@ -175,7 +175,7 @@ class TeraRaid:
         self.raid_enemy_info = raid_enemy_info
 
         # events who force their own difficulty
-        if self.raid_enemy_info.difficulty:
+        if self.raid_enemy_info.difficulty is not None:
             self.difficulty = self.raid_enemy_info.difficulty
 
         # slot directly determines species + form
