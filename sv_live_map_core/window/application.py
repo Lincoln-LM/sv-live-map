@@ -564,14 +564,20 @@ class Application(customtkinter.CTk):
         pos_x, pos_y = self.map_widget.game_coordinates_to_deg(game_x, _, game_z)
         if 'marker' not in self.background_workers['position']:
             player_icon = self.reader.read_trainer_icon()
-            player_icon = player_icon.resize((54, 54))
+            player_icon = player_icon.resize((54, 54), Image.LANCZOS)
             mask = Image.open(get_path("./resources/icon_mask.png")).convert('L')
             overlay = Image.open(get_path("./resources/icon_overlay.png"))
             player_icon.putalpha(mask)
             player_icon.paste(overlay, (0, 0), overlay)
             player_icon = ImageTk.PhotoImage(player_icon)
             self.background_workers['position']['marker'] = \
-                    self.map_widget.set_marker(pos_x, pos_y, "PLAYER", image = player_icon)
+                self.map_widget.set_marker(
+                    pos_x,
+                    pos_y,
+                    self.reader.my_status.original_trainer,
+                    image = player_icon,
+                    font = "Montserrat 11 bold"
+                )
         else:
             self.background_workers['position']['marker'].set_position(pos_x, pos_y)
 

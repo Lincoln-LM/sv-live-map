@@ -7,13 +7,23 @@ from PIL import Image, ImageTk
 
 class CorrectedMarker(CanvasPositionMarker):
     """CanvasPositionMarker that renders images correctly"""
-    def __init__(self, map_widget: TkinterMapView, position: tuple, scale_with_zoom = False, **kwargs):
+    def __init__(
+        self,
+        map_widget: TkinterMapView,
+        position: tuple,
+        scale_with_zoom = False,
+        **kwargs
+    ):
         super().__init__(map_widget, position, **kwargs)
         self.scale_with_zoom = scale_with_zoom
         self.last_zoom = self.map_widget.zoom
         # tkinter images get garbage collected apparently?
         self.image_copy = self.image
         self.icon_copy = self.icon
+
+    def calculate_text_y_offset(self):
+        # TODO: support other anchors
+        self.text_y_offset = 20
 
     def bind_click(self, obj):
         """Bind click methods of a canvas object"""
