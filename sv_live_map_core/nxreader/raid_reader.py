@@ -18,7 +18,6 @@ from ..structure.my_status_9 import MyStatus9
 # TODO: exceptions.py
 class SaveBlockError(Exception):
     """Error when reading save block"""
-    pass
 
 class RaidReader(NXReader):
     """Subclass of NXReader with functions specifically for raids"""
