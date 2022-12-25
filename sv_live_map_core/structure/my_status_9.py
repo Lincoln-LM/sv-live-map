@@ -6,11 +6,9 @@ from bytechomp import Annotated
 from ..enums import Game, Gender, Language
 
 @dataclass
-class Character:
-    """Character byte"""
-    _value: U8
-    def __str__(self):
-        return chr(self._value) if self._value else ""
+class CharacterByte:
+    """Half of a utf16-le character"""
+    value: U8
 
 @dataclass
 class UnusedByte:
@@ -26,8 +24,8 @@ class MyStatus9:
     _gender: U16
     _language: U8
     _unused_0: Annotated[list[UnusedByte], 8]
-    _ot_trash: Annotated[list[Character], 10]
-    _unused_1: Annotated[list[UnusedByte], 0x40]
+    _ot_trash: Annotated[list[CharacterByte], 20]
+    _unused_1: Annotated[list[UnusedByte], 0x36]
     birth_month: U8
     birth_day: U8
 
@@ -38,7 +36,9 @@ class MyStatus9:
         self.game = Game.from_game_id(self._game)
         self.gender = Gender(self._gender)
         self.language = Language(self._language)
-        self.original_trainer = "".join(str(char) for char in self._ot_trash)
+        self.original_trainer = bytes(
+            char_byte.value for char_byte in self._ot_trash
+        ).decode("utf-16le")
 
     def __str__(self) -> str:
         return f"OT: {self.original_trainer} TID: {self.g9tid} SID: {self.g9sid}"
