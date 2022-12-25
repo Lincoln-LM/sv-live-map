@@ -73,27 +73,47 @@ class NXReader:
         """Detach controller from switch"""
         self._send_command('detachController')
 
+    def _read_chunks(self, size: int, chunk_size: int, read_func: callable) -> bytes:
+        """Read data from socket/usb in chunks"""
+        if size < chunk_size:
+            return read_func(size)
+        # empty bytes of size
+        data = bytearray(0 for _ in range(size))
+        i = 0
+        # while there is still data to read
+        while i < size:
+            current_chunk_size = chunk_size
+            # data left to read is less than chunk_size
+            if size - i < current_chunk_size:
+                current_chunk_size = size - i
+            # try to read chunk_size worth of data
+            read_data = read_func(current_chunk_size)
+            # store in data
+            data[i : i + len(read_data)] = read_data
+            i += len(read_data)
+        return data
+
     def _recv(self, size: int) -> bytes:
         """Receive response from sys-botbase"""
         if not self.usb_connection:
-            return binascii.unhexlify(self.socket.recv(2 * size + 1)[:-1])
-        size = int(struct.unpack("<L", self.global_in.read(4, timeout = 0).tobytes())[0])
-        data = [0 for _ in range(size)]
-        if size > 4080:
-            i = 0
-            while i < size:
-                chunk_size = 4080
-                if size - i < 4080:
-                    chunk_size = size - i
-                read_data = self.global_in.read(chunk_size, timeout = 0).tobytes()
-                for byte in read_data:
-                    data[i] = int(byte)
-                    i += 1
-        else:
-            read_data = self.global_in.read(size, timeout = 0).tobytes()
-            for i, byte in enumerate(read_data):
-                data[i] = byte
-        return bytes(data)
+            # hex -> bytes, strip ending \n
+            return binascii.unhexlify(
+                self._read_chunks(
+                    # * 2 because the data is sent as a hex string
+                    # + 1 because it ends in \n
+                    size = size * 2 + 1,
+                    chunk_size = 1020,
+                    read_func = self.socket.recv
+                )[:-1]
+            )
+        # usb tells us the size its sending
+        usb_size = int(struct.unpack("<L", self.global_in.read(4, timeout = 0).tobytes())[0])
+        assert usb_size == size, "USB did not send the correct amount of bytes"
+        return self._read_chunks(
+            size,
+            4080,
+            lambda size: self.global_in.read(size, timeout = 0).tobytes()
+        )
 
     def close(self) -> None:
         """Close connection to switch"""
@@ -154,7 +174,6 @@ class NXReader:
     def read(self, address: int, size: int) -> bytes:
         """Read bytes from heap"""
         self._send_command(f'peek 0x{address:X} 0x{size:X}')
-        sleep(size / 0x8000)
         return self._recv(size)
 
     def read_int(self, address: int, size: int) -> int:
@@ -164,7 +183,6 @@ class NXReader:
     def read_absolute(self, address: int, size: int) -> bytes:
         """Read bytes from absolute address"""
         self._send_command(f'peekAbsolute 0x{address:X} 0x{size:X}')
-        sleep(size / 0x8000)
         return self._recv(size)
 
     def read_absolute_int(self, address: int, size: int) -> int:
@@ -178,7 +196,6 @@ class NXReader:
     def read_main(self, address: int, size: int) -> bytes:
         """Read bytes from main"""
         self._send_command(f'peekMain 0x{address:X} 0x{size:X}')
-        sleep(size / 0x8000)
         return self._recv(size)
 
     def read_main_int(self, address: int, size: int) -> int:
@@ -194,7 +211,6 @@ class NXReader:
         jumps = pointer.replace('[', '').replace('main', '').split(']')
         command = f'pointerPeek 0x{size:X} 0x{" 0x".join(jump.replace("+", "") for jump in jumps)}'
         self._send_command(command)
-        sleep(size / 0x4000)
         return self._recv(size)
 
     def read_pointer_int(self, pointer: str, size: int) -> int:

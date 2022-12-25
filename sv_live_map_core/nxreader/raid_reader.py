@@ -15,6 +15,10 @@ from ..structure.raid_block import RaidBlock, process_raid_block
 from ..rng import SCXorshift32
 from ..structure.my_status_9 import MyStatus9
 
+# TODO: exceptions.py
+class SaveBlockError(Exception):
+    """Error when reading save block"""
+
 class RaidReader(NXReader):
     """Subclass of NXReader with functions specifically for raids"""
     RAID_BINARY_SIZES = (0x3128, 0x3058, 0x4400, 0x5A78, 0x6690, 0x4FB0)
@@ -22,8 +26,14 @@ class RaidReader(NXReader):
     # https://github.com/Manu098vm/SVResearches/blob/master/RAM%20Pointers/RAM%20Pointers.txt
     RAID_BLOCK_PTR = ("[[main+43A77C8]+160]+40", 0xC98) # ty skylink!
     SAVE_BLOCK_PTR = "[[[main+4385F30]+80]+8]"
-    DIFFICULTY_FLAG_LOCATIONS = (0x2BF20, 0x1F400, 0x1B640, 0x13EC0)
-    MY_STATUS_LOCATION = 0x29F40
+    DIFFICULTY_FLAG_LOCATIONS = (
+        # ofs, loc
+        (0x2BF20, 0xEC95D8EF),
+        (0x1F400, 0xA9428DFE),
+        (0x1B640, 0x9535F471),
+        (0x13EC0, 0x6E7F8220)
+    )
+    MY_STATUS_LOCATION = (0x29F40, 0xE3E89BD1)
 
     def __init__(
         self,
@@ -72,15 +82,34 @@ class RaidReader(NXReader):
         # each key remains constant and SCXorshift32(difficulty_{n}_key).next() can be precomputed
         # for the sake of showing how to decrypt it this is not done
         progress = StoryProgress.SIX_STAR_UNLOCKED
-        for offset in reversed(self.DIFFICULTY_FLAG_LOCATIONS):
-            if self.read_save_block_bool(offset):
+        for (ofs, key) in reversed(self.DIFFICULTY_FLAG_LOCATIONS):
+            if self.read_save_block_bool(ofs, key = key):
                 return StoryProgress(progress)
             progress -= 1
         return StoryProgress.DEFAULT
 
     def read_my_status(self) -> MyStatus9:
         """Read trainer info"""
-        return self.read_save_block_struct(self.MY_STATUS_LOCATION, MyStatus9)
+        ofs, key = self.MY_STATUS_LOCATION
+        return self.read_save_block_struct(ofs, MyStatus9, key = key)
+
+    def _search_save_block(self, base_offset: int, key: int = None) -> tuple[int, int]:
+        """Search memory for the correct save block offset"""
+        if key is None:
+            return base_offset, self.read_pointer_int(f"{self.SAVE_BLOCK_PTR}+{base_offset:X}", 4)
+        read_key = self.read_pointer_int(f"{self.SAVE_BLOCK_PTR}+{base_offset:X}", 4)
+        if read_key != key:
+            print(f"WARNING: {base_offset=:X} contains the key {read_key=:X} and not {key=:X}")
+            print("Searching for correct block")
+            direction = 1 if key > read_key else -1
+            for offset in range(base_offset, base_offset + direction * 0x1000, direction * 0x20):
+                read_key = self.read_pointer_int(f"{self.SAVE_BLOCK_PTR}+{offset:X}", 4)
+                print(f"Testing {offset=:X}, {read_key=:X}")
+                if read_key == key:
+                    print(f"Found at {offset=:X}")
+                    return offset, key
+            raise SaveBlockError("Save block not found")
+        return base_offset, key
 
     @staticmethod
     def _decrypt_save_block(key: int, block: bytearray) -> bytearray:
@@ -89,30 +118,31 @@ class RaidReader(NXReader):
             block[i] = byte ^ rng.next()
         return block
 
-    def read_save_block_struct(self, offset: int, _struct: Type):
+    def read_save_block_struct(self, offset: int, _struct: Type, key: int = None):
         """Read decrypted save block of bytechomp struct at offset"""
+        offset, key = self._search_save_block(offset, key)
         byte_reader = bytechomp.Reader[_struct](bytechomp.ByteOrder.LITTLE).allocate()
-        byte_reader.feed(self.read_save_block_object(offset))
+        byte_reader.feed(self.read_save_block_object(offset, key))
         assert byte_reader.is_complete(), "Invalid data size"
         return byte_reader.build()
 
-    def read_save_block_int(self, offset: int) -> int:
+    def read_save_block_int(self, offset: int, key: int = None) -> int:
         """Read decrypted save block u32 at offset"""
-        return int.from_bytes(self.read_save_block(offset, 5)[1:], 'little')
+        return int.from_bytes(self.read_save_block(offset, 5, key = key)[1:], 'little')
 
-    def read_save_block_bool(self, offset: int) -> int:
+    def read_save_block_bool(self, offset: int, key: int = None) -> int:
         """Read decrypted save block boolean at offset"""
-        return int.from_bytes(self.read_save_block(offset, 1), 'little') == 2
+        return int.from_bytes(self.read_save_block(offset, 1, key = key), 'little') == 2
 
-    def read_save_block(self, offset: int, size: int) -> bytearray:
+    def read_save_block(self, offset: int, size: int, key: int = None) -> bytearray:
         """Read decrypted save block at offset"""
-        key = self.read_pointer_int(f"{self.SAVE_BLOCK_PTR}+{offset:X}", 4)
+        offset, key = self._search_save_block(offset, key)
         block = bytearray(self.read_pointer(f"[{self.SAVE_BLOCK_PTR}+{offset + 8:X}]", size))
         return self._decrypt_save_block(key, block)
 
-    def read_save_block_object(self, offset: int) -> bytearray:
+    def read_save_block_object(self, offset: int, key: int = None) -> bytearray:
         """Read decrypted save block object at offset"""
-        key = self.read_pointer_int(f"{self.SAVE_BLOCK_PTR}+{offset:X}", 4)
+        offset, key = self._search_save_block(offset, key)
         header = bytearray(self.read_pointer(f"[{self.SAVE_BLOCK_PTR}+{offset + 8:X}]", 5))
         header = self._decrypt_save_block(key, header)
         # discard type byte
@@ -145,9 +175,9 @@ class RaidReader(NXReader):
         return Image.open(
             io.BytesIO(
                 build_dxt1_header(
-                    self.read_save_block_int(0x1a3c0),
-                    self.read_save_block_int(0x1da0)
-                ) + self.read_save_block_object(0x273e0)
+                    self.read_save_block_int(0x1a3c0, key = 0x8fab2c4d),
+                    self.read_save_block_int(0x1da0, key = 0xb384c24)
+                ) + self.read_save_block_object(0x273e0, key = 0xd41f4fc4)
             )
         )
 
