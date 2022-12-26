@@ -4,7 +4,6 @@ import binascii
 from functools import partial
 import time
 import sys
-import pickle
 import os
 import os.path
 import threading
@@ -304,14 +303,14 @@ class Application(customtkinter.CTk):
         """Read cached encounter tables"""
         tables = []
         for level in StarLevel:
-            if not os.path.exists(f"./cached_tables/{level.name}.pkl"):
+            if not os.path.exists(f"./cached_tables/{level.name}.bin"):
                 self.error_message_window(
                     "File Missing",
-                    f"cached table ./cached_tables/{level.name}.pkl does not exist."
+                    f"cached table ./cached_tables/{level.name}.bin does not exist."
                 )
                 return None
-            with open(f"./cached_tables/{level.name}.pkl", "rb") as file:
-                tables.append(pickle.load(file))
+            with open(f"./cached_tables/{level.name}.bin", "rb") as file:
+                tables.append(file.read())
         return tuple(tables)
 
     def dump_cached_tables(self):
@@ -319,8 +318,8 @@ class Application(customtkinter.CTk):
         if not os.path.exists(get_path("./cached_tables/")):
             os.mkdir(get_path("./cached_tables/"))
         for level in StarLevel:
-            with open(f"./cached_tables/{level.name}.pkl", "wb+") as file:
-                pickle.dump(self.reader.raid_enemy_table_arrays[level], file)
+            with open(f"./cached_tables/{level.name}.bin", "wb+") as file:
+                self.reader.raid_enemy_table_arrays[level].dump_binary(file)
 
     def connect(self) -> bool:
         """Connect to switch and return True if success"""

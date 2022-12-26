@@ -47,12 +47,16 @@ class RaidReader(NXReader):
         port: int = 6000,
         usb_connection: bool = False,
         read_safety: bool = False,
-        raid_enemy_table_arrays: tuple[RaidEnemyTableArray, 7] = None,
+        raid_enemy_table_arrays: tuple[bytes, 7] = None,
     ):
         super().__init__(ip_address, port, usb_connection)
         self.read_safety = read_safety
-        self.raid_enemy_table_arrays: tuple[RaidEnemyTableArray, 7] = \
-            raid_enemy_table_arrays or self.read_raid_enemy_table_arrays()
+        if raid_enemy_table_arrays is None:
+            self.raid_enemy_table_arrays: tuple[RaidEnemyTableArray, 7] = \
+                self.read_raid_enemy_table_arrays()
+        else:
+            self.raid_enemy_table_arrays = \
+                [RaidEnemyTableArray(table) for table in raid_enemy_table_arrays]
         self.delivery_raid_priority: tuple[int] = self.read_delivery_raid_priority()
         self.story_progress: StoryProgress = self.read_story_progess()
         self.game_version: Game = self.read_game_version()

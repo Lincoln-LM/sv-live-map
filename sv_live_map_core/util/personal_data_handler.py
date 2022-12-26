@@ -10,7 +10,6 @@ class PersonalDataHandler:
     def __init__(self) -> None:
         with open(
             get_path("./resources/personal_data_partial.json"),
-            
             "r",
             encoding = "utf-8"
         ) as personal_data_json:

@@ -1,5 +1,6 @@
 """Generic FlatBuffer object"""
 
+from io import FileIO
 from enum import IntEnum
 from typing import Type, Self, Callable
 import flatbuffers
@@ -43,6 +44,10 @@ class FlatBufferObject:
         )
         self._offset = offset
         self._counter = 4
+
+    def dump_binary(self, stream: FileIO):
+        """Dump binary to file stream"""
+        stream.write(self._table.Bytes)
 
     def read_int(self, _type: INT_TYPES, position: int, default = None):
         """Read value of _type at position"""
