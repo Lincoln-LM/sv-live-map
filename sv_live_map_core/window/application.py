@@ -355,7 +355,8 @@ class Application(customtkinter.CTk):
                     len(self.reader.raid_enemy_table_arrays[StarLevel.FOUR_STAR].raid_enemy_tables),
                     len(self.reader.raid_enemy_table_arrays[StarLevel.FIVE_STAR].raid_enemy_tables),
                     len(self.reader.raid_enemy_table_arrays[StarLevel.SIX_STAR].raid_enemy_tables),
-                    len(self.reader.raid_enemy_table_arrays[StarLevel.EVENT].raid_enemy_tables)
+                    # 0 when game has never connected to the internet
+                    # len(self.reader.raid_enemy_table_arrays[StarLevel.EVENT].raid_enemy_tables)
                 ):
                     return self.connection_error(
                         "Raid data is invalid. Ensure the game is loaded in."
