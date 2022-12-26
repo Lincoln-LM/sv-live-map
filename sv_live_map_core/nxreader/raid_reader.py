@@ -22,18 +22,24 @@ class SaveBlockError(Exception):
 class RaidReader(NXReader):
     """Subclass of NXReader with functions specifically for raids"""
     RAID_BINARY_SIZES = (0x3128, 0x3058, 0x4400, 0x5A78, 0x6690, 0x4FB0)
-    RAID_PRIORITY_PTR = ("[[[[main+43A7798]+08]+2C0]+10]+88", 0x58)
+    RAID_BINARY_OFS = (0x8, 0x8, 0x4, 0x4, 0x4, 0x4, None)
     # https://github.com/Manu098vm/SVResearches/blob/master/RAM%20Pointers/RAM%20Pointers.txt
     RAID_BLOCK_PTR = ("[[main+43A77C8]+160]+40", 0xC98) # ty skylink!
     SAVE_BLOCK_PTR = "[[[main+4385F30]+80]+8]"
+    GAME_ID_OFS = 0x4385FD0 # game_id = *(main + GAME_ID_OFS)
+    # save block locations and keys: (ofs, key)
     DIFFICULTY_FLAG_LOCATIONS = (
-        # ofs, loc
         (0x2BF20, 0xEC95D8EF),
         (0x1F400, 0xA9428DFE),
         (0x1B640, 0x9535F471),
         (0x13EC0, 0x6E7F8220)
     )
     MY_STATUS_LOCATION = (0x29F40, 0xE3E89BD1)
+    BCAT_RAID_BINARY_LOCATION = (0x1040, 0x520A1B0)
+    BCAT_RAID_PRIORITY_LOCATION = (0x1860, 0x95451E4)
+    TRAINER_ICON_WIDTH_LOCATION = (0x1A3C0, 0x8FAB2C4D)
+    TRAINER_ICON_HEIGHT_LOCATION = (0x1DA0, 0xB384C24)
+    TRAINER_ICON_LOCATION = (0x273E0, 0xD41F4FC4)
 
     def __init__(
         self,
@@ -47,7 +53,6 @@ class RaidReader(NXReader):
         self.read_safety = read_safety
         self.raid_enemy_table_arrays: tuple[RaidEnemyTableArray, 7] = \
             raid_enemy_table_arrays or self.read_raid_enemy_table_arrays()
-        # TODO: cache
         self.delivery_raid_priority: tuple[int] = self.read_delivery_raid_priority()
         self.story_progress: StoryProgress = self.read_story_progess()
         self.game_version: Game = self.read_game_version()
@@ -55,9 +60,9 @@ class RaidReader(NXReader):
         print(f"Trainer Info | {self.my_status}")
 
     def read_delivery_raid_priority(self) -> tuple[int]:
-        """Read the delivery priority flatbuffer from memory"""
+        """Read the delivery priority flatbuffer from the save"""
         delivery_raid_priority_array = DeliveryRaidPriorityArray(
-            self.read_pointer(*self.RAID_PRIORITY_PTR)
+            self.read_save_block_object(*self.BCAT_RAID_PRIORITY_LOCATION)
         )
         if len(delivery_raid_priority_array.delivery_raid_prioritys) == 0:
             return (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
@@ -66,21 +71,20 @@ class RaidReader(NXReader):
             .delivery_group_id \
             .group_counts
 
-    @staticmethod
-    def raid_binary_ptr(star_level: StarLevel) -> tuple[str, int]:
-        """Get a pointer to the raid flatbuffer binary in memory"""
+    def read_raid_binary(self, star_level: StarLevel) -> bytes:
+        """Read raid flatbuffer binary from memory"""
         if star_level == StarLevel.EVENT:
-            return ("[[[[[[main+4384A50]+30]+288]+290]+280]+28]+414", 0x7530)
-        return (
-            # TODO: find a more stable pointer for scarlet and violet
-            f"[[[[[[[[main+43A78D8]+C0]+E8]]+10]+4A8]+{0xD0 + star_level * 0xB0:X}]+1E8]",
-            RaidReader.RAID_BINARY_SIZES[star_level]
+            return self.read_save_block_object(*self.BCAT_RAID_BINARY_LOCATION)
+        return self.read_absolute(
+            self.read_pointer_int(
+                f"[[[[[[[[main+43A77B8]+20]+2B0]+60]+10]+208]]+198]+{(star_level + 1) * 0xB0:X}",
+                8
+            ) - self.RAID_BINARY_OFS[star_level],
+            self.RAID_BINARY_SIZES[star_level]
         )
 
     def read_story_progess(self) -> StoryProgress:
         """Read and decrypt story progress from save blocks"""
-        # each key remains constant and SCXorshift32(difficulty_{n}_key).next() can be precomputed
-        # for the sake of showing how to decrypt it this is not done
         progress = StoryProgress.SIX_STAR_UNLOCKED
         for (ofs, key) in reversed(self.DIFFICULTY_FLAG_LOCATIONS):
             if self.read_save_block_bool(ofs, key = key):
@@ -175,39 +179,39 @@ class RaidReader(NXReader):
         return Image.open(
             io.BytesIO(
                 build_dxt1_header(
-                    self.read_save_block_int(0x1a3c0, key = 0x8fab2c4d),
-                    self.read_save_block_int(0x1da0, key = 0xb384c24)
-                ) + self.read_save_block_object(0x273e0, key = 0xd41f4fc4)
+                    self.read_save_block_int(*self.TRAINER_ICON_WIDTH_LOCATION),
+                    self.read_save_block_int(*self.TRAINER_ICON_HEIGHT_LOCATION)
+                ) + self.read_save_block_object(*self.TRAINER_ICON_LOCATION)
             )
         )
 
     def read_game_version(self) -> Game:
         """Read game version"""
-        return Game.from_game_id(self.read_main_int(0x4385FD0, 4))
+        return Game.from_game_id(self.read_main_int(self.GAME_ID_OFS, 4))
 
     def read_raid_enemy_table_arrays(self) -> tuple[RaidEnemyTableArray, 7]:
         """Read all raid flatbuffer binaries from memory"""
         return (
             RaidEnemyTableArray(
-                self.read_pointer(*self.raid_binary_ptr(StarLevel.ONE_STAR))
+                self.read_raid_binary(StarLevel.ONE_STAR)
             ),
             RaidEnemyTableArray(
-                self.read_pointer(*self.raid_binary_ptr(StarLevel.TWO_STAR))
+                self.read_raid_binary(StarLevel.TWO_STAR)
             ),
             RaidEnemyTableArray(
-                self.read_pointer(*self.raid_binary_ptr(StarLevel.THREE_STAR))
+                self.read_raid_binary(StarLevel.THREE_STAR)
             ),
             RaidEnemyTableArray(
-                self.read_pointer(*self.raid_binary_ptr(StarLevel.FOUR_STAR))
+                self.read_raid_binary(StarLevel.FOUR_STAR)
             ),
             RaidEnemyTableArray(
-                self.read_pointer(*self.raid_binary_ptr(StarLevel.FIVE_STAR))
+                self.read_raid_binary(StarLevel.FIVE_STAR)
             ),
             RaidEnemyTableArray(
-                self.read_pointer(*self.raid_binary_ptr(StarLevel.SIX_STAR))
+                self.read_raid_binary(StarLevel.SIX_STAR)
             ),
             RaidEnemyTableArray(
-                self.read_pointer(*self.raid_binary_ptr(StarLevel.EVENT))
+                self.read_raid_binary(StarLevel.EVENT)
             ),
         )
 
@@ -237,22 +241,26 @@ class RaidReader(NXReader):
             while self.check_if_data_avaiable():
                 self.socket.recv(0x8000)
 
-    def read(self, address, size):
+    def read(self, address: int, size: int) -> bytes:
+        """Read bytes from heap"""
         if self.read_safety and not self.usb_connection:
             self.clear_all_data()
         return super().read(address, size)
 
-    def read_absolute(self, address, size):
+    def read_absolute(self, address: int, size: int) -> bytes:
+        """Read bytes from heap"""
         if self.read_safety and not self.usb_connection:
             self.clear_all_data()
         return super().read_absolute(address, size)
 
-    def read_main(self, address, size):
+    def read_main(self, address: int, size: int) -> bytes:
+        """Read bytes from main"""
         if self.read_safety and not self.usb_connection:
             self.clear_all_data()
         return super().read_main(address, size)
 
-    def read_pointer(self, pointer, size):
+    def read_pointer(self, pointer: str, size: int) -> bytes:
+        """Read bytes from pointer"""
         if self.read_safety and not self.usb_connection:
             self.clear_all_data()
         return super().read_pointer(pointer, size)
