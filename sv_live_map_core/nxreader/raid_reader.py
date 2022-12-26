@@ -48,7 +48,6 @@ class RaidReader(NXReader):
         self.read_safety = read_safety
         self.raid_enemy_table_arrays: tuple[RaidEnemyTableArray, 7] = \
             raid_enemy_table_arrays or self.read_raid_enemy_table_arrays()
-        # TODO: cache
         self.delivery_raid_priority: tuple[int] = self.read_delivery_raid_priority()
         self.story_progress: StoryProgress = self.read_story_progess()
         self.game_version: Game = self.read_game_version()
@@ -240,22 +239,26 @@ class RaidReader(NXReader):
             while self.check_if_data_avaiable():
                 self.socket.recv(0x8000)
 
-    def read(self, address, size):
+    def read(self, address: int, size: int) -> bytes:
+        """Read bytes from heap"""
         if self.read_safety and not self.usb_connection:
             self.clear_all_data()
         return super().read(address, size)
 
-    def read_absolute(self, address, size):
+    def read_absolute(self, address: int, size: int) -> bytes:
+        """Read bytes from heap"""
         if self.read_safety and not self.usb_connection:
             self.clear_all_data()
         return super().read_absolute(address, size)
 
-    def read_main(self, address, size):
+    def read_main(self, address: int, size: int) -> bytes:
+        """Read bytes from main"""
         if self.read_safety and not self.usb_connection:
             self.clear_all_data()
         return super().read_main(address, size)
 
-    def read_pointer(self, pointer, size):
+    def read_pointer(self, pointer: str, size: int) -> bytes:
+        """Read bytes from pointer"""
         if self.read_safety and not self.usb_connection:
             self.clear_all_data()
         return super().read_pointer(pointer, size)
