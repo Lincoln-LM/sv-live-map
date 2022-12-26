@@ -44,11 +44,11 @@ class ScrollableFrame(customtkinter.CTkFrame):
         self.scrollable_frame.bind_all("<MouseWheel>", self.on_scroll)
         self.scrollable_frame.bind_all(
             "<Button-4>",
-            lambda: self.canvas_inner.yview_scroll(1, "units")
+            lambda _: self.canvas_inner.yview_scroll(1, "units")
         )
         self.scrollable_frame.bind_all(
             "<Button-5>",
-            lambda: self.canvas_inner.yview_scroll(-1, "units")
+            lambda _: self.canvas_inner.yview_scroll(-1, "units")
         )
 
     def on_leave(self, _):
