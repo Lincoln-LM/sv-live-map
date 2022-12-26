@@ -21,7 +21,6 @@ class PokeSpriteHandler:
             form = None if "-" not in title else int(split[-1].replace("f", ""))
             female = title.endswith("f")
             img = Image.open(f"{sprite_path}{file}")
-            
             # convert to tk image for gui
             if self.tk_image:
                 img = ImageTk.PhotoImage(img)

@@ -348,12 +348,24 @@ class Application(customtkinter.CTk):
                 # disable after the tables are read
                 self.reader.read_safety = False
                 if 0 in (
-                    len(self.reader.raid_enemy_table_arrays[StarLevel.ONE_STAR].raid_enemy_tables),
-                    len(self.reader.raid_enemy_table_arrays[StarLevel.TWO_STAR].raid_enemy_tables),
-                    len(self.reader.raid_enemy_table_arrays[StarLevel.THREE_STAR].raid_enemy_tables),
-                    len(self.reader.raid_enemy_table_arrays[StarLevel.FOUR_STAR].raid_enemy_tables),
-                    len(self.reader.raid_enemy_table_arrays[StarLevel.FIVE_STAR].raid_enemy_tables),
-                    len(self.reader.raid_enemy_table_arrays[StarLevel.SIX_STAR].raid_enemy_tables),
+                    len(
+                        self.reader.raid_enemy_table_arrays[StarLevel.ONE_STAR].raid_enemy_tables
+                    ),
+                    len(
+                        self.reader.raid_enemy_table_arrays[StarLevel.TWO_STAR].raid_enemy_tables
+                    ),
+                    len(
+                        self.reader.raid_enemy_table_arrays[StarLevel.THREE_STAR].raid_enemy_tables
+                    ),
+                    len(
+                        self.reader.raid_enemy_table_arrays[StarLevel.FOUR_STAR].raid_enemy_tables
+                    ),
+                    len(
+                        self.reader.raid_enemy_table_arrays[StarLevel.FIVE_STAR].raid_enemy_tables
+                    ),
+                    len(
+                        self.reader.raid_enemy_table_arrays[StarLevel.SIX_STAR].raid_enemy_tables
+                    ),
                     # 0 when game has never connected to the internet
                     # len(self.reader.raid_enemy_table_arrays[StarLevel.EVENT].raid_enemy_tables)
                 ):

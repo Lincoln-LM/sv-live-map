@@ -320,7 +320,10 @@ class AutomationWindow(customtkinter.CTkToplevel):
         self.master.reader.manual_click("DDOWN", 2.5, 3)
         self.master.reader.manual_click("A")
         # scroll down to datetime, this is not fully consistent but will not break execution
-        self.master.reader.manual_click("DDOWN", 0.7 if self.master.reader.usb_connection else 0.825)
+        self.master.reader.manual_click(
+            "DDOWN",
+            0.7 if self.master.reader.usb_connection else 0.825
+        )
         self.master.reader.manual_click("A")
         self.master.reader.pause(0.4)
         # select Date and Time
