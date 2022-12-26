@@ -42,8 +42,14 @@ class ScrollableFrame(customtkinter.CTkFrame):
     def on_enter(self, _):
         """On enter event"""
         self.scrollable_frame.bind_all("<MouseWheel>", self.on_scroll)
-        self.scrollable_frame.bind_all("<Button-4>", self.on_scroll)
-        self.scrollable_frame.bind_all("<Button-5>", self.on_scroll)
+        self.scrollable_frame.bind_all(
+            "<Button-4>",
+            lambda: self.canvas_inner.yview_scroll(1, "units")
+        )
+        self.scrollable_frame.bind_all(
+            "<Button-5>",
+            lambda: self.canvas_inner.yview_scroll(-1, "units")
+        )
 
     def on_leave(self, _):
         """On leave event"""
@@ -51,9 +57,7 @@ class ScrollableFrame(customtkinter.CTkFrame):
 
     def on_scroll(self, event):
         """On scroll event"""
-        if sys.platform.startswith("linux"):
-            self.canvas_inner.yview_scroll(-1 * (round(event.delta / 120)), "units")
-        elif sys.platform.startswith("win"):
+        if sys.platform.startswith("win"):
             self.canvas_inner.yview_scroll(-1 * (round(event.delta / 120)), "units")
         elif sys.platform.startswith("darwin"):
             self.canvas_inner.yview_scroll(-1 * event.delta, "units")
