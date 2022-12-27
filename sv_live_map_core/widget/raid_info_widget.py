@@ -3,7 +3,7 @@
 from typing import Callable
 import customtkinter
 from PIL import Image, ImageTk
-from ..structure.raid_block import TeraRaid
+from ..save.raid_block import TeraRaid
 from ..util.poke_sprite_handler import PokeSpriteHandler
 from .image_widget import ImageWidget
 from ..enums import TeraType, Gender, StarLevel

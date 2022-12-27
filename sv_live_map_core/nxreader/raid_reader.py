@@ -11,9 +11,9 @@ from .nxreader import NXReader
 from ..enums import StarLevel, StoryProgress, Game
 from ..fbs.raid_enemy_table_array import RaidEnemyTableArray
 from ..fbs.delivery_raid_priority_array import DeliveryRaidPriorityArray
-from ..structure.raid_block import RaidBlock, process_raid_block
+from ..save.raid_block import RaidBlock, process_raid_block
 from ..rng import SCXorshift32
-from ..structure.my_status_9 import MyStatus9
+from ..save.my_status_9 import MyStatus9
 
 # TODO: exceptions.py
 class SaveBlockError(Exception):
@@ -127,6 +127,7 @@ class RaidReader(NXReader):
             block[i] = byte ^ rng.next()
         return block
 
+    # TODO: read save blocks more like save_file_9 does
     def read_save_block_struct(self, offset: int, _struct: Type, key: int = None):
         """Read decrypted save block of bytechomp struct at offset"""
         offset, key = self._search_save_block(offset, key)

@@ -1,6 +1,6 @@
 """Filter for TeraRaids"""
 
-from ..structure.raid_block import TeraRaid
+from ..save.raid_block import TeraRaid
 from ..enums import AbilityIndex, Gender, Nature, Species, StarLevel
 
 class RaidFilter:

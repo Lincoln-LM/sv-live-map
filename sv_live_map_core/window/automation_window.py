@@ -22,7 +22,7 @@ from ..util.path_handler import get_path
 if TYPE_CHECKING:
     from typing import Type, Callable
     from .application import Application
-    from ..structure.raid_block import TeraRaid, RaidBlock
+    from ..save.raid_block import TeraRaid, RaidBlock
 
 class AutomationWindow(customtkinter.CTkToplevel):
     """Automation window"""
