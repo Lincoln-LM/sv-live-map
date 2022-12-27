@@ -2,8 +2,15 @@
    https://github.com/kwsch/PKHeX/tree/master/PKHeX.Core/Saves/Encryption/SwishCrypto"""
 
 import struct
+from typing import Type
+import bytechomp
 from ..rng.xorshift import SCXorshift32
 from ..enums.save_block import SCTypeCode
+from ..enums.difficulty import StoryProgress
+from ..save.my_status_9 import MyStatus9
+from ..save.raid_block import RaidBlock, process_raid_block
+from ..fbs.raid_enemy_table_array import RaidEnemyTableArray
+from ..fbs.delivery_raid_priority_array import DeliveryRaidPriorityArray
 
 def parse_int(block_type: SCTypeCode, data: bytearray) -> int:
     """Parse bytes for integer SCTypeCodes"""
@@ -33,6 +40,17 @@ class SaveFile9:
         0x26, 0x9B, 0xA3, 0xED, 0x7A, 0x53, 0x00, 0xA4, 0x48, 0xB3, 0x50, 0x9E, 0x14, 0xA0, 0x52,
         0xDE, 0x7E, 0x10, 0x2B, 0x1B, 0x77, 0x6E,
     ]
+
+    DIFFICULTY_FLAG_LOCATIONS = (
+        0xEC95D8EF,
+        0xA9428DFE,
+        0x9535F471,
+        0x6E7F8220,
+    )
+    MY_STATUS_LOCATION = 0xE3E89BD1
+    BCAT_RAID_BINARY_LOCATION = 0x520A1B0
+    BCAT_RAID_PRIORITY_LOCATION = 0x95451E4
+    RAID_BLOCK_LOCATION = 0xCAAC8800
 
     def __init__(self, save_data: bytearray):
         self.save_data = save_data
@@ -126,3 +144,42 @@ class SaveFile9:
                 )
             case _:
                 raise NotImplementedError(f"{block_type:!r} is not an implemented block type.")
+
+    def read_block_struct(self, key: int, _struct: Type):
+        """Read decrypted save block as bytechomp struct"""
+        byte_reader = bytechomp.Reader[_struct](bytechomp.ByteOrder.LITTLE).allocate()
+        byte_reader.feed(self.read_block(key))
+        assert byte_reader.is_complete(), "Invalid data size"
+        return byte_reader.build()
+
+    def read_story_progess(self) -> StoryProgress:
+        """Read and decrypt story progress from save blocks"""
+        progress = StoryProgress.SIX_STAR_UNLOCKED
+        for key in reversed(self.DIFFICULTY_FLAG_LOCATIONS):
+            if self.read_block(key):
+                return StoryProgress(progress)
+            progress -= 1
+        return StoryProgress.DEFAULT
+
+    def read_my_status(self) -> MyStatus9:
+        """Read trainer info"""
+        return self.read_block_struct(self.MY_STATUS_LOCATION, MyStatus9)
+
+    def read_event_binary(self) -> RaidEnemyTableArray:
+        """Read event binary from save"""
+        return RaidEnemyTableArray(self.read_block(self.BCAT_RAID_BINARY_LOCATION))
+
+    def read_event_priority(self) -> DeliveryRaidPriorityArray:
+        """Read event priority binary from save"""
+        delivery_raid_priority_array = \
+            DeliveryRaidPriorityArray(self.read_block(self.BCAT_RAID_PRIORITY_LOCATION))
+        if len(delivery_raid_priority_array.delivery_raid_prioritys) == 0:
+            return (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+        return delivery_raid_priority_array \
+            .delivery_raid_prioritys[0] \
+            .delivery_group_id \
+            .group_counts
+
+    def read_raid_block(self) -> RaidBlock:
+        """Read and process raid block"""
+        return process_raid_block(self.read_block(self.RAID_BLOCK_LOCATION))

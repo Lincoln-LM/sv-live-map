@@ -13,18 +13,15 @@ import json
 import struct
 from PIL import Image, ImageTk
 import customtkinter
-import bytechomp
 from ..nxreader.raid_reader import RaidReader
 from ..widget.paldea_map_view import PaldeaMapView
 from ..util.poke_sprite_handler import PokeSpriteHandler
 from ..widget.scrollable_frame import ScrollableFrame
 from ..widget.raid_info_widget import RaidInfoWidget
-from ..enums import StarLevel, StoryProgress
+from ..enums import StarLevel
 from ..fbs.raid_enemy_table_array import RaidEnemyTableArray
-from ..fbs.delivery_raid_priority_array import DeliveryRaidPriorityArray
-from ..save.raid_block import RaidBlock, TeraRaid, process_raid_block
+from ..save.raid_block import RaidBlock, TeraRaid
 from ..save.save_file_9 import SaveFile9
-from ..save.my_status_9 import MyStatus9
 from ..widget.corrected_marker import CorrectedMarker
 from ..util.personal_data_handler import PersonalDataHandler
 from .automation_window import AutomationWindow
@@ -249,38 +246,20 @@ class Application(customtkinter.CTk):
         with open(filename, "rb") as save_file:
             save_file = SaveFile9(bytearray(save_file.read()))
 
-        progress = StoryProgress.SIX_STAR_UNLOCKED
-        for (_, key) in reversed(RaidReader.DIFFICULTY_FLAG_LOCATIONS):
-            if save_file.read_block(key):
-                break
-            progress -= 1
-        progress = StoryProgress(progress)
-        # TODO: read block as struct method
-        byte_reader = bytechomp.Reader[MyStatus9](bytechomp.ByteOrder.LITTLE).allocate()
-        byte_reader.feed(save_file.read_block(RaidReader.MY_STATUS_LOCATION[1]))
-        assert byte_reader.is_complete(), "Invalid data size"
-        my_status: MyStatus9 = byte_reader.build()
+        progress = save_file.read_story_progess()
+        my_status = save_file.read_my_status()
 
         print("Save Info:")
         print(my_status)
         print(f"{progress=}")
 
-        raid_tables = list(self.read_cached_tables())
-        raid_tables.append(save_file.read_block(RaidReader.BCAT_RAID_BINARY_LOCATION[1]))
-        raid_tables = tuple(RaidEnemyTableArray(buf) for buf in raid_tables)
+        raid_tables = list(map(RaidEnemyTableArray, self.read_cached_tables()))
+        raid_tables.append(save_file.read_event_binary())
+        raid_tables = tuple(raid_tables)
 
-        delivery_raid_priority_array = DeliveryRaidPriorityArray(
-            save_file.read_block(RaidReader.BCAT_RAID_PRIORITY_LOCATION[1])
-        )
-        if len(delivery_raid_priority_array.delivery_raid_prioritys) == 0:
-            raid_priority = (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
-        else:
-            raid_priority = delivery_raid_priority_array \
-                .delivery_raid_prioritys[0] \
-                .delivery_group_id \
-                .group_counts
+        raid_priority = save_file.read_event_priority()
 
-        raid_block = process_raid_block(save_file.read_block(0xCAAC8800))
+        raid_block = save_file.read_raid_block()
         raid_block.initialize_data(
             raid_tables,
             progress,
