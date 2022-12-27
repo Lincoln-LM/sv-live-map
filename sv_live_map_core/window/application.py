@@ -345,10 +345,11 @@ class Application(customtkinter.CTk):
                 self.reader = RaidReader(
                     self.ip_entry.get(),
                     usb_connection = self.usb_check.get(),
-                    read_safety = True
+                    # TODO: does read_safety need to exist anymore?
+                    read_safety = False
                 )
-                # disable after the tables are read
-                self.reader.read_safety = False
+                # # disable after the tables are read
+                # self.reader.read_safety = False
                 if 0 in (
                     len(
                         self.reader.raid_enemy_table_arrays[StarLevel.ONE_STAR].raid_enemy_tables
