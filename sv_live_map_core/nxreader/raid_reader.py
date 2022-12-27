@@ -57,6 +57,7 @@ class RaidReader(NXReader):
         else:
             self.raid_enemy_table_arrays = \
                 [RaidEnemyTableArray(table) for table in raid_enemy_table_arrays]
+            self.raid_enemy_table_arrays.extend(self.read_raid_binary(StarLevel.EVENT))
         self.delivery_raid_priority: tuple[int] = self.read_delivery_raid_priority()
         self.story_progress: StoryProgress = self.read_story_progess()
         self.game_version: Game = self.read_game_version()
@@ -196,29 +197,18 @@ class RaidReader(NXReader):
 
     def read_raid_enemy_table_arrays(self) -> tuple[RaidEnemyTableArray, 7]:
         """Read all raid flatbuffer binaries from memory"""
-        return (
-            RaidEnemyTableArray(
-                self.read_raid_binary(StarLevel.ONE_STAR)
-            ),
-            RaidEnemyTableArray(
-                self.read_raid_binary(StarLevel.TWO_STAR)
-            ),
-            RaidEnemyTableArray(
-                self.read_raid_binary(StarLevel.THREE_STAR)
-            ),
-            RaidEnemyTableArray(
-                self.read_raid_binary(StarLevel.FOUR_STAR)
-            ),
-            RaidEnemyTableArray(
-                self.read_raid_binary(StarLevel.FIVE_STAR)
-            ),
-            RaidEnemyTableArray(
-                self.read_raid_binary(StarLevel.SIX_STAR)
-            ),
-            RaidEnemyTableArray(
-                self.read_raid_binary(StarLevel.EVENT)
-            ),
-        )
+        binaries = []
+        for difficulty in StarLevel:
+            if difficulty == StarLevel.SEVEN_STAR:
+                continue
+            print(f"Reading binary for {difficulty=}")
+            binaries.append(
+                RaidEnemyTableArray(
+                    self.read_raid_binary(difficulty)
+                )
+            )
+        print("Done reading raid binaries!")
+        return tuple(binaries)
 
     def read_raid_block_data(self) -> RaidBlock:
         """Read raid block data from memory and process"""
