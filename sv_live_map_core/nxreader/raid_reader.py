@@ -57,6 +57,7 @@ class RaidReader(NXReader):
         else:
             self.raid_enemy_table_arrays = \
                 [RaidEnemyTableArray(table) for table in raid_enemy_table_arrays]
+            self.raid_enemy_table_arrays.extend(self.read_raid_binary(StarLevel.EVENT))
         self.delivery_raid_priority: tuple[int] = self.read_delivery_raid_priority()
         self.story_progress: StoryProgress = self.read_story_progess()
         self.game_version: Game = self.read_game_version()

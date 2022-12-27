@@ -303,6 +303,8 @@ class Application(customtkinter.CTk):
         """Read cached encounter tables"""
         tables = []
         for level in StarLevel:
+            if level == StarLevel.EVENT:
+                continue
             if not os.path.exists(f"./cached_tables/{level.name}.bin"):
                 self.error_message_window(
                     "File Missing",
