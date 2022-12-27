@@ -8,7 +8,7 @@
 
 [![](https://img.shields.io/badge/Python%20Scripts-Direct%20Download-orange)](https://github.com/Lincoln-LM/sv-live-map/archive/refs/heads/master.zip)
 
-GUI Map for displaying information on Tera Raid Dens in Pokémon Scarlet and Violet
+GUI Map for displaying information on Tera Raid Dens in Pokémon Scarlet and Violet either live or from a save backup
 
 Spiritual sequel to [PLA-Live-Map](https://github.com/Lincoln-LM/PLA-Live-Map)
 
@@ -24,7 +24,7 @@ For a non-map GUI, check out [LegoFigure11](https://github.com/LegoFigure11)'s [
 
 ### Details:
 sv-live-map reads tera raid encounter info directly from the flatbuffer binary in memory, this means that this repo does not need to contain serialized encounter information. 
-This encounter info is then used to predict the generation of raid dens from their seeds and the player's current story progress, also stored in memory.
+This encounter info is then used to predict the generation of raid dens from their seeds and the player's current story progress, also stored in memory. Alternatively, the user can supply a save and dumped raid tables to display raids from a backup.
 All relevant read/derived information is then displayed to the user via the graphical user interface.
 
 The program also supports automatically date skipping until a target is found.
