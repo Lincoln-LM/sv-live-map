@@ -19,7 +19,7 @@ from ..widget.scrollable_frame import ScrollableFrame
 from ..widget.raid_info_widget import RaidInfoWidget
 from ..enums import StarLevel
 from ..fbs.raid_enemy_table_array import RaidEnemyTableArray
-from ..structure.raid_block import RaidBlock, TeraRaid
+from ..save.raid_block import RaidBlock, TeraRaid
 from ..widget.corrected_marker import CorrectedMarker
 from ..util.personal_data_handler import PersonalDataHandler
 from .automation_window import AutomationWindow
