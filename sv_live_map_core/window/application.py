@@ -3,6 +3,7 @@
 import binascii
 from functools import partial
 import time
+from tkinter import filedialog
 import sys
 import os
 import os.path
@@ -12,14 +13,18 @@ import json
 import struct
 from PIL import Image, ImageTk
 import customtkinter
+import bytechomp
 from ..nxreader.raid_reader import RaidReader
 from ..widget.paldea_map_view import PaldeaMapView
 from ..util.poke_sprite_handler import PokeSpriteHandler
 from ..widget.scrollable_frame import ScrollableFrame
 from ..widget.raid_info_widget import RaidInfoWidget
-from ..enums import StarLevel
+from ..enums import StarLevel, StoryProgress
 from ..fbs.raid_enemy_table_array import RaidEnemyTableArray
-from ..save.raid_block import RaidBlock, TeraRaid
+from ..fbs.delivery_raid_priority_array import DeliveryRaidPriorityArray
+from ..save.raid_block import RaidBlock, TeraRaid, process_raid_block
+from ..save.save_file_9 import SaveFile9
+from ..save.my_status_9 import MyStatus9
 from ..widget.corrected_marker import CorrectedMarker
 from ..util.personal_data_handler import PersonalDataHandler
 from .automation_window import AutomationWindow
@@ -216,13 +221,74 @@ class Application(customtkinter.CTk):
         )
         self.automation_button.grid(row = 10, column = 0, columnspan = 2, padx = 10, pady = 5)
 
+        self.load_save_button = customtkinter.CTkButton(
+            master = self.settings_frame,
+            text = "Load From Save",
+            width = 300,
+            command = self.load_from_save
+        )
+        self.load_save_button.grid(row = 11, column = 0, columnspan = 2, padx = 10, pady = 5)
+
         self.dump_button = customtkinter.CTkButton(
             master = self.settings_frame,
             text = "Dump Raids",
             width = 300,
             command = self.dump_raids
         )
-        self.dump_button.grid(row = 11, column = 0, columnspan = 2, padx = 10, pady = 5)
+        self.dump_button.grid(row = 12, column = 0, columnspan = 2, padx = 10, pady = 5)
+
+    def load_from_save(self):
+        """Load and display info from save"""
+        # TODO: support raid_block.bin
+        filename = filedialog.askopenfilename(
+            filetypes = (("Save File", "*"),),
+            initialdir = get_path("./")
+        )
+        if not filename:
+            return
+        with open(filename, "rb") as save_file:
+            save_file = SaveFile9(bytearray(save_file.read()))
+
+        progress = StoryProgress.SIX_STAR_UNLOCKED
+        for (_, key) in reversed(RaidReader.DIFFICULTY_FLAG_LOCATIONS):
+            if save_file.read_block(key):
+                break
+            progress -= 1
+        progress = StoryProgress(progress)
+        # TODO: read block as struct method
+        byte_reader = bytechomp.Reader[MyStatus9](bytechomp.ByteOrder.LITTLE).allocate()
+        byte_reader.feed(save_file.read_block(RaidReader.MY_STATUS_LOCATION[1]))
+        assert byte_reader.is_complete(), "Invalid data size"
+        my_status: MyStatus9 = byte_reader.build()
+
+        print("Save Info:")
+        print(my_status)
+        print(f"{progress=}")
+
+        raid_tables = list(self.read_cached_tables())
+        raid_tables.append(save_file.read_block(RaidReader.BCAT_RAID_BINARY_LOCATION[1]))
+        raid_tables = tuple(RaidEnemyTableArray(buf) for buf in raid_tables)
+
+        delivery_raid_priority_array = DeliveryRaidPriorityArray(
+            save_file.read_block(RaidReader.BCAT_RAID_PRIORITY_LOCATION[1])
+        )
+        if len(delivery_raid_priority_array.delivery_raid_prioritys) == 0:
+            raid_priority = (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+        else:
+            raid_priority = delivery_raid_priority_array \
+                .delivery_raid_prioritys[0] \
+                .delivery_group_id \
+                .group_counts
+
+        raid_block = process_raid_block(save_file.read_block(0xCAAC8800))
+        raid_block.initialize_data(
+            raid_tables,
+            progress,
+            my_status.game,
+            my_status,
+            raid_priority
+        )
+        self.render_raids(raid_block)
 
     def dump_raids(self):
         """Dump Raid Block"""
@@ -299,7 +365,7 @@ class Application(customtkinter.CTk):
             )
         )
 
-    def read_cached_tables(self) -> tuple[RaidEnemyTableArray]:
+    def read_cached_tables(self) -> tuple[bytearray]:
         """Read cached encounter tables"""
         tables = []
         for level in StarLevel:
@@ -385,7 +451,7 @@ class Application(customtkinter.CTk):
             print(error)
             return False
 
-    def connection_error(self, error_message):
+    def connection_error(self, error_message: str):
         """Set reader to None and open error window"""
         self.reader = None
         self.error_message_window("Invalid", error_message)
@@ -417,7 +483,6 @@ class Application(customtkinter.CTk):
                             raise error
                 self.reader.read_safety = False
                 if render:
-                    self.info_frame_horizontal_separator.grid_forget()
                     self.render_thread = self.render_raids(raid_block_data)
                 return raid_block_data
             except (TimeoutError, struct.error, binascii.Error) as error:
@@ -428,8 +493,9 @@ class Application(customtkinter.CTk):
         else:
             self.error_message_window("Invalid", "Not connected to switch.")
 
-    def render_raids(self, raid_block_data) -> threading.Thread:
+    def render_raids(self, raid_block_data: RaidBlock) -> threading.Thread:
         """Display raid information"""
+        self.info_frame_horizontal_separator.grid_forget()
         for info_widget in self.raid_info_widgets:
             info_widget.grid_forget()
         for marker in self.raid_markers.values():
