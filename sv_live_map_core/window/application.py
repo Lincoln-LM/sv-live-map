@@ -376,6 +376,7 @@ class Application(customtkinter.CTk):
                     )
 
                 self.dump_cached_tables()
+                self.use_cached_tables.select()
             return True
         except (TimeoutError, struct.error, binascii.Error) as error:
             self.reader = None
