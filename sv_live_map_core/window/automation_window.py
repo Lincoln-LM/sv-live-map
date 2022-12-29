@@ -683,6 +683,8 @@ class AutomationWindow(customtkinter.CTkToplevel):
         self.load_combobox(self.difficulty_filter, filter_json, "DifficultyFilter")
         if filter_json.get("ShinyFilter", False):
             self.shiny_filter.select()
+        else:
+            self.shiny_filter.deselect()
 
     def load_iv_filter(self, filter_json: dict):
         """Load iv filter from filter_json"""
