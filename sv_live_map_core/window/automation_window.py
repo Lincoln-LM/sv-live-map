@@ -319,11 +319,18 @@ class AutomationWindow(customtkinter.CTkToplevel):
         # scroll down to System
         self.master.reader.manual_click("DDOWN", 2.5, 3)
         self.master.reader.manual_click("A")
-        # scroll down to datetime, this is not fully consistent but will not break execution
-        self.master.reader.manual_click(
-            "DDOWN",
-            0.7 if self.master.reader.usb_connection else 0.825
-        )
+        # scroll down to datetime
+        if self.safe_mode_check.get():
+            # https://github.com/LegoFigure11/RaidCrawler/blob/cc9e9176bfcfc1cbc22c6f8c9d6ebaaad78ddc05/Properties/Settings.settings#L32
+            for _ in range(38):
+                self.master.reader.manual_click("DDOWN", 0.1)
+                self.master.reader.pause(0.2)
+        else:
+            # this is not fully consistent but will not break execution
+            self.master.reader.manual_click(
+                "DDOWN",
+                0.7 if self.master.reader.usb_connection else 0.825
+            )
         self.master.reader.manual_click("A")
         self.master.reader.pause(0.4)
         # select Date and Time
@@ -445,18 +452,24 @@ class AutomationWindow(customtkinter.CTkToplevel):
         self.settings_frame.grid(row = 0, column = 2, columnspan = 2, sticky = "nsew")
         self.grid_columnconfigure(2, minsize = 400)
 
+        self.safe_mode_check = customtkinter.CTkCheckBox(
+            master = self.settings_frame,
+            text = "Safe mode (slower, more consistent)"
+        )
+        self.safe_mode_check.grid(row = 0, column = 0, columnspan = 2, padx = 10, pady = 10)
+
         # gui indication settings
         self.map_render_check = customtkinter.CTkCheckBox(
             master = self.settings_frame,
             text = "Render on map each reset (slow)"
         )
-        self.map_render_check.grid(row = 0, column = 0, columnspan = 2, padx = 10, pady = 10)
+        self.map_render_check.grid(row = 1, column = 0, columnspan = 2, padx = 10, pady = 10)
 
         self.popup_check = customtkinter.CTkCheckBox(
             master = self.settings_frame,
             text = "Display popup when found"
         )
-        self.popup_check.grid(row = 1, column = 0, columnspan = 2, padx = 10, pady = 10)
+        self.popup_check.grid(row = 2, column = 0, columnspan = 2, padx = 10, pady = 10)
 
         # webhook settings
         self.webhook_check = customtkinter.CTkCheckBox(
@@ -464,45 +477,45 @@ class AutomationWindow(customtkinter.CTkToplevel):
             text = "Send webhook when found",
             command = self.toggle_webhook_settings
         )
-        self.webhook_check.grid(row = 2, column = 0, columnspan = 2, padx = 10, pady = 10)
+        self.webhook_check.grid(row = 3, column = 0, columnspan = 2, padx = 10, pady = 10)
 
         self.widget_label = customtkinter.CTkLabel(
             master = self.settings_frame,
             text = "Widget display"
         )
-        self.widget_label.grid(row = 3, column = 0, padx = (10, 0), pady = 10)
+        self.widget_label.grid(row = 4, column = 0, padx = (10, 0), pady = 10)
 
         self.embed_select = customtkinter.CTkSwitch(
             master = self.settings_frame,
             # padding
             text = "     Embed display"
         )
-        self.embed_select.grid(row = 3, column = 1, padx = (0, 10), pady = 10)
+        self.embed_select.grid(row = 4, column = 1, padx = (0, 10), pady = 10)
 
         # webook entry
         self.webhook_entry_label = customtkinter.CTkLabel(
             master = self.settings_frame,
             text = "Webhook URL:"
         )
-        self.webhook_entry_label.grid(row = 4, column = 0, padx = 10, pady = 10)
+        self.webhook_entry_label.grid(row = 5, column = 0, padx = 10, pady = 10)
 
         self.webhook_entry = customtkinter.CTkEntry(
             master = self.settings_frame,
             width = 150
         )
-        self.webhook_entry.grid(row = 4, column = 1, padx = 10, pady = 10)
+        self.webhook_entry.grid(row = 5, column = 1, padx = 10, pady = 10)
 
         self.ping_entry_label = customtkinter.CTkLabel(
             master = self.settings_frame,
             text = "ID to Ping:"
         )
-        self.ping_entry_label.grid(row = 5, column = 0, padx = 10, pady = 10)
+        self.ping_entry_label.grid(row = 6, column = 0, padx = 10, pady = 10)
 
         self.ping_entry = customtkinter.CTkEntry(
             master = self.settings_frame,
             width = 150
         )
-        self.ping_entry.grid(row = 5, column = 1, padx = 10, pady = 10)
+        self.ping_entry.grid(row = 6, column = 1, padx = 10, pady = 10)
 
     def draw_filter_frame(self):
         """Draw frame with filter information"""
@@ -600,7 +613,7 @@ class AutomationWindow(customtkinter.CTkToplevel):
             height = self.SAVE_IMAGE.height(),
             command = self.save_filter
         )
-        self.save_filter_button.grid(row = 6, column = 0, padx = 5, pady = (45, 5))
+        self.save_filter_button.grid(row = 6, column = 0, padx = 5, pady = (85, 5))
 
         self.load_filter_button = customtkinter.CTkButton(
             self.filter_frame,
@@ -611,7 +624,7 @@ class AutomationWindow(customtkinter.CTkToplevel):
             height = self.LOAD_IMAGE.height(),
             command = self.load_filter
         )
-        self.load_filter_button.grid(row = 6, column = 1, padx = 5, pady = (45, 5))
+        self.load_filter_button.grid(row = 6, column = 1, padx = 5, pady = (85, 5))
 
     def save_filter(self):
         """Save current filter to file"""
