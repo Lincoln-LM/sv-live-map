@@ -12,8 +12,13 @@ import usb.backend.libusb1
 
 LIBUSB1_BACKEND = usb.backend.libusb1.get_backend(find_library=libusb_package.find_library)
 
+# TODO: exceptions.py
+
 class USBError(Exception):
     """Error to be raised for usb connections"""
+
+class SocketError(Exception):
+    """Error to be raised for socket connections"""
 
 class NXReader:
     """Simplified class to read information from sys-botbase"""
@@ -88,6 +93,9 @@ class NXReader:
                 current_chunk_size = size - i
             # try to read chunk_size worth of data
             read_data = read_func(current_chunk_size)
+            # socket shut down on the switch side
+            if len(read_data) == 0:
+                raise SocketError("Socket shut down on the switch's side.")
             # store in data
             data[i : i + len(read_data)] = read_data
             i += len(read_data)

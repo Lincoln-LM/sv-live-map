@@ -3,6 +3,7 @@
 import binascii
 from functools import partial
 import time
+import traceback
 from tkinter import filedialog
 import sys
 import os
@@ -14,6 +15,7 @@ import struct
 from PIL import Image, ImageTk
 import customtkinter
 from ..nxreader.raid_reader import RaidReader
+from ..nxreader.nxreader import SocketError
 from ..widget.paldea_map_view import PaldeaMapView
 from ..util.poke_sprite_handler import PokeSpriteHandler
 from ..widget.scrollable_frame import ScrollableFrame
@@ -425,10 +427,10 @@ class Application(customtkinter.CTk):
                 self.dump_cached_tables()
                 self.use_cached_tables.select()
             return True
-        except (TimeoutError, struct.error, binascii.Error) as error:
+        except (TimeoutError, struct.error, binascii.Error, SocketError):
             self.reader = None
             self.error_message_window("TimeoutError", "Connection timed out.")
-            print(error)
+            traceback.print_exc()
             return False
 
     def connection_error(self, error_message: str):
@@ -450,6 +452,7 @@ class Application(customtkinter.CTk):
         """Read and display all raid information"""
         if self.reader:
             # struct.error/binascii.Error when connection terminates before all bytes are read
+            # SocketError specifically when switch socket stops sending data
             try:
                 # try reading up to 5 times before erroring
                 for i in range(5):
@@ -465,7 +468,7 @@ class Application(customtkinter.CTk):
                 if render:
                     self.render_thread = self.render_raids(raid_block_data)
                 return raid_block_data
-            except (TimeoutError, struct.error, binascii.Error) as error:
+            except (TimeoutError, struct.error, binascii.Error, SocketError) as error:
                 if 'position' in self.background_workers \
                       and self.background_workers['position']['active']:
                     self.toggle_position_work()
@@ -601,9 +604,11 @@ class Application(customtkinter.CTk):
         if 'position' not in self.background_workers:
             self.background_workers['position'] = {'active': False}
         if self.background_workers['position']['active']:
-            self.background_workers['position']['marker'].delete()
-            self.background_workers['position'].pop('marker')
-            self.after_cancel(self.background_workers['position']['worker'])
+            if 'marker' in self.background_workers['position']:
+                self.background_workers['position']['marker'].delete()
+                self.background_workers['position'].pop('marker')
+            if 'worker' in self.background_workers['position']:
+                self.after_cancel(self.background_workers['position']['worker'])
             self.background_workers['position']['active'] = False
             self.position_button.configure(text = "Track Player")
         elif self.reader:
@@ -621,7 +626,7 @@ class Application(customtkinter.CTk):
             # omit Y (height) coordinate
             game_x, _, game_z = \
                     struct.unpack("fff", self.reader.read_main(self.PLAYER_POS_ADDRESS, 12))
-        except (TimeoutError, struct.error, binascii.Error) as error:
+        except (TimeoutError, struct.error, binascii.Error, SocketError) as error:
             self.connection_timeout(error)
         pos_x, pos_y = self.map_widget.game_coordinates_to_deg(game_x, _, game_z)
         if 'marker' not in self.background_workers['position']:

@@ -9,7 +9,11 @@ from tkinter import filedialog
 from threading import Thread
 from typing import TYPE_CHECKING
 import json
-from PIL import ImageGrab, ImageTk, Image
+import struct
+import binascii
+import contextlib
+import tkinter
+from PIL import ImageTk, Image
 import customtkinter
 import discord_webhook
 from ..widget.raid_info_widget import RaidInfoWidget
@@ -18,6 +22,7 @@ from ..widget.iv_filter_widget import IVFilterWidget
 from ..enums import Nature, AbilityIndex, Gender, Species, StarLevel
 from ..widget.checked_combobox import CheckedCombobox
 from ..util.path_handler import get_path
+from ..nxreader.nxreader import SocketError
 
 if TYPE_CHECKING:
     from typing import Type, Callable
@@ -95,8 +100,12 @@ class AutomationWindow(customtkinter.CTkToplevel):
         last_seed = None
         while not self.target_found:
             if self.master.reader:
-                total_raid_count, total_reset_count, last_seed, raid_block = \
-                    self.read_raids(total_raid_count, total_reset_count, last_seed)
+                try:
+                    total_raid_count, total_reset_count, last_seed, raid_block = \
+                        self.read_raids(total_raid_count, total_reset_count, last_seed)
+                except (TimeoutError, struct.error, binascii.Error, SocketError) as error:
+                    self.stop_automation()
+                    raise error
 
                 popup_display_builder, webhook_display_builder = self.define_builders()
 
@@ -200,7 +209,9 @@ class AutomationWindow(customtkinter.CTkToplevel):
                 time.sleep(1)
                 widget: RaidInfoWidget
                 img = widget.create_image()
-                popup_window.destroy()
+                # unsure why this happens even when window is properly destroyed
+                with contextlib.suppress(tkinter.TclError):
+                    popup_window.destroy()
                 if not os.path.exists(get_path("./found_screenshots/")):
                     os.mkdir(get_path("./found_screenshots/"))
                 img.save(get_path(f"./found_screenshots/{raid.seed}.png"))
