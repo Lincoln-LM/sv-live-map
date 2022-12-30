@@ -327,7 +327,7 @@ class AutomationWindow(customtkinter.CTkToplevel):
             # https://github.com/LegoFigure11/RaidCrawler/blob/cc9e9176bfcfc1cbc22c6f8c9d6ebaaad78ddc05/Properties/Settings.settings#L32
             for _ in range(38):
                 self.master.reader.manual_click("DDOWN", 0.1)
-                self.master.reader.pause(0.2)
+            self.master.reader.pause(0.2)
         else:
             # this is not fully consistent but will not break execution
             self.master.reader.manual_click(
