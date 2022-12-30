@@ -139,7 +139,7 @@ class RaidInfoWidget(customtkinter.CTkFrame):
             ),
             width = 200
         )
-        self.info_display.pack(side = "left", fill = "x")
+        self.info_display.pack(side = "left", fill = "x", pady = (13, 0))
 
     def draw_main_sprites(self):
         """Draw tera_sprite and poke_sprite"""
@@ -162,8 +162,7 @@ class RaidInfoWidget(customtkinter.CTkFrame):
         self.tera_sprite_display.pack(
             side = "left",
             fill = "y",
-            padx = (40, 0),
-            pady = (40, 0) if self.is_popup else (20, 0)
+            padx = (40, 0)
         )
 
         self.sprite_display = ImageWidget(
@@ -173,8 +172,19 @@ class RaidInfoWidget(customtkinter.CTkFrame):
         )
         self.sprite_display.pack(
             side = "left",
-            fill = "y",
-            pady = (35, 0) if self.is_popup else (45, 0)
+            fill = "y"
+        )
+        self.update_padding()
+
+    def update_padding(self):
+        """Update padding on ImageWidgets based on hide_sensitive_info"""
+        self.tera_sprite_display.pack_configure(
+            pady = (36 if self.raid_data.hide_sensitive_info else 49, 0) if self.is_popup
+            else (2 if self.raid_data.hide_sensitive_info else 6, 0)
+        )
+        self.sprite_display.pack_configure(
+            pady = (29 if self.raid_data.hide_sensitive_info else 42, 0) if self.is_popup
+            else (27 if self.raid_data.hide_sensitive_info else 40, 0)
         )
 
     def cache_sprites(self):

@@ -312,6 +312,7 @@ class Application(customtkinter.CTk):
             if isinstance(widget, RaidInfoWidget):
                 widget.raid_data.hide_sensitive_info = self.hide_info_check.get()
                 widget.info_display.configure(text = widget.raid_data)
+                widget.update_padding()
                 return
             for child in widget.winfo_children():
                 search_children(child)
