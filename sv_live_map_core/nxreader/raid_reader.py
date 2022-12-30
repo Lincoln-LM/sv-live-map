@@ -172,7 +172,7 @@ class RaidReader(NXReader):
         # discard type and size bytes
         return self._decrypt_save_block(key, full_object)[5:]
 
-    def read_trainer_icon(self) -> Image:
+    def read_trainer_icon(self) -> Image.Image:
         """Read trainer icon as PIL image"""
         # thanks NPO! https://github.com/NPO-197
         def build_dxt1_header(width, height):
