@@ -47,3 +47,6 @@ The main purpose of this project is to show off [elegant parsing of flatbuffer b
 
 ### Image Credits:
 * Icons in [icons8](./resources/icons8) folder provided by [icons8](https://icons8.com)
+
+### Font Credits:
+* Fonts in [fonts](./resources/fonts) folder provided by [Google Fonts](https://fonts.google.com/about)

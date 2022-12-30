@@ -1,8 +1,10 @@
 """customtkinter widget for displaying raid info"""
 
 from typing import Callable
+from tkinter import filedialog
+import os
 import customtkinter
-from PIL import Image, ImageTk
+from PIL import Image, ImageTk, ImageDraw, ImageFont
 from ..save.raid_block import TeraRaid
 from ..util.poke_sprite_handler import PokeSpriteHandler
 from .image_widget import ImageWidget
@@ -19,6 +21,7 @@ class RaidInfoWidget(customtkinter.CTkFrame):
     EVENT_UNDERLAY: ImageTk.PhotoImage = None
     SHINY_OVERLAY: ImageTk.PhotoImage = None
     COPY_IMAGE: ImageTk.PhotoImage = None
+    CAMERA_IMAGE: ImageTk.PhotoImage = None
     TERA_SPRITES: list[ImageTk.PhotoImage] = []
     TERA_6_SPRITES: list[ImageTk.PhotoImage] = []
     SEPARATOR_COLOR = "#949392"
@@ -61,6 +64,7 @@ class RaidInfoWidget(customtkinter.CTkFrame):
         self.info_display: customtkinter.CTkLabel
         self.swap_location_button: customtkinter.CTkButton
         self.copy_info_button: customtkinter.CTkButton
+        self.save_image_button: customtkinter.CTkButton
         self.horizontal_sep: customtkinter.CTkFrame
 
         self.initialize_components(raid_data, has_alternate_location)
@@ -122,6 +126,76 @@ class RaidInfoWidget(customtkinter.CTkFrame):
             fg_color = self.fg_color
         )
         self.copy_info_button.pack(side = "left", padx = (0, 15), fill = "y")
+        self.save_image_button = customtkinter.CTkButton(
+            master = self,
+            text = "",
+            width = self.CAMERA_IMAGE.width(),
+            height = self.CAMERA_IMAGE.height(),
+            image = self.CAMERA_IMAGE,
+            command = self.save_image,
+            fg_color = self.fg_color
+        )
+        self.save_image_button.pack(side = "left", padx = (0, 15), fill = "y")
+
+    def save_image(self):
+        """Save image to file"""
+        if not os.path.exists(get_path("./found_screenshots/")):
+            os.mkdir(get_path("./found_screenshots/"))
+        filename = filedialog.asksaveasfilename(
+            filetypes = (("PNG File", "*.png"),),
+            initialdir = get_path("./found_screenshots/")
+        )
+        if not filename:
+            return
+        if not filename.endswith(".png"):
+            filename = f"{filename}.png"
+        self.create_image().save(filename)
+
+    def create_image(self) -> Image.Image:
+        """Create image representation of widget"""
+        size = (
+            self.winfo_width()
+            # exclude buttons
+             - (
+                 self.copy_info_button.winfo_width()
+                 + self.save_image_button.winfo_width()
+                 + (self.swap_location_button.winfo_width() if not self.is_popup else 0)
+               ),
+            self.winfo_height()
+        )
+        bbox = (0, 0) + size
+        img = Image.new("RGBA", size = size)
+        img_draw = ImageDraw.Draw(img)
+        img_draw.rectangle(bbox, fill = self.fg_color[1])
+        tera_sprite = ImageTk.getimage(self.tera_sprite)
+        poke_sprite = ImageTk.getimage(self.poke_sprite)
+        img.paste(
+            tera_sprite,
+            (
+                self.tera_sprite_display.winfo_x(),
+                (size[1] - self.tera_sprite.height()) // 2
+            ),
+            tera_sprite
+        )
+        img.paste(
+            poke_sprite,
+            (
+                self.sprite_display.winfo_x(),
+                (size[1] - self.poke_sprite.height()) // 2
+            ),
+            poke_sprite
+        )
+        font = ImageFont.truetype(get_path("./resources/fonts/Inter/static/Inter-Regular.ttf"), 10)
+        img_draw.text(
+            (
+                self.info_display.text_label.winfo_x() + self.info_display.winfo_x(),
+                (size[1] - self.info_display.winfo_height()) // 2
+            ),
+            self.info_display.text_label['text'],
+            font = font,
+            align = 'center'
+        )
+        return img
 
     def copy_info(self):
         """Copy info to clipboard"""
@@ -139,7 +213,7 @@ class RaidInfoWidget(customtkinter.CTkFrame):
             ),
             width = 200
         )
-        self.info_display.pack(side = "left", fill = "x")
+        self.info_display.pack(side = "left", fill = "x", pady = (13, 0))
 
     def draw_main_sprites(self):
         """Draw tera_sprite and poke_sprite"""
@@ -162,8 +236,7 @@ class RaidInfoWidget(customtkinter.CTkFrame):
         self.tera_sprite_display.pack(
             side = "left",
             fill = "y",
-            padx = (40, 0),
-            pady = (40, 0) if self.is_popup else (20, 0)
+            padx = (40, 0)
         )
 
         self.sprite_display = ImageWidget(
@@ -173,8 +246,19 @@ class RaidInfoWidget(customtkinter.CTkFrame):
         )
         self.sprite_display.pack(
             side = "left",
-            fill = "y",
-            pady = (35, 0) if self.is_popup else (45, 0)
+            fill = "y"
+        )
+        self.update_padding()
+
+    def update_padding(self):
+        """Update padding on ImageWidgets based on hide_sensitive_info"""
+        self.tera_sprite_display.pack_configure(
+            pady = (36 if self.raid_data.hide_sensitive_info else 49, 0) if self.is_popup
+            else (2 if self.raid_data.hide_sensitive_info else 6, 0)
+        )
+        self.sprite_display.pack_configure(
+            pady = (29 if self.raid_data.hide_sensitive_info else 42, 0) if self.is_popup
+            else (27 if self.raid_data.hide_sensitive_info else 40, 0)
         )
 
     def cache_sprites(self):
@@ -221,6 +305,12 @@ class RaidInfoWidget(customtkinter.CTkFrame):
                     get_path("./resources/icons8/clipboard.png")
                 )
             )
+        if RaidInfoWidget.CAMERA_IMAGE is None:
+            RaidInfoWidget.CAMERA_IMAGE = ImageTk.PhotoImage(
+                Image.open(
+                    get_path("./resources/icons8/camera.png")
+                )
+            )
 
     def grab_tera_sprite(self, raid_data):
         """Grab tera_sprite from cache"""
@@ -239,7 +329,7 @@ class RaidInfoWidget(customtkinter.CTkFrame):
             sprite = ImageTk.PhotoImage(underlay)
         return sprite
 
-    def grab_poke_sprite(self) -> Image:
+    def grab_poke_sprite(self) -> Image.Image:
         """Grab poke_sprite from the sprite handler"""
         sprite = self.poke_sprite_handler.grab_sprite(
             self.raid_data.species,

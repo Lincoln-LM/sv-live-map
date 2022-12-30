@@ -196,18 +196,10 @@ class AutomationWindow(customtkinter.CTkToplevel):
                 webhook.add_embed(embed)
                 webhook.execute()
             else:
-                popup_window, _ = popup_display_builder(raid)
-                x_pos, y_pos = popup_window.winfo_x() + 8, popup_window.winfo_y() + 5
+                popup_window, widget = popup_display_builder(raid)
                 time.sleep(1)
-                img = ImageGrab.grab(
-                    (
-                        x_pos,
-                        y_pos,
-                        x_pos + popup_window.winfo_width(),
-                        y_pos + popup_window.winfo_height() + 23
-                    )
-                )
-                time.sleep(1)
+                widget: RaidInfoWidget
+                img = widget.create_image()
                 popup_window.destroy()
                 if not os.path.exists(get_path("./found_screenshots/")):
                     os.mkdir(get_path("./found_screenshots/"))
