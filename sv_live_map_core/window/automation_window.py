@@ -403,7 +403,7 @@ class AutomationWindow(customtkinter.CTkToplevel):
     def on_closing(self):
         """Handle closing of the window"""
         # save settings
-        self.settings['Automation'] = {
+        self.master.settings['Automation'] = {
             'SafeMode': self.safe_mode_check.get(),
             'MapRender': self.map_render_check.get(),
             'Popup': self.popup_check.get(),
