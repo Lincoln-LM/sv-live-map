@@ -404,6 +404,7 @@ class AutomationWindow(customtkinter.CTkToplevel):
         """Handle closing of the window"""
         # save settings
         self.settings['Automation'] = {
+            'SafeMode': self.safe_mode_check.get(),
             'MapRender': self.map_render_check.get(),
             'Popup': self.popup_check.get(),
             'Webhook': self.webhook_check.get(),
@@ -430,6 +431,7 @@ class AutomationWindow(customtkinter.CTkToplevel):
     def parse_settings(self):
         """Load settings"""
         automation_settings: dict = self.settings.setdefault('Automation', {})
+        self.safe_mode_check.check_state = bool(automation_settings.get('SafeMode', False))
         self.map_render_check.check_state = bool(automation_settings.get('MapRender', False))
         self.popup_check.check_state = bool(automation_settings.get('Popup', False))
         self.webhook_check.check_state = bool(automation_settings.get('Webhook', False))
