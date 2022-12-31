@@ -159,7 +159,7 @@ class RaidInfoWidget(customtkinter.CTkFrame):
              - (
                  self.copy_info_button.winfo_width()
                  + self.save_image_button.winfo_width()
-                 + (self.swap_location_button.winfo_width() if not self.is_popup else 0)
+                 + (0 if self.is_popup else self.swap_location_button.winfo_width())
                ),
             self.winfo_height()
         )

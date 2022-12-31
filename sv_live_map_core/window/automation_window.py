@@ -9,7 +9,11 @@ from tkinter import filedialog
 from threading import Thread
 from typing import TYPE_CHECKING
 import json
-from PIL import ImageGrab, ImageTk, Image
+import struct
+import binascii
+import contextlib
+import tkinter
+from PIL import ImageTk, Image
 import customtkinter
 import discord_webhook
 from ..widget.raid_info_widget import RaidInfoWidget
@@ -18,6 +22,7 @@ from ..widget.iv_filter_widget import IVFilterWidget
 from ..enums import Nature, AbilityIndex, Gender, Species, StarLevel
 from ..widget.checked_combobox import CheckedCombobox
 from ..util.path_handler import get_path
+from ..nxreader.nxreader import SocketError
 
 if TYPE_CHECKING:
     from typing import Type, Callable
@@ -67,8 +72,18 @@ class AutomationWindow(customtkinter.CTkToplevel):
                 )
             )
 
+    def send_webhook_log(self, log_message: str):
+        """Send simple string log to webhook if applicable"""
+        if self.webhook_check.get():
+            webhook = discord_webhook.webhook.DiscordWebhook(
+                url = self.webhook_entry.get(),
+                content = log_message
+            )
+            webhook.execute()
+
     def start_automation(self):
         """Start automation"""
+        self.send_webhook_log("Automation Starting.")
         self.target_found = False
         self.start_button.configure(require_redraw = True, text = "Stop Automation")
         self.start_button.configure(command = self.stop_automation)
@@ -78,6 +93,7 @@ class AutomationWindow(customtkinter.CTkToplevel):
 
     def stop_automation(self):
         """Stop automation"""
+        self.send_webhook_log("Automation Ending.")
         if self.automation_thread:
             self.target_found = True
             self.automation_thread = None
@@ -93,22 +109,27 @@ class AutomationWindow(customtkinter.CTkToplevel):
         total_raid_count = 0
         total_reset_count = 0
         last_seed = None
-        while not self.target_found:
-            if self.master.reader:
-                total_raid_count, total_reset_count, last_seed, raid_block = \
-                    self.read_raids(total_raid_count, total_reset_count, last_seed)
+        try:
+            while not self.target_found:
+                if self.master.reader:
+                    total_raid_count, total_reset_count, last_seed, raid_block = \
+                        self.read_raids(total_raid_count, total_reset_count, last_seed)
 
-                popup_display_builder, webhook_display_builder = self.define_builders()
+                    popup_display_builder, webhook_display_builder = self.define_builders()
 
-                self.filter_raids(raid_block, popup_display_builder, webhook_display_builder)
+                    self.filter_raids(raid_block, popup_display_builder, webhook_display_builder)
 
-                if self.target_found:
-                    break
+                    if self.target_found:
+                        break
 
-                self.full_dateskip(check_target_found = True)
-            else:
-                self.master.connection_error("Not connected to switch.")
-                self.target_found = True
+                    self.full_dateskip(check_target_found = True)
+                else:
+                    self.master.connection_error("Not connected to switch.")
+                    self.target_found = True
+        except (TimeoutError, struct.error, binascii.Error, SocketError) as error:
+            self.stop_automation()
+            self.send_webhook_log(f"Exception: <@{self.exception_ping_entry.get()}> ``{error}``")
+            raise error
         self.target_found = True
         sys.exit()
 
@@ -158,7 +179,7 @@ class AutomationWindow(customtkinter.CTkToplevel):
             if self.embed_select.get():
                 webhook = discord_webhook.webhook.DiscordWebhook(
                     url = self.webhook_entry.get(),
-                    content = f"<@{self.ping_entry.get()}>"
+                    content = f"<@{self.raid_found_ping_entry.get()}>"
                 )
                 embed = discord_webhook.webhook.DiscordEmbed(
                     title = f"Shiny {raid.species} ★"
@@ -200,14 +221,16 @@ class AutomationWindow(customtkinter.CTkToplevel):
                 time.sleep(1)
                 widget: RaidInfoWidget
                 img = widget.create_image()
-                popup_window.destroy()
+                # unsure why this happens even when window is properly destroyed
+                with contextlib.suppress(tkinter.TclError):
+                    popup_window.destroy()
                 if not os.path.exists(get_path("./found_screenshots/")):
                     os.mkdir(get_path("./found_screenshots/"))
                 img.save(get_path(f"./found_screenshots/{raid.seed}.png"))
                 with open(get_path(f"./found_screenshots/{raid.seed}.png"), "rb") as img:
                     webhook = discord_webhook.webhook.DiscordWebhook(
                         url = self.webhook_entry.get(),
-                        content = f"<@{self.ping_entry.get()}>"
+                        content = f"<@{self.raid_found_ping_entry.get()}>"
                     )
                     webhook.add_file(img.read(), "img.png")
                     webhook.execute()
@@ -316,7 +339,7 @@ class AutomationWindow(customtkinter.CTkToplevel):
             # https://github.com/LegoFigure11/RaidCrawler/blob/cc9e9176bfcfc1cbc22c6f8c9d6ebaaad78ddc05/Properties/Settings.settings#L32
             for _ in range(38):
                 self.master.reader.manual_click("DDOWN", 0.1)
-                self.master.reader.pause(0.2)
+            self.master.reader.pause(0.2)
         else:
             # this is not fully consistent but will not break execution
             self.master.reader.manual_click(
@@ -402,7 +425,8 @@ class AutomationWindow(customtkinter.CTkToplevel):
             'Webhook': self.webhook_check.get(),
             'Embed': self.embed_select.get(),
             'WebhookUrl': self.webhook_entry.get(),
-            'PingId': self.ping_entry.get()
+            'PingId': self.raid_found_ping_entry.get(),
+            'ExceptionPingId': self.exception_ping_entry.get()
         }
 
         # TODO: make this less hacky
@@ -417,8 +441,10 @@ class AutomationWindow(customtkinter.CTkToplevel):
         self.embed_select.configure(require_redraw = True, state = new_state)
         self.webhook_entry_label.configure(require_redraw = True, state = new_state)
         self.webhook_entry.configure(require_redraw = True, state = new_state)
-        self.ping_entry_label.configure(require_redraw = True, state = new_state)
-        self.ping_entry.configure(require_redraw = True, state = new_state)
+        self.raid_found_ping_entry_label.configure(require_redraw = True, state = new_state)
+        self.raid_found_ping_entry.configure(require_redraw = True, state = new_state)
+        self.exception_ping_entry_label.configure(require_redraw = True, state = new_state)
+        self.exception_ping_entry.configure(require_redraw = True, state = new_state)
 
     def parse_settings(self):
         """Load settings"""
@@ -429,7 +455,8 @@ class AutomationWindow(customtkinter.CTkToplevel):
         self.webhook_check.check_state = bool(automation_settings.get('Webhook', False))
         self.embed_select.check_state = bool(automation_settings.get('Embed', False))
         self.webhook_entry.insert(0, automation_settings.get('WebhookUrl', ''))
-        self.ping_entry.insert(0, automation_settings.get('PingId', ''))
+        self.raid_found_ping_entry.insert(0, automation_settings.get('PingId', ''))
+        self.exception_ping_entry.insert(0, automation_settings.get('ExceptionPingId', ''))
         self.toggle_webhook_settings()
 
         # redraw all settings widgets
@@ -438,7 +465,8 @@ class AutomationWindow(customtkinter.CTkToplevel):
         self.webhook_check.draw()
         self.embed_select.draw()
         self.webhook_entry.draw()
-        self.ping_entry.draw()
+        self.raid_found_ping_entry.draw()
+        self.exception_ping_entry.draw()
 
     def draw_settings_frame(self):
         """Draw frame with settings information"""
@@ -468,7 +496,7 @@ class AutomationWindow(customtkinter.CTkToplevel):
         # webhook settings
         self.webhook_check = customtkinter.CTkCheckBox(
             master = self.settings_frame,
-            text = "Send webhook when found",
+            text = "Webhook Alerts",
             command = self.toggle_webhook_settings
         )
         self.webhook_check.grid(row = 3, column = 0, columnspan = 2, padx = 10, pady = 10)
@@ -499,17 +527,29 @@ class AutomationWindow(customtkinter.CTkToplevel):
         )
         self.webhook_entry.grid(row = 5, column = 1, padx = 10, pady = 10)
 
-        self.ping_entry_label = customtkinter.CTkLabel(
+        self.raid_found_ping_entry_label = customtkinter.CTkLabel(
             master = self.settings_frame,
-            text = "ID to Ping:"
+            text = "Raid Found ID to Ping:"
         )
-        self.ping_entry_label.grid(row = 6, column = 0, padx = 10, pady = 10)
+        self.raid_found_ping_entry_label.grid(row = 6, column = 0, padx = 10, pady = 10)
 
-        self.ping_entry = customtkinter.CTkEntry(
+        self.raid_found_ping_entry = customtkinter.CTkEntry(
             master = self.settings_frame,
             width = 150
         )
-        self.ping_entry.grid(row = 6, column = 1, padx = 10, pady = 10)
+        self.raid_found_ping_entry.grid(row = 6, column = 1, padx = 10, pady = 10)
+
+        self.exception_ping_entry_label = customtkinter.CTkLabel(
+            master = self.settings_frame,
+            text = "Exception ID to Ping:"
+        )
+        self.exception_ping_entry_label.grid(row = 7, column = 0, padx = 10, pady = 10)
+
+        self.exception_ping_entry = customtkinter.CTkEntry(
+            master = self.settings_frame,
+            width = 150
+        )
+        self.exception_ping_entry.grid(row = 7, column = 1, padx = 10, pady = 10)
 
     def draw_filter_frame(self):
         """Draw frame with filter information"""
@@ -607,7 +647,7 @@ class AutomationWindow(customtkinter.CTkToplevel):
             height = self.SAVE_IMAGE.height(),
             command = self.save_filter
         )
-        self.save_filter_button.grid(row = 6, column = 0, padx = 5, pady = (85, 5))
+        self.save_filter_button.grid(row = 6, column = 0, padx = 5, pady = (125, 5))
 
         self.load_filter_button = customtkinter.CTkButton(
             self.filter_frame,
@@ -618,7 +658,7 @@ class AutomationWindow(customtkinter.CTkToplevel):
             height = self.LOAD_IMAGE.height(),
             command = self.load_filter
         )
-        self.load_filter_button.grid(row = 6, column = 1, padx = 5, pady = (85, 5))
+        self.load_filter_button.grid(row = 6, column = 1, padx = 5, pady = (125, 5))
 
     def save_filter(self):
         """Save current filter to file"""
