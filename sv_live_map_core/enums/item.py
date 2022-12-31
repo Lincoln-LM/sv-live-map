@@ -2195,3 +2195,16 @@ class Item(IntEnum):
 
     def __str__(self) -> str:
         return self.name.replace('_', ' ').title()
+
+class RaidRewardItemSubjectType(IntEnum):
+    """Raid reward type"""
+    ALL = 0
+    HOST = 1
+    CLIENT = 2
+    ONCE = 3
+
+class RaidRewardItemCategoryType(IntEnum):
+    """Raid reward category"""
+    ITEM = 0
+    POKE = 1
+    GEM = 2
