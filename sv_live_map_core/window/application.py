@@ -89,6 +89,7 @@ class Application(customtkinter.CTk):
         self.info_frame = ScrollableFrame(master = self, width = 600)
         self.info_frame.grid(row = 0, column = 3, sticky = "nsew")
         self.grid_columnconfigure(3, minsize = 600)
+        self.grid_rowconfigure(0, minsize = self.map_widget.height)
 
         self.info_frame_label = customtkinter.CTkLabel(
             master = self.info_frame.scrollable_frame,
@@ -129,8 +130,38 @@ class Application(customtkinter.CTk):
         self.map_frame.grid(row = 0, column = 2, sticky = "nsew")
         self.grid_columnconfigure(2, minsize = 150)
 
-        self.map_widget = PaldeaMapView(self.map_frame)
+        self.map_widget = PaldeaMapView(self.map_frame, on_popout = self.on_popout)
         self.map_widget.grid(row = 1, column = 0, sticky = "nw")
+
+    def on_popout(self, is_popped_out: bool, new_map: PaldeaMapView):
+        """Adjust map frame on popout"""
+        new_map.tile_image_cache = self.map_widget.tile_image_cache
+        new_map.zoom = self.map_widget.zoom
+        new_map.upper_left_tile_pos = self.map_widget.upper_left_tile_pos
+        new_map.lower_right_tile_pos = self.map_widget.lower_right_tile_pos
+        if is_popped_out:
+            self.geometry(f"{self.WIDTH - self.map_frame.winfo_width()}x{self.HEIGHT}")
+            self.minsize(self.WIDTH - self.map_frame.winfo_width(), self.HEIGHT)
+            self.map_frame.grid_forget()
+            self.grid_columnconfigure(2, minsize = 0)
+        else:
+            self.geometry(f"{self.WIDTH}x{self.HEIGHT}")
+            self.minsize(self.WIDTH, self.HEIGHT)
+            self.map_frame.grid(row = 0, column = 2, sticky = "nsew")
+            self.grid_columnconfigure(2, minsize = 150)
+        for key, item in self.raid_markers.items():
+            new_item = new_map.set_marker(
+                *item.position,
+                icon = item.icon,
+                image = item.image,
+                command = item.command,
+                scale_with_zoom = self.scale_sprites_check.get()
+            )
+            if is_popped_out:
+                item.delete()
+            self.raid_markers[key] = new_item
+        self.map_widget = new_map
+        self.map_widget.draw_initial_array()
 
     def draw_settings_frame(self):
         """Draw the leftmost frame"""
@@ -353,13 +384,13 @@ class Application(customtkinter.CTk):
         for level in StarLevel:
             if level in (StarLevel.EVENT, StarLevel.SEVEN_STAR):
                 continue
-            if not os.path.exists(f"./cached_tables/{level.name}.bin"):
+            if not os.path.exists(get_path(f"./cached_tables/{level.name}.bin")):
                 self.error_message_window(
                     "File Missing",
                     f"cached table ./cached_tables/{level.name}.bin does not exist."
                 )
                 return None
-            with open(f"./cached_tables/{level.name}.bin", "rb") as file:
+            with open(get_path(f"./cached_tables/{level.name}.bin"), "rb") as file:
                 tables.append(file.read())
         return tuple(tables)
 
