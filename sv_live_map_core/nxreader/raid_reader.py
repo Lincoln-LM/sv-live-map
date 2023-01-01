@@ -11,6 +11,8 @@ from .nxreader import NXReader
 from ..enums import StarLevel, StoryProgress, Game
 from ..fbs.raid_enemy_table_array import RaidEnemyTableArray
 from ..fbs.delivery_raid_priority_array import DeliveryRaidPriorityArray
+from ..fbs.raid_fixed_reward_item_array import RaidFixedRewardItemArray
+from ..fbs.raid_lottery_reward_item_array import RaidLotteryRewardItemArray
 from ..save.raid_block import RaidBlock, process_raid_block
 from ..rng import SCXorshift32
 from ..save.my_status_9 import MyStatus9
@@ -48,6 +50,7 @@ class RaidReader(NXReader):
         usb_connection: bool = False,
         read_safety: bool = False,
         raid_enemy_table_arrays: tuple[bytes, 7] = None,
+        raid_item_table_arrays: tuple[bytes, 2] = None,
     ):
         super().__init__(ip_address, port, usb_connection)
         self.read_safety = read_safety
@@ -64,6 +67,16 @@ class RaidReader(NXReader):
                     )
                 )
             )
+        if raid_item_table_arrays is None:
+            self.raid_item_table_arrays: \
+                tuple[RaidFixedRewardItemArray | RaidLotteryRewardItemArray, 2] = \
+                self.read_raid_item_table_arrays()
+        else:
+            self.raid_item_table_arrays: \
+                tuple[RaidFixedRewardItemArray | RaidLotteryRewardItemArray, 2] = [
+                    RaidFixedRewardItemArray(raid_item_table_arrays[0]),
+                    RaidLotteryRewardItemArray(raid_item_table_arrays[1]),
+                ]
         self.delivery_raid_priority: tuple[int] = self.read_delivery_raid_priority()
         self.story_progress: StoryProgress = self.read_story_progess()
         self.game_version: Game = self.read_game_version()
@@ -81,6 +94,29 @@ class RaidReader(NXReader):
             .delivery_raid_prioritys[0] \
             .delivery_group_id \
             .group_counts
+
+    def read_raid_fixed_item_binary(self) -> bytes:
+        """Read raid fixed item flatbuffer binary from memory"""
+        return self.read_pointer("[[[[[[[[main+43A77B8]+20]+2B0]+60]+30]+208]]+5D0]", 0x1CA8)
+
+    def read_raid_lottery_item_binary(self) -> bytes:
+        """Read raid lottery item flatbuffer binary from memory"""
+        return self.read_absolute(
+            self.read_pointer_int(
+                "[[[[[[[main+43A77B8]+20]+2B0]+60]+28]+200]]+E8",
+                8
+            ) - 0xC,
+            0x3AC8
+        )
+
+    def read_raid_item_table_arrays(
+        self
+    ) -> tuple[RaidFixedRewardItemArray | RaidLotteryRewardItemArray, 2]:
+        """Read raid item table arrays from flatbuffers stored in memory"""
+        return [
+            RaidFixedRewardItemArray(self.read_raid_fixed_item_binary()),
+            RaidLotteryRewardItemArray(self.read_raid_lottery_item_binary()),
+        ]
 
     def read_raid_binary(self, star_level: StarLevel) -> bytes:
         """Read raid flatbuffer binary from memory"""

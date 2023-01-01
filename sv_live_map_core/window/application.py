@@ -378,8 +378,8 @@ class Application(customtkinter.CTk):
             )
         )
 
-    def read_cached_tables(self) -> tuple[bytearray]:
-        """Read cached encounter tables"""
+    def read_cached_tables(self) -> tuple[tuple[bytearray]]:
+        """Read cached encounter and item tables"""
         tables = []
         for level in StarLevel:
             if level in (StarLevel.EVENT, StarLevel.SEVEN_STAR):
@@ -392,15 +392,40 @@ class Application(customtkinter.CTk):
                 return None
             with open(get_path(f"./cached_tables/{level.name}.bin"), "rb") as file:
                 tables.append(file.read())
-        return tuple(tables)
+
+        if not os.path.exists(get_path("./cached_tables/FIXED_ITEM.bin")):
+            self.error_message_window(
+                "File Missing",
+                "cached table ./cached_tables/FIXED_ITEM.bin does not exist."
+            )
+            return None
+        with open(get_path("./cached_tables/FIXED_ITEM.bin"), "rb") as file:
+            fixed_item_table = file.read()
+
+        if not os.path.exists(get_path("./cached_tables/LOTTERY_ITEM.bin")):
+            self.error_message_window(
+                "File Missing",
+                "cached table ./cached_tables/LOTTERY_ITEM.bin does not exist."
+            )
+            return None
+        with open(get_path("./cached_tables/LOTTERY_ITEM.bin"), "rb") as file:
+            lottery_item_table = file.read()
+
+        return tuple(tables), (fixed_item_table, lottery_item_table)
 
     def dump_cached_tables(self):
-        """Dump cached encounter tables"""
+        """Dump cached encounter and item tables"""
         if not os.path.exists(get_path("./cached_tables/")):
             os.mkdir(get_path("./cached_tables/"))
         for level in StarLevel:
+            if level in (StarLevel.EVENT, StarLevel.SEVEN_STAR):
+                continue
             with open(f"./cached_tables/{level.name}.bin", "wb+") as file:
                 self.reader.raid_enemy_table_arrays[level].dump_binary(file)
+        with open(get_path("./cached_tables/FIXED_ITEM.bin"), "wb+") as file:
+            self.reader.raid_item_table_arrays[0].dump_binary(file)
+        with open(get_path("./cached_tables/LOTTERY_ITEM.bin"), "wb+") as file:
+            self.reader.raid_item_table_arrays[1].dump_binary(file)
 
     def connect(self) -> bool:
         """Connect to switch and return True if success"""
@@ -413,7 +438,8 @@ class Application(customtkinter.CTk):
                     self.ip_entry.get(),
                     read_safety = False,
                     usb_connection = self.usb_check.get(),
-                    raid_enemy_table_arrays = cached_tables
+                    raid_enemy_table_arrays = cached_tables[0],
+                    raid_item_table_arrays = cached_tables[1],
                 )
                 if len(self.reader.raid_enemy_table_arrays[0].raid_enemy_tables) == 0:
                     return self.connection_error(
