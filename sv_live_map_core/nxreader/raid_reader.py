@@ -39,6 +39,8 @@ class RaidReader(NXReader):
     MY_STATUS_LOCATION = (0x29F40, 0xE3E89BD1)
     BCAT_RAID_BINARY_LOCATION = (0x1040, 0x520A1B0)
     BCAT_RAID_PRIORITY_LOCATION = (0x1860, 0x95451E4)
+    BCAT_RAID_FIXED_REWARD_LOCATION = (0x16D40, 0x7D6C2B82)
+    BCAT_RAID_LOTTERY_REWARD_LOCATION = (0x1E6A0, 0xA52B4811)
     TRAINER_ICON_WIDTH_LOCATION = (0x1A3C0, 0x8FAB2C4D)
     TRAINER_ICON_HEIGHT_LOCATION = (0x1DA0, 0xB384C24)
     TRAINER_ICON_LOCATION = (0x273E0, 0xD41F4FC4)
@@ -69,14 +71,15 @@ class RaidReader(NXReader):
             )
         if raid_item_table_arrays is None:
             self.raid_item_table_arrays: \
-                tuple[RaidFixedRewardItemArray | RaidLotteryRewardItemArray, 2] = \
+                tuple[RaidFixedRewardItemArray | RaidLotteryRewardItemArray, 4] = \
                 self.read_raid_item_table_arrays()
         else:
             self.raid_item_table_arrays: \
-                tuple[RaidFixedRewardItemArray | RaidLotteryRewardItemArray, 2] = [
+                tuple[RaidFixedRewardItemArray | RaidLotteryRewardItemArray, 4] = (
                     RaidFixedRewardItemArray(raid_item_table_arrays[0]),
                     RaidLotteryRewardItemArray(raid_item_table_arrays[1]),
-                ]
+                    *self.read_delivery_item_binaries()
+                )
         self.delivery_raid_priority: tuple[int] = self.read_delivery_raid_priority()
         self.story_progress: StoryProgress = self.read_story_progess()
         self.game_version: Game = self.read_game_version()
@@ -109,14 +112,32 @@ class RaidReader(NXReader):
             0x3AC8
         )
 
-    def read_raid_item_table_arrays(
+    def read_delivery_item_binaries(
         self
     ) -> tuple[RaidFixedRewardItemArray | RaidLotteryRewardItemArray, 2]:
-        """Read raid item table arrays from flatbuffers stored in memory"""
-        return [
+        """Read delivery item flatbuffer binaries from save blocks"""
+        return (
+            RaidFixedRewardItemArray(
+                self.read_save_block_object(
+                    *self.BCAT_RAID_FIXED_REWARD_LOCATION
+                )
+            ),
+            RaidLotteryRewardItemArray(
+                self.read_save_block_object(
+                    *self.BCAT_RAID_LOTTERY_REWARD_LOCATION
+                )
+            ),
+        )
+
+    def read_raid_item_table_arrays(
+        self
+    ) -> tuple[RaidFixedRewardItemArray | RaidLotteryRewardItemArray, 4]:
+        """Read raid item table arrays from flatbuffer binaries stored in memory"""
+        return (
             RaidFixedRewardItemArray(self.read_raid_fixed_item_binary()),
             RaidLotteryRewardItemArray(self.read_raid_lottery_item_binary()),
-        ]
+            *self.read_delivery_item_binaries()
+        )
 
     def read_raid_binary(self, star_level: StarLevel) -> bytes:
         """Read raid flatbuffer binary from memory"""
