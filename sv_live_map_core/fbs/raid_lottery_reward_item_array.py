@@ -17,7 +17,7 @@ class RaidLotteryRewardItemArray(FlatBufferObject):
             self.read_init_object_array(RaidLotteryRewardItem)
 
     @property
-    def raid_lottery_reward_item_dict(self) -> dict[int, tuple[RaidLotteryRewardItemInfo]]:
+    def reward_item_dict(self) -> dict[int, tuple[RaidLotteryRewardItemInfo]]:
         """Grab reward item table as a dict"""
         return {
             table.table_name: table.reward_items for table in self.raid_lottery_reward_items
@@ -27,37 +27,67 @@ class RaidLotteryRewardItem(FlatBufferObject):
     """Table containing RaidLotteryRewardItemInfo"""
     def __init__(self, buf: bytearray, offset: int):
         FlatBufferObject.__init__(self, buf, offset)
-        self.table_name = self.read_init_int(U64)
-        self.reward_item_00 = self.read_init_object(RaidLotteryRewardItemInfo)
-        self.reward_item_01 = self.read_init_object(RaidLotteryRewardItemInfo)
-        self.reward_item_02 = self.read_init_object(RaidLotteryRewardItemInfo)
-        self.reward_item_03 = self.read_init_object(RaidLotteryRewardItemInfo)
-        self.reward_item_04 = self.read_init_object(RaidLotteryRewardItemInfo)
-        self.reward_item_05 = self.read_init_object(RaidLotteryRewardItemInfo)
-        self.reward_item_06 = self.read_init_object(RaidLotteryRewardItemInfo)
-        self.reward_item_07 = self.read_init_object(RaidLotteryRewardItemInfo)
-        self.reward_item_08 = self.read_init_object(RaidLotteryRewardItemInfo)
-        self.reward_item_09 = self.read_init_object(RaidLotteryRewardItemInfo)
-        self.reward_item_10 = self.read_init_object(RaidLotteryRewardItemInfo)
-        self.reward_item_11 = self.read_init_object(RaidLotteryRewardItemInfo)
-        self.reward_item_12 = self.read_init_object(RaidLotteryRewardItemInfo)
-        self.reward_item_13 = self.read_init_object(RaidLotteryRewardItemInfo)
-        self.reward_item_14 = self.read_init_object(RaidLotteryRewardItemInfo)
-        self.reward_item_15 = self.read_init_object(RaidLotteryRewardItemInfo)
-        self.reward_item_16 = self.read_init_object(RaidLotteryRewardItemInfo)
-        self.reward_item_17 = self.read_init_object(RaidLotteryRewardItemInfo)
-        self.reward_item_18 = self.read_init_object(RaidLotteryRewardItemInfo)
-        self.reward_item_19 = self.read_init_object(RaidLotteryRewardItemInfo)
-        self.reward_item_20 = self.read_init_object(RaidLotteryRewardItemInfo)
-        self.reward_item_21 = self.read_init_object(RaidLotteryRewardItemInfo)
-        self.reward_item_22 = self.read_init_object(RaidLotteryRewardItemInfo)
-        self.reward_item_23 = self.read_init_object(RaidLotteryRewardItemInfo)
-        self.reward_item_24 = self.read_init_object(RaidLotteryRewardItemInfo)
-        self.reward_item_25 = self.read_init_object(RaidLotteryRewardItemInfo)
-        self.reward_item_26 = self.read_init_object(RaidLotteryRewardItemInfo)
-        self.reward_item_27 = self.read_init_object(RaidLotteryRewardItemInfo)
-        self.reward_item_28 = self.read_init_object(RaidLotteryRewardItemInfo)
-        self.reward_item_29 = self.read_init_object(RaidLotteryRewardItemInfo)
+        self.table_name: int = self.read_init_int(U64)
+        self.reward_item_00: RaidLotteryRewardItemInfo = \
+            self.read_init_object(RaidLotteryRewardItemInfo)
+        self.reward_item_01: RaidLotteryRewardItemInfo = \
+            self.read_init_object(RaidLotteryRewardItemInfo)
+        self.reward_item_02: RaidLotteryRewardItemInfo = \
+            self.read_init_object(RaidLotteryRewardItemInfo)
+        self.reward_item_03: RaidLotteryRewardItemInfo = \
+            self.read_init_object(RaidLotteryRewardItemInfo)
+        self.reward_item_04: RaidLotteryRewardItemInfo = \
+            self.read_init_object(RaidLotteryRewardItemInfo)
+        self.reward_item_05: RaidLotteryRewardItemInfo = \
+            self.read_init_object(RaidLotteryRewardItemInfo)
+        self.reward_item_06: RaidLotteryRewardItemInfo = \
+            self.read_init_object(RaidLotteryRewardItemInfo)
+        self.reward_item_07: RaidLotteryRewardItemInfo = \
+            self.read_init_object(RaidLotteryRewardItemInfo)
+        self.reward_item_08: RaidLotteryRewardItemInfo = \
+            self.read_init_object(RaidLotteryRewardItemInfo)
+        self.reward_item_09: RaidLotteryRewardItemInfo = \
+            self.read_init_object(RaidLotteryRewardItemInfo)
+        self.reward_item_10: RaidLotteryRewardItemInfo = \
+            self.read_init_object(RaidLotteryRewardItemInfo)
+        self.reward_item_11: RaidLotteryRewardItemInfo = \
+            self.read_init_object(RaidLotteryRewardItemInfo)
+        self.reward_item_12: RaidLotteryRewardItemInfo = \
+            self.read_init_object(RaidLotteryRewardItemInfo)
+        self.reward_item_13: RaidLotteryRewardItemInfo = \
+            self.read_init_object(RaidLotteryRewardItemInfo)
+        self.reward_item_14: RaidLotteryRewardItemInfo = \
+            self.read_init_object(RaidLotteryRewardItemInfo)
+        self.reward_item_15: RaidLotteryRewardItemInfo = \
+            self.read_init_object(RaidLotteryRewardItemInfo)
+        self.reward_item_16: RaidLotteryRewardItemInfo = \
+            self.read_init_object(RaidLotteryRewardItemInfo)
+        self.reward_item_17: RaidLotteryRewardItemInfo = \
+            self.read_init_object(RaidLotteryRewardItemInfo)
+        self.reward_item_18: RaidLotteryRewardItemInfo = \
+            self.read_init_object(RaidLotteryRewardItemInfo)
+        self.reward_item_19: RaidLotteryRewardItemInfo = \
+            self.read_init_object(RaidLotteryRewardItemInfo)
+        self.reward_item_20: RaidLotteryRewardItemInfo = \
+            self.read_init_object(RaidLotteryRewardItemInfo)
+        self.reward_item_21: RaidLotteryRewardItemInfo = \
+            self.read_init_object(RaidLotteryRewardItemInfo)
+        self.reward_item_22: RaidLotteryRewardItemInfo = \
+            self.read_init_object(RaidLotteryRewardItemInfo)
+        self.reward_item_23: RaidLotteryRewardItemInfo = \
+            self.read_init_object(RaidLotteryRewardItemInfo)
+        self.reward_item_24: RaidLotteryRewardItemInfo = \
+            self.read_init_object(RaidLotteryRewardItemInfo)
+        self.reward_item_25: RaidLotteryRewardItemInfo = \
+            self.read_init_object(RaidLotteryRewardItemInfo)
+        self.reward_item_26: RaidLotteryRewardItemInfo = \
+            self.read_init_object(RaidLotteryRewardItemInfo)
+        self.reward_item_27: RaidLotteryRewardItemInfo = \
+            self.read_init_object(RaidLotteryRewardItemInfo)
+        self.reward_item_28: RaidLotteryRewardItemInfo = \
+            self.read_init_object(RaidLotteryRewardItemInfo)
+        self.reward_item_29: RaidLotteryRewardItemInfo = \
+            self.read_init_object(RaidLotteryRewardItemInfo)
 
     @property
     def reward_items(self) -> tuple[RaidLotteryRewardItemInfo]:
@@ -99,8 +129,9 @@ class RaidLotteryRewardItemInfo(FlatBufferObject):
     """Table describing a random raid drop item"""
     def __init__(self, buf: bytearray, offset: int):
         FlatBufferObject.__init__(self, buf, offset)
-        self.category = self.read_init_int_enum(I32, RaidRewardItemCategoryType)
-        self.item_id = self.read_init_int_enum(I32, Item)
-        self.num = self.read_init_int(I8)
-        self.rate = self.read_init_int(I32)
-        self.rare_item_flag = self.read_init_int_enum(I8, bool)
+        self.category: RaidRewardItemCategoryType = \
+            self.read_init_int_enum(I32, RaidRewardItemCategoryType)
+        self.item_id: Item = self.read_init_int_enum(I32, Item)
+        self.num: int = self.read_init_int(I8)
+        self.rate: int = self.read_init_int(I32)
+        self.rare_item_flag: bool = self.read_init_int_enum(I8, bool)

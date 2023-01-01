@@ -17,7 +17,7 @@ class RaidFixedRewardItemArray(FlatBufferObject):
             self.read_init_object_array(RaidFixedRewardItem)
 
     @property
-    def raid_fixed_reward_item_dict(self) -> dict[int, tuple[RaidFixedRewardItemInfo]]:
+    def reward_item_dict(self) -> dict[int, tuple[RaidFixedRewardItemInfo]]:
         """Grab reward item table as a dict"""
         return {
             table.table_name: table.reward_items for table in self.raid_fixed_reward_items
