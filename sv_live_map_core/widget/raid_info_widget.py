@@ -10,6 +10,7 @@ from ..util.poke_sprite_handler import PokeSpriteHandler
 from .image_widget import ImageWidget
 from ..enums import TeraType, Gender, StarLevel
 from ..util.path_handler import get_path
+from ..window.reward_window import RewardWindow
 
 # type union not yet supported by pylint
 # pylint: disable=unsupported-binary-operation
@@ -21,6 +22,7 @@ class RaidInfoWidget(customtkinter.CTkFrame):
     EVENT_UNDERLAY: ImageTk.PhotoImage = None
     SHINY_OVERLAY: ImageTk.PhotoImage = None
     COPY_IMAGE: ImageTk.PhotoImage = None
+    BAG_IMAGE: ImageTk.PhotoImage = None
     CAMERA_IMAGE: ImageTk.PhotoImage = None
     TERA_SPRITES: list[ImageTk.PhotoImage] = []
     TERA_6_SPRITES: list[ImageTk.PhotoImage] = []
@@ -63,6 +65,7 @@ class RaidInfoWidget(customtkinter.CTkFrame):
         self.sprite_display: ImageWidget
         self.info_display: customtkinter.CTkLabel
         self.swap_location_button: customtkinter.CTkButton
+        self.raid_reward_button: customtkinter.CTkButton
         self.copy_info_button: customtkinter.CTkButton
         self.save_image_button: customtkinter.CTkButton
         self.horizontal_sep: customtkinter.CTkFrame
@@ -116,6 +119,16 @@ class RaidInfoWidget(customtkinter.CTkFrame):
                     width = 50
                 )
             self.swap_location_button.pack(side = "left", padx = (0, 15))
+        self.raid_reward_button = customtkinter.CTkButton(
+            master = self,
+            text = "",
+            width = self.BAG_IMAGE.width(),
+            height = self.BAG_IMAGE.height(),
+            image = self.BAG_IMAGE,
+            command = self.open_raid_rewards,
+            fg_color = self.fg_color
+        )
+        self.raid_reward_button.pack(side = "left", padx = (0, 15), fill = "y")
         self.copy_info_button = customtkinter.CTkButton(
             master = self,
             text = "",
@@ -136,6 +149,11 @@ class RaidInfoWidget(customtkinter.CTkFrame):
             fg_color = self.fg_color
         )
         self.save_image_button.pack(side = "left", padx = (0, 15), fill = "y")
+
+    def open_raid_rewards(self):
+        """Open raid reward display"""
+        reward_window = RewardWindow(raid_data = self.raid_data, fg_color = self.fg_color)
+        reward_window.focus_force()
 
     def save_image(self):
         """Save image to file"""
@@ -159,6 +177,7 @@ class RaidInfoWidget(customtkinter.CTkFrame):
              - (
                  self.copy_info_button.winfo_width()
                  + self.save_image_button.winfo_width()
+                 + self.raid_reward_button.winfo_width()
                  + (0 if self.is_popup else self.swap_location_button.winfo_width())
                ),
             self.winfo_height()
@@ -309,6 +328,12 @@ class RaidInfoWidget(customtkinter.CTkFrame):
             RaidInfoWidget.CAMERA_IMAGE = ImageTk.PhotoImage(
                 Image.open(
                     get_path("./resources/icons8/camera.png")
+                )
+            )
+        if RaidInfoWidget.BAG_IMAGE is None:
+            RaidInfoWidget.BAG_IMAGE = ImageTk.PhotoImage(
+                Image.open(
+                    get_path("./resources/icons8/bag.png")
                 )
             )
 

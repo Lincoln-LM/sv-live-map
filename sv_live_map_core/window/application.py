@@ -36,7 +36,7 @@ class Application(customtkinter.CTk):
     """Live Map GUI"""
     # pylint: disable=too-many-instance-attributes
     APP_NAME = "SV Live Map"
-    WIDTH = 1430
+    WIDTH = 1490
     HEIGHT = 512
     DEFAULT_IP = "192.168.0.0"
     PLAYER_POS_ADDRESS = 0x4380340
@@ -86,9 +86,9 @@ class Application(customtkinter.CTk):
 
     def draw_info_frame(self):
         """Draw the rightmost frame"""
-        self.info_frame = ScrollableFrame(master = self, width = 600)
+        self.info_frame = ScrollableFrame(master = self, width = 660)
         self.info_frame.grid(row = 0, column = 3, sticky = "nsew")
-        self.grid_columnconfigure(3, minsize = 600)
+        self.grid_columnconfigure(3, minsize = 660)
         self.grid_rowconfigure(0, minsize = self.map_widget.height)
 
         self.info_frame_label = customtkinter.CTkLabel(
@@ -109,7 +109,7 @@ class Application(customtkinter.CTk):
                 self.info_frame.scrollable_frame,
                 bg_color = self.SEPARATOR_COLOR,
                 fg_color = customtkinter.ThemeManager.theme["color"]["frame_low"],
-                width = 600,
+                width = 660,
                 height = 5,
                 bd = 0
             )

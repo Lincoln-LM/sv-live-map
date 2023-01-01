@@ -2196,7 +2196,7 @@ class Item(IntEnum):
     YELLOW_DISH = 2400
 
     def __str__(self) -> str:
-        return self.name.replace('_', ' ').title()
+        return self.name.replace('_', ' ').title().replace(" Xs", " XS").replace(" Xl", "XL")
 
 class SandwichLevel(IntEnum):
     """Sandwich boost level"""
@@ -2205,12 +2205,36 @@ class SandwichLevel(IntEnum):
     LVL_2 = 2
     LVL_3 = 3
 
+    def __str__(self) -> str:
+        match self:
+            case SandwichLevel.NONE:
+                return "No Raid Sandwich Required"
+            case SandwichLevel.LVL_1:
+                return "Level 1+ Raid Sandwich"
+            case SandwichLevel.LVL_2:
+                return "Level 2+ Raid Sandwich"
+            case SandwichLevel.LVL_3:
+                return "Level 3 Raid Sandwich"
+        return ""
+
 class RaidRewardItemSubjectType(IntEnum):
     """Raid reward type"""
     ALL = 0
     HOST = 1
     CLIENT = 2
     ONCE = 3
+
+    def __str__(self) -> str:
+        match self:
+            case RaidRewardItemSubjectType.ALL:
+                return "All Raiders"
+            case RaidRewardItemSubjectType.HOST:
+                return "Host Only"
+            case RaidRewardItemSubjectType.CLIENT:
+                return "All Raiders Except Host"
+            case RaidRewardItemSubjectType.ONCE:
+                return "Once Per Save"
+        return ""
 
 class RaidRewardItemCategoryType(IntEnum):
     """Raid reward category"""
