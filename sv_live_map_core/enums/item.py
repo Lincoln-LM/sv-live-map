@@ -2203,7 +2203,12 @@ class Item(IntEnum):
             item_iteration += 1
         if item_iteration > 0:
             name = f"{name}-{item_iteration}"
-        return name.replace('_', ' ').title().replace(" Xs", " XS").replace(" Xl", "XL")
+        name = name.replace('_', ' ').title().replace(" Xs", " XS").replace(" Xl", " XL")
+        if name.startswith("Tm"):
+            name = f"TM{name[2:]}"
+        if name.startswith("Pp"):
+            name = f"PP{name[2:]}"
+        return name
 
 class SandwichLevel(IntEnum):
     """Sandwich boost level"""

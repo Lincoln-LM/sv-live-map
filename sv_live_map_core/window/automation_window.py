@@ -171,7 +171,7 @@ class AutomationWindow(customtkinter.CTkToplevel):
                 RaidInfoWidget,
                 poke_sprite_handler = self.master.sprite_handler,
                 raid_data = raid,
-                hide_sensitive_info=self.master.hide_info_check.get(),
+                hide_sensitive_info = self.master.hide_info_check.get(),
                 fg_color = customtkinter.ThemeManager.theme["color"]["frame_low"],
             )
 
@@ -195,7 +195,7 @@ class AutomationWindow(customtkinter.CTkToplevel):
                 dummy_widget = RaidInfoWidget(
                     poke_sprite_handler = self.master.sprite_handler,
                     raid_data = raid,
-                    hide_sensitive_info=self.master.hide_info_check.get(),
+                    hide_sensitive_info = self.master.hide_info_check.get(),
                 )
 
                 poke_sprite_img: Image = ImageTk.getimage(dummy_widget.poke_sprite)
@@ -214,8 +214,20 @@ class AutomationWindow(customtkinter.CTkToplevel):
                         "tera.png"
                     )
                 embed.add_embed_field("Info", str(dummy_widget.info_display.text))
+                if self.include_rewards_check.get():
+                    item_embed = discord_webhook.webhook.DiscordEmbed(
+                        title = f"{raid.species} Items",
+                        color = 0xF8C8DC
+                    )
+                    item_embed.add_embed_field(
+                        "Items",
+                        "\n".join(
+                            f"{reward[1]}x {reward[0]}" for reward in raid.rewards
+                        )
+                    )
 
                 webhook.add_embed(embed)
+                webhook.add_embed(item_embed)
                 webhook.execute()
             else:
                 popup_window, widget = popup_display_builder(raid)
@@ -429,7 +441,8 @@ class AutomationWindow(customtkinter.CTkToplevel):
             'Embed': self.embed_select.get(),
             'WebhookUrl': self.webhook_entry.get(),
             'PingId': self.raid_found_ping_entry.get(),
-            'ExceptionPingId': self.exception_ping_entry.get()
+            'ExceptionPingId': self.exception_ping_entry.get(),
+            'IncludeRewards': self.include_rewards_check.get(),
         }
 
         # TODO: make this less hacky
@@ -448,6 +461,7 @@ class AutomationWindow(customtkinter.CTkToplevel):
         self.raid_found_ping_entry.configure(require_redraw = True, state = new_state)
         self.exception_ping_entry_label.configure(require_redraw = True, state = new_state)
         self.exception_ping_entry.configure(require_redraw = True, state = new_state)
+        self.include_rewards_check.configure(require_redraw = True, state = new_state)
 
     def parse_settings(self):
         """Load settings"""
@@ -460,6 +474,8 @@ class AutomationWindow(customtkinter.CTkToplevel):
         self.webhook_entry.insert(0, automation_settings.get('WebhookUrl', ''))
         self.raid_found_ping_entry.insert(0, automation_settings.get('PingId', ''))
         self.exception_ping_entry.insert(0, automation_settings.get('ExceptionPingId', ''))
+        self.include_rewards_check.check_state = \
+            bool(automation_settings.get('IncludeRewards', False))
         self.toggle_webhook_settings()
 
         # redraw all settings widgets
@@ -470,6 +486,7 @@ class AutomationWindow(customtkinter.CTkToplevel):
         self.webhook_entry.draw()
         self.raid_found_ping_entry.draw()
         self.exception_ping_entry.draw()
+        self.include_rewards_check.draw()
 
     def draw_settings_frame(self):
         """Draw frame with settings information"""
@@ -504,55 +521,61 @@ class AutomationWindow(customtkinter.CTkToplevel):
         )
         self.webhook_check.grid(row = 3, column = 0, columnspan = 2, padx = 10, pady = 10)
 
+        self.include_rewards_check = customtkinter.CTkCheckBox(
+            master = self.settings_frame,
+            text = "Include Raid Rewards",
+        )
+        self.include_rewards_check.grid(row = 4, column = 0, columnspan = 2, padx = 10, pady = 10)
+
         self.widget_label = customtkinter.CTkLabel(
             master = self.settings_frame,
             text = "Widget display"
         )
-        self.widget_label.grid(row = 4, column = 0, padx = (10, 0), pady = 10)
+        self.widget_label.grid(row = 5, column = 0, padx = (10, 0), pady = 10)
 
         self.embed_select = customtkinter.CTkSwitch(
             master = self.settings_frame,
             # padding
             text = "     Embed display"
         )
-        self.embed_select.grid(row = 4, column = 1, padx = (0, 10), pady = 10)
+        self.embed_select.grid(row = 5, column = 1, padx = (0, 10), pady = 10)
 
         # webook entry
         self.webhook_entry_label = customtkinter.CTkLabel(
             master = self.settings_frame,
             text = "Webhook URL:"
         )
-        self.webhook_entry_label.grid(row = 5, column = 0, padx = 10, pady = 10)
+        self.webhook_entry_label.grid(row = 6, column = 0, padx = 10, pady = 10)
 
         self.webhook_entry = customtkinter.CTkEntry(
             master = self.settings_frame,
             width = 150
         )
-        self.webhook_entry.grid(row = 5, column = 1, padx = 10, pady = 10)
+        self.webhook_entry.grid(row = 6, column = 1, padx = 10, pady = 10)
 
         self.raid_found_ping_entry_label = customtkinter.CTkLabel(
             master = self.settings_frame,
             text = "Raid Found ID to Ping:"
         )
-        self.raid_found_ping_entry_label.grid(row = 6, column = 0, padx = 10, pady = 10)
+        self.raid_found_ping_entry_label.grid(row = 7, column = 0, padx = 10, pady = 10)
 
         self.raid_found_ping_entry = customtkinter.CTkEntry(
             master = self.settings_frame,
             width = 150
         )
-        self.raid_found_ping_entry.grid(row = 6, column = 1, padx = 10, pady = 10)
+        self.raid_found_ping_entry.grid(row = 7, column = 1, padx = 10, pady = 10)
 
         self.exception_ping_entry_label = customtkinter.CTkLabel(
             master = self.settings_frame,
             text = "Exception ID to Ping:"
         )
-        self.exception_ping_entry_label.grid(row = 7, column = 0, padx = 10, pady = 10)
+        self.exception_ping_entry_label.grid(row = 8, column = 0, padx = 10, pady = 10)
 
         self.exception_ping_entry = customtkinter.CTkEntry(
             master = self.settings_frame,
             width = 150
         )
-        self.exception_ping_entry.grid(row = 7, column = 1, padx = 10, pady = 10)
+        self.exception_ping_entry.grid(row = 8, column = 1, padx = 10, pady = 10)
 
     def draw_filter_frame(self):
         """Draw frame with filter information"""

@@ -24,6 +24,7 @@ from ..enums import (
     AbilityIndex,
     Item,
     RaidRewardItemSubjectType,
+    RaidRewardItemCategoryType,
     SandwichLevel
 )
 from ..fbs.raid_enemy_table_array import RaidEnemyTableArray, RaidEnemyTable, RaidEnemyInfo
@@ -425,7 +426,7 @@ class TeraRaid:
         lottery_items = lottery_array[self.raid_enemy_info.drop_table_random]
         self.rewards = []
         for item_info in fixed_items:
-            if item_info.item_id is not None:
+            if item_info.item_id not in (None, Item.NONE):
                 self.rewards.append(
                     (
                         item_info.item_id,
@@ -434,7 +435,7 @@ class TeraRaid:
                         SandwichLevel.NONE,
                     )
                 )
-            elif item_info.category is not None:
+            elif item_info.category not in (None, RaidRewardItemCategoryType.ITEM):
                 self.rewards.append(
                     (
                         item_info.category.to_item_id(
@@ -454,7 +455,7 @@ class TeraRaid:
             item_rand = rng_reward.rand(lot_sum)
             for item_info in lottery_items:
                 if item_rand < (item_info.rate or 0):
-                    if item_info.item_id is not None:
+                    if item_info.item_id not in (None, Item.NONE):
                         self.rewards.append(
                             (
                                 item_info.item_id,
@@ -463,7 +464,7 @@ class TeraRaid:
                                 SandwichLevel(max(0, 4 - (count - cnt)))
                             )
                         )
-                    elif item_info.category is not None:
+                    elif item_info.category not in (None, RaidRewardItemCategoryType.ITEM):
                         self.rewards.append(
                             (
                                 item_info.category.to_item_id(
