@@ -2285,8 +2285,27 @@ class RaidRewardItemCategoryType(IntEnum):
         """Get item id from species, tera_type, and reward category"""
         match self:
             case RaidRewardItemCategoryType.GEM:
-                # in order
-                return Item(tera_type + Item.NORMAL_TERA_SHARD)
+                # not in order (thanks GF)
+                match tera_type:
+                    case TeraType.NORMAL: return Item.NORMAL_TERA_SHARD
+                    case TeraType.FIGHTING: return Item.FIGHTING_TERA_SHARD
+                    case TeraType.FLYING: return Item.FLYING_TERA_SHARD
+                    case TeraType.POISON: return Item.POISON_TERA_SHARD
+                    case TeraType.GROUND: return Item.GROUND_TERA_SHARD
+                    case TeraType.ROCK: return Item.ROCK_TERA_SHARD
+                    case TeraType.BUG: return Item.BUG_TERA_SHARD
+                    case TeraType.GHOST: return Item.GHOST_TERA_SHARD
+                    case TeraType.STEEL: return Item.STEEL_TERA_SHARD
+                    case TeraType.FIRE: return Item.FIRE_TERA_SHARD
+                    case TeraType.WATER: return Item.WATER_TERA_SHARD
+                    case TeraType.GRASS: return Item.GRASS_TERA_SHARD
+                    case TeraType.ELECTRIC: return Item.ELECTRIC_TERA_SHARD
+                    case TeraType.PSYCHIC: return Item.PSYCHIC_TERA_SHARD
+                    case TeraType.ICE: return Item.ICE_TERA_SHARD
+                    case TeraType.DRAGON: return Item.DRAGON_TERA_SHARD
+                    case TeraType.DARK: return Item.DARK_TERA_SHARD
+                    case TeraType.FAIRY: return Item.FAIRY_TERA_SHARD
+                    case _: return Item.NONE
             case RaidRewardItemCategoryType.POKE:
                 match species:
                     case Species.VENONAT | Species.VENOMOTH: return Item.VENONAT_FANG
@@ -2470,3 +2489,4 @@ class RaidRewardItemCategoryType(IntEnum):
                     case Species.CHARCADET | Species.ARMAROUGE | Species.CERULEDGE: return Item.CHARCADET_SOOT
                     case Species.TOEDSCOOL | Species.TOEDSCRUEL: return Item.TOEDSCOOL_FLAPS
                     case Species.WOOPER | Species.QUAGSIRE | Species.CLODSIRE: return Item.WOOPER_SLIME
+                    case _: return Item.NONE
