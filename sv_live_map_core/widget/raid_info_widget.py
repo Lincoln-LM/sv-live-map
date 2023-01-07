@@ -149,6 +149,20 @@ class RaidInfoWidget(customtkinter.CTkFrame):
             command = self.save_image,
             fg_color = self.fg_color
         )
+        # bind middle click to save w/ items
+        self.save_image_button.bind(
+            '<Enter>',
+            lambda _: self.save_image_button.bind_all(
+                "<Button-2>",
+                lambda _: self.save_image(
+                    include_rewards = True
+                )
+            )
+        )
+        self.save_image_button.bind(
+            '<Leave>',
+            lambda _: self.save_image_button.unbind_all("<Button-2>")
+        )
         self.save_image_button.pack(side = "left", padx = (0, 15), fill = "y")
 
     def open_raid_rewards(self):
@@ -156,7 +170,7 @@ class RaidInfoWidget(customtkinter.CTkFrame):
         reward_window = RewardWindow(raid_data = self.raid_data, fg_color = self.fg_color)
         reward_window.focus_force()
 
-    def save_image(self):
+    def save_image(self, include_rewards: bool = False):
         """Save image to file"""
         if not os.path.exists(get_path("./found_screenshots/")):
             os.mkdir(get_path("./found_screenshots/"))
@@ -168,7 +182,7 @@ class RaidInfoWidget(customtkinter.CTkFrame):
             return
         if not filename.endswith(".png"):
             filename = f"{filename}.png"
-        self.create_image().save(filename)
+        self.create_image(include_rewards = include_rewards).save(filename)
 
     def create_image(self, include_rewards = False) -> Image.Image:
         """Create image representation of widget"""
