@@ -32,11 +32,12 @@
   "DifficultyFilter": [],
   "ShinyFilter": 0,
   "RewardFilter": [
-    1904,
+    1606,
+    1907,
     1905,
     1906,
-    1907,
-    1908
+    1908,
+    1904
   ],
-  "RewardCountFilter": 0
+  "RewardCountFilter": 1
 }
