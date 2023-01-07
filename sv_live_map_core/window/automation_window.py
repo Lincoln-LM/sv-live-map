@@ -227,7 +227,8 @@ class AutomationWindow(customtkinter.CTkToplevel):
                     )
 
                 webhook.add_embed(embed)
-                webhook.add_embed(item_embed)
+                if self.include_rewards_check.get():
+                    webhook.add_embed(item_embed)
                 webhook.execute()
             else:
                 popup_window, widget = popup_display_builder(raid)
