@@ -234,7 +234,7 @@ class AutomationWindow(customtkinter.CTkToplevel):
                 popup_window, widget = popup_display_builder(raid)
                 time.sleep(1)
                 widget: RaidInfoWidget
-                img = widget.create_image()
+                img = widget.create_image(self.include_rewards_check.get())
                 # unsure why this happens even when window is properly destroyed
                 with contextlib.suppress(tkinter.TclError):
                     popup_window.destroy()

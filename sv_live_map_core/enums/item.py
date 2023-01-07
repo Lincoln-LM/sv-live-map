@@ -2229,6 +2229,19 @@ class SandwichLevel(IntEnum):
                 return "Level 3 Raid Sandwich"
         return ""
 
+    def __format__(self, format_spec: str) -> str:
+        if format_spec == 'img':
+            match self:
+                case SandwichLevel.NONE:
+                    return ""
+                case SandwichLevel.LVL_1:
+                    return "LVL 1+ only"
+                case SandwichLevel.LVL_2:
+                    return "LVL 2+ only"
+                case SandwichLevel.LVL_3:
+                    return "LVL 3 only"
+        return super().__format__(format_spec)
+
 class RaidRewardItemSubjectType(IntEnum):
     """Raid reward type"""
     ALL = 0
@@ -2247,6 +2260,19 @@ class RaidRewardItemSubjectType(IntEnum):
             case RaidRewardItemSubjectType.ONCE:
                 return "Once Per Save"
         return ""
+
+    def __format__(self, format_spec: str) -> str:
+        if format_spec == 'img':
+            match self:
+                case RaidRewardItemSubjectType.ALL:
+                    return ""
+                case RaidRewardItemSubjectType.HOST:
+                    return "Host Only"
+                case RaidRewardItemSubjectType.CLIENT:
+                    return "Non Host"
+                case RaidRewardItemSubjectType.ONCE:
+                    return "Once Per Save"
+        return super().__format__(format_spec)
 
 class RaidRewardItemCategoryType(IntEnum):
     """Raid reward category"""

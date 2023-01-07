@@ -7,6 +7,7 @@ import customtkinter
 from PIL import Image, ImageTk, ImageDraw, ImageFont
 from ..save.raid_block import TeraRaid
 from ..util.poke_sprite_handler import PokeSpriteHandler
+from ..util.item_sprite_handler import ItemSpriteHandler
 from .image_widget import ImageWidget
 from ..enums import TeraType, Gender, StarLevel
 from ..util.path_handler import get_path
@@ -169,7 +170,7 @@ class RaidInfoWidget(customtkinter.CTkFrame):
             filename = f"{filename}.png"
         self.create_image().save(filename)
 
-    def create_image(self) -> Image.Image:
+    def create_image(self, include_rewards = False) -> Image.Image:
         """Create image representation of widget"""
         size = (
             self.winfo_width()
@@ -180,7 +181,7 @@ class RaidInfoWidget(customtkinter.CTkFrame):
                  + self.raid_reward_button.winfo_width()
                  + (0 if self.is_popup else self.swap_location_button.winfo_width())
                ),
-            self.winfo_height()
+            self.winfo_height() + (len(self.raid_data.rewards) * 21 + 5 if include_rewards else 0)
         )
         bbox = (0, 0) + size
         img = Image.new("RGBA", size = size)
@@ -192,7 +193,7 @@ class RaidInfoWidget(customtkinter.CTkFrame):
             tera_sprite,
             (
                 self.tera_sprite_display.winfo_x(),
-                (size[1] - self.tera_sprite.height()) // 2
+                (self.winfo_height() - self.tera_sprite.height()) // 2
             ),
             tera_sprite
         )
@@ -200,7 +201,7 @@ class RaidInfoWidget(customtkinter.CTkFrame):
             poke_sprite,
             (
                 self.sprite_display.winfo_x(),
-                (size[1] - self.poke_sprite.height()) // 2
+                (self.winfo_height() - self.poke_sprite.height()) // 2
             ),
             poke_sprite
         )
@@ -208,12 +209,54 @@ class RaidInfoWidget(customtkinter.CTkFrame):
         img_draw.text(
             (
                 self.info_display.text_label.winfo_x() + self.info_display.winfo_x(),
-                (size[1] - self.info_display.winfo_height()) // 2
+                (self.winfo_height() - self.info_display.winfo_height()) // 2
             ),
             self.info_display.text_label['text'],
             font = font,
             align = 'center'
         )
+        if include_rewards:
+            if RewardWindow.ITEM_SPRITE_HANDLER is None:
+                RewardWindow.ITEM_SPRITE_HANDLER = ItemSpriteHandler(True)
+
+            for i, reward in enumerate(self.raid_data.rewards):
+                tk_sprite = RewardWindow.ITEM_SPRITE_HANDLER.grab_sprite(reward[0])
+                sprite = ImageTk.getimage(tk_sprite)
+                img.paste(
+                    sprite,
+                    (
+                        5,
+                        self.winfo_height() + i * 21 - 8
+                    ),
+                    sprite
+                )
+                img_draw.text(
+                    (
+                        5 + 37,
+                        self.winfo_height() + i * 21
+                    ),
+                    f"{reward[1]}x {reward[0]}",
+                    font = font,
+                    align = 'center'
+                )
+                img_draw.text(
+                    (
+                        5 + 37 + 200,
+                        self.winfo_height() + i * 21
+                    ),
+                    f"{reward[2]:img}",
+                    font = font,
+                    align = 'center'
+                )
+                img_draw.text(
+                    (
+                        5 + 37 + 300,
+                        self.winfo_height() + i * 21
+                    ),
+                    f"{reward[3]:img}",
+                    font = font,
+                    align = 'center'
+                )
         return img
 
     def copy_info(self):
