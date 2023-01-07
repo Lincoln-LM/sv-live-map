@@ -22,6 +22,8 @@ from ..widget.scrollable_frame import ScrollableFrame
 from ..widget.raid_info_widget import RaidInfoWidget
 from ..enums import StarLevel
 from ..fbs.raid_enemy_table_array import RaidEnemyTableArray
+from ..fbs.raid_fixed_reward_item_array import RaidFixedRewardItemArray
+from ..fbs.raid_lottery_reward_item_array import RaidLotteryRewardItemArray
 from ..save.raid_block import RaidBlock, TeraRaid
 from ..save.save_file_9 import SaveFile9
 from ..widget.corrected_marker import CorrectedMarker
@@ -286,15 +288,25 @@ class Application(customtkinter.CTk):
         print(my_status)
         print(f"{progress=}")
 
-        raid_tables = list(map(RaidEnemyTableArray, self.read_cached_tables()))
-        raid_tables.append(save_file.read_event_binary())
-        raid_tables = tuple(raid_tables)
+        cached_tables = self.read_cached_tables()
+
+        raid_enemy_table_arrays = cached_tables[0]
+        raid_enemy_table_arrays = [RaidEnemyTableArray(table) for table in raid_enemy_table_arrays]
+        raid_enemy_table_arrays.append(save_file.read_event_binary())
+
+        raid_item_table_arrays = cached_tables[1]
+        raid_item_table_arrays = (
+            RaidFixedRewardItemArray(raid_item_table_arrays[0]),
+            RaidLotteryRewardItemArray(raid_item_table_arrays[1]),
+            *save_file.read_delivery_item_binaries()
+        )
 
         raid_priority = save_file.read_event_priority()
 
         raid_block = save_file.read_raid_block()
         raid_block.initialize_data(
-            raid_tables,
+            raid_enemy_table_arrays,
+            raid_item_table_arrays,
             progress,
             my_status.game,
             my_status,
