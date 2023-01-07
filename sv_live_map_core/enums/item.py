@@ -2196,7 +2196,14 @@ class Item(IntEnum):
     YELLOW_DISH = 2400
 
     def __str__(self) -> str:
-        return self.name.replace('_', ' ').title().replace(" Xs", " XS").replace(" Xl", "XL")
+        item_iteration = 0
+        name = self.name
+        while name.endswith("_"):
+            name = name[:-1]
+            item_iteration += 1
+        if item_iteration > 0:
+            name = f"{name}-{item_iteration}"
+        return name.replace('_', ' ').title().replace(" Xs", " XS").replace(" Xl", "XL")
 
 class SandwichLevel(IntEnum):
     """Sandwich boost level"""

@@ -1,7 +1,7 @@
 """Filter for TeraRaids"""
 
 from ..save.raid_block import TeraRaid
-from ..enums import AbilityIndex, Gender, Nature, Species, StarLevel
+from ..enums import AbilityIndex, Gender, Nature, Species, StarLevel, Item
 
 class RaidFilter:
     """Filter for TeraRaids"""
@@ -11,6 +11,7 @@ class RaidFilter:
     ANY_NATURE = list(Nature)
     ANY_SPECIES = list(Species)
     ANY_DIFFICULTY = list(StarLevel)
+    ANY_REWARD = list(Item)
 
     def __init__(
         self,
@@ -25,7 +26,9 @@ class RaidFilter:
         nature_filter: list[Nature] = None,
         species_filter: list[Species] = None,
         shiny_filter: bool = False,
-        star_filter: list[StarLevel] = None
+        star_filter: list[StarLevel] = None,
+        reward_filter: list[Item] = None,
+        reward_count_filter: int = None,
     ) -> None:
         self.hp_filter = hp_filter or self.ANY_IV
         self.atk_filter = atk_filter or self.ANY_IV
@@ -39,6 +42,8 @@ class RaidFilter:
         self.species_filter = species_filter or self.ANY_SPECIES.copy()
         self.shiny_filter = shiny_filter
         self.star_filter = star_filter or self.ANY_DIFFICULTY.copy()
+        self.reward_filter = reward_filter or self.ANY_REWARD.copy()
+        self.reward_count_filter = reward_count_filter or 0
 
     @property
     def iv_filters(self) -> list[range]:
@@ -71,6 +76,14 @@ class RaidFilter:
             return False
 
         if raid.difficulty not in self.star_filter:
+            return False
+
+        if (
+            sum(
+                reward[1] for reward in raid.rewards if reward[0] in self.reward_filter
+            )
+            < self.reward_count_filter
+        ):
             return False
 
         return bool(not self.shiny_filter or raid.is_shiny)

@@ -19,8 +19,9 @@ import discord_webhook
 from ..widget.raid_info_widget import RaidInfoWidget
 from ..util.raid_filter import RaidFilter
 from ..widget.iv_filter_widget import IVFilterWidget
-from ..enums import Nature, AbilityIndex, Gender, Species, StarLevel
+from ..enums import Nature, AbilityIndex, Gender, Species, StarLevel, Item
 from ..widget.checked_combobox import CheckedCombobox
+from ..widget.spinbox import Spinbox
 from ..util.path_handler import get_path
 from ..nxreader.nxreader import SocketError
 
@@ -279,7 +280,9 @@ class AutomationWindow(customtkinter.CTkToplevel):
             nature_filter = self.nature_filter.get(),
             species_filter = self.species_filter.get(),
             shiny_filter = self.shiny_filter.get(),
-            star_filter = self.difficulty_filter.get()
+            star_filter = self.difficulty_filter.get(),
+            reward_filter = self.reward_filter.get(),
+            reward_count_filter = self.reward_count_filter.get(),
         )
 
     def handle_displays(
@@ -635,8 +638,29 @@ class AutomationWindow(customtkinter.CTkToplevel):
         )
         self.difficulty_filter.grid(row = 4, column = 3, padx = 10)
 
+        self.reward_label = customtkinter.CTkLabel(
+            self.filter_frame,
+            text = "Reward Items:"
+        )
+        self.reward_label.grid(row = 5, column = 2)
+
+        self.reward_filter = CheckedCombobox(
+            self.filter_frame,
+            values = sorted(list(Item), key = lambda item: item.name)
+        )
+        self.reward_filter.grid(row = 5, column = 3, padx = 10)
+
+        self.reward_count_filter_label = customtkinter.CTkLabel(
+            self.filter_frame,
+            text = "Min Reward Count:"
+        )
+        self.reward_count_filter_label.grid(row = 6, column = 2)
+
+        self.reward_count_filter = Spinbox(self.filter_frame)
+        self.reward_count_filter.grid(row = 6, column = 3, padx = 10)
+
         self.shiny_filter = customtkinter.CTkCheckBox(self.filter_frame, text = "Shiny Only")
-        self.shiny_filter.grid(row = 5, column = 2, columnspan = 2)
+        self.shiny_filter.grid(row = 7, column = 2, columnspan = 2)
 
         self.save_filter_button = customtkinter.CTkButton(
             self.filter_frame,
@@ -647,7 +671,7 @@ class AutomationWindow(customtkinter.CTkToplevel):
             height = self.SAVE_IMAGE.height(),
             command = self.save_filter
         )
-        self.save_filter_button.grid(row = 6, column = 0, padx = 5, pady = (125, 5))
+        self.save_filter_button.grid(row = 8, column = 0, padx = 5, pady = (125, 5))
 
         self.load_filter_button = customtkinter.CTkButton(
             self.filter_frame,
@@ -658,7 +682,7 @@ class AutomationWindow(customtkinter.CTkToplevel):
             height = self.LOAD_IMAGE.height(),
             command = self.load_filter
         )
-        self.load_filter_button.grid(row = 6, column = 1, padx = 5, pady = (125, 5))
+        self.load_filter_button.grid(row = 8, column = 1, padx = 5, pady = (125, 5))
 
     def save_filter(self):
         """Save current filter to file"""
@@ -691,6 +715,8 @@ class AutomationWindow(customtkinter.CTkToplevel):
             "SpeciesFilter": self.species_filter.get(),
             "DifficultyFilter": self.difficulty_filter.get(),
             "ShinyFilter": self.shiny_filter.get(),
+            "RewardFilter": self.reward_filter.get(),
+            "RewardCountFilter": self.reward_count_filter.get(),
         }
 
     def load_filter(self):
@@ -715,6 +741,8 @@ class AutomationWindow(customtkinter.CTkToplevel):
         self.load_combobox(self.gender_filter, filter_json, "GenderFilter")
         self.load_combobox(self.species_filter, filter_json, "SpeciesFilter")
         self.load_combobox(self.difficulty_filter, filter_json, "DifficultyFilter")
+        self.load_combobox(self.reward_filter, filter_json, "RewardFilter")
+        self.reward_count_filter.set(filter_json.get("RewardCountFilter", 0))
         if filter_json.get("ShinyFilter", False):
             self.shiny_filter.select()
         else:
