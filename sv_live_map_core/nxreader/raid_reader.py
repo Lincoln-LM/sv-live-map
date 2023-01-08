@@ -11,6 +11,8 @@ from .nxreader import NXReader
 from ..enums import StarLevel, StoryProgress, Game
 from ..fbs.raid_enemy_table_array import RaidEnemyTableArray
 from ..fbs.delivery_raid_priority_array import DeliveryRaidPriorityArray
+from ..fbs.raid_fixed_reward_item_array import RaidFixedRewardItemArray
+from ..fbs.raid_lottery_reward_item_array import RaidLotteryRewardItemArray
 from ..save.raid_block import RaidBlock, process_raid_block
 from ..rng import SCXorshift32
 from ..save.my_status_9 import MyStatus9
@@ -37,6 +39,8 @@ class RaidReader(NXReader):
     MY_STATUS_LOCATION = (0x29F40, 0xE3E89BD1)
     BCAT_RAID_BINARY_LOCATION = (0x1040, 0x520A1B0)
     BCAT_RAID_PRIORITY_LOCATION = (0x1860, 0x95451E4)
+    BCAT_RAID_FIXED_REWARD_LOCATION = (0x16D40, 0x7D6C2B82)
+    BCAT_RAID_LOTTERY_REWARD_LOCATION = (0x1E6A0, 0xA52B4811)
     TRAINER_ICON_WIDTH_LOCATION = (0x1A3C0, 0x8FAB2C4D)
     TRAINER_ICON_HEIGHT_LOCATION = (0x1DA0, 0xB384C24)
     TRAINER_ICON_LOCATION = (0x273E0, 0xD41F4FC4)
@@ -48,6 +52,7 @@ class RaidReader(NXReader):
         usb_connection: bool = False,
         read_safety: bool = False,
         raid_enemy_table_arrays: tuple[bytes, 7] = None,
+        raid_item_table_arrays: tuple[bytes, 2] = None,
     ):
         super().__init__(ip_address, port, usb_connection)
         self.read_safety = read_safety
@@ -64,6 +69,17 @@ class RaidReader(NXReader):
                     )
                 )
             )
+        if raid_item_table_arrays is None:
+            self.raid_item_table_arrays: \
+                tuple[RaidFixedRewardItemArray | RaidLotteryRewardItemArray, 4] = \
+                self.read_raid_item_table_arrays()
+        else:
+            self.raid_item_table_arrays: \
+                tuple[RaidFixedRewardItemArray | RaidLotteryRewardItemArray, 4] = (
+                    RaidFixedRewardItemArray(raid_item_table_arrays[0]),
+                    RaidLotteryRewardItemArray(raid_item_table_arrays[1]),
+                    *self.read_delivery_item_binaries()
+                )
         self.delivery_raid_priority: tuple[int] = self.read_delivery_raid_priority()
         self.story_progress: StoryProgress = self.read_story_progess()
         self.game_version: Game = self.read_game_version()
@@ -81,6 +97,47 @@ class RaidReader(NXReader):
             .delivery_raid_prioritys[0] \
             .delivery_group_id \
             .group_counts
+
+    def read_raid_fixed_item_binary(self) -> bytes:
+        """Read raid fixed item flatbuffer binary from memory"""
+        return self.read_pointer("[[[[[[[[main+43A77B8]+20]+2B0]+60]+30]+208]]+5D0]", 0x1CA8)
+
+    def read_raid_lottery_item_binary(self) -> bytes:
+        """Read raid lottery item flatbuffer binary from memory"""
+        return self.read_absolute(
+            self.read_pointer_int(
+                "[[[[[[[main+43A77B8]+20]+2B0]+60]+28]+200]]+E8",
+                8
+            ) - 0xC,
+            0x3AC8
+        )
+
+    def read_delivery_item_binaries(
+        self
+    ) -> tuple[RaidFixedRewardItemArray | RaidLotteryRewardItemArray, 2]:
+        """Read delivery item flatbuffer binaries from save blocks"""
+        return (
+            RaidFixedRewardItemArray(
+                self.read_save_block_object(
+                    *self.BCAT_RAID_FIXED_REWARD_LOCATION
+                )
+            ),
+            RaidLotteryRewardItemArray(
+                self.read_save_block_object(
+                    *self.BCAT_RAID_LOTTERY_REWARD_LOCATION
+                )
+            ),
+        )
+
+    def read_raid_item_table_arrays(
+        self
+    ) -> tuple[RaidFixedRewardItemArray | RaidLotteryRewardItemArray, 4]:
+        """Read raid item table arrays from flatbuffer binaries stored in memory"""
+        return (
+            RaidFixedRewardItemArray(self.read_raid_fixed_item_binary()),
+            RaidLotteryRewardItemArray(self.read_raid_lottery_item_binary()),
+            *self.read_delivery_item_binaries()
+        )
 
     def read_raid_binary(self, star_level: StarLevel) -> bytes:
         """Read raid flatbuffer binary from memory"""
@@ -221,6 +278,7 @@ class RaidReader(NXReader):
         raid_block = process_raid_block(self.read_pointer(*self.RAID_BLOCK_PTR))
         raid_block.initialize_data(
             self.raid_enemy_table_arrays,
+            self.raid_item_table_arrays,
             self.story_progress,
             self.game_version,
             self.my_status,

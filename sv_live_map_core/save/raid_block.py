@@ -22,8 +22,14 @@ from ..enums import (
     Ability,
     Gender,
     AbilityIndex,
+    Item,
+    RaidRewardItemSubjectType,
+    RaidRewardItemCategoryType,
+    SandwichLevel
 )
 from ..fbs.raid_enemy_table_array import RaidEnemyTableArray, RaidEnemyTable, RaidEnemyInfo
+from ..fbs.raid_fixed_reward_item_array import RaidFixedRewardItemArray
+from ..fbs.raid_lottery_reward_item_array import RaidLotteryRewardItemArray
 from ..util.personal_data_handler import PersonalDataHandler
 from .my_status_9 import MyStatus9
 
@@ -162,6 +168,38 @@ def calc_difficulty(story_progress: StoryProgress, difficulty_rand: int) -> Star
             )
     return None
 
+def calc_reward_item_count(count_rand: int, difficulty: StarLevel):
+    """Calculate the amount of lottery raid rewards based on difficulty and rand"""
+    # https://github.com/LegoFigure11/RaidCrawler/blob/ea82f3f8afb9b8dafc676b8ca7bc5b8ee128f71e/Structures/RaidRewards.cs#L24
+    match difficulty:
+        case StarLevel.ONE_STAR | StarLevel.TWO_STAR:
+            base_items = 4
+        case StarLevel.THREE_STAR | StarLevel.FOUR_STAR:
+            base_items = 5
+        case StarLevel.FIVE_STAR:
+            base_items = 6
+        case StarLevel.SIX_STAR | StarLevel.SEVEN_STAR:
+            base_items = 7
+        case _:
+            base_items = 0
+    return (
+        base_items
+        if count_rand < 10
+        else (
+            base_items + 1
+            if count_rand < 40
+            else (
+                base_items + 2
+                if count_rand < 70
+                else (
+                    base_items + 3
+                    if count_rand < 90
+                    else base_items + 4
+                )
+            )
+        )
+    )
+
 @dataclass
 class TeraRaid:
     """Single Tera Raid Data"""
@@ -199,6 +237,8 @@ class TeraRaid:
         self.height: int = None
         self.weight: int = None
         self.scale: int = None
+
+        self.rewards: list[tuple[Item, int, RaidRewardItemSubjectType, SandwichLevel]] = None
 
         # for map display
         self.id_str: str = f"{self.area_id}-{self.den_id}"
@@ -342,6 +382,7 @@ class TeraRaid:
     def initialize_data(
         self,
         raid_enemy_table_arrays: tuple[RaidEnemyTableArray],
+        raid_item_table_arrays: tuple[RaidFixedRewardItemArray | RaidLotteryRewardItemArray],
         story_progress: StoryProgress,
         game: Game,
         my_status: MyStatus9,
@@ -358,12 +399,85 @@ class TeraRaid:
         # rng object used for difficulty and slot
         rng_slot = Xoroshiro128Plus(self.seed)
 
+        # rng object used for reward items
+        rng_reward = Xoroshiro128Plus(self.seed)
+
         self.difficulty = self.rand_difficulty(story_progress, rng_slot)
 
         possible_encounter_slots, encounter_slot_total = \
             self.build_encounter_table(raid_enemy_table_arrays, story_progress, game)
 
         self.generate_from_slots(rng_slot, possible_encounter_slots, encounter_slot_total)
+        self.generate_rewards(rng_reward, raid_item_table_arrays)
+
+    def generate_rewards(
+        self,
+        rng_reward: Xoroshiro128Plus,
+        raid_item_table_arrays: tuple[RaidFixedRewardItemArray | RaidLotteryRewardItemArray]
+    ):
+        """Generate raid rewards"""
+        if self.is_event:
+            fixed_array = raid_item_table_arrays[2].reward_item_dict
+            lottery_array = raid_item_table_arrays[3].reward_item_dict
+        else:
+            fixed_array = raid_item_table_arrays[0].reward_item_dict
+            lottery_array = raid_item_table_arrays[1].reward_item_dict
+        fixed_items = fixed_array[self.raid_enemy_info.drop_table_fix]
+        lottery_items = lottery_array[self.raid_enemy_info.drop_table_random]
+        self.rewards = []
+        for item_info in fixed_items:
+            if item_info.item_id not in (None, Item.NONE):
+                self.rewards.append(
+                    (
+                        item_info.item_id,
+                        item_info.num,
+                        item_info.subject_type or RaidRewardItemSubjectType.ALL,
+                        SandwichLevel.NONE,
+                    )
+                )
+            elif item_info.category not in (None, RaidRewardItemCategoryType.ITEM):
+                self.rewards.append(
+                    (
+                        item_info.category.to_item_id(
+                            self.species,
+                            self.tera_type
+                        ),
+                        item_info.num,
+                        item_info.subject_type or RaidRewardItemSubjectType.ALL,
+                        SandwichLevel.NONE,
+                    )
+                )
+        lot_sum = sum(item.rate or 0 for item in lottery_items)
+        count_rand = rng_reward.rand(100)
+        # for now, assume sandwich lv.3
+        count = calc_reward_item_count(count_rand, self.difficulty) + 3
+        for cnt in range(count):
+            item_rand = rng_reward.rand(lot_sum)
+            for item_info in lottery_items:
+                if item_rand < (item_info.rate or 0):
+                    if item_info.item_id not in (None, Item.NONE):
+                        self.rewards.append(
+                            (
+                                item_info.item_id,
+                                item_info.num,
+                                RaidRewardItemSubjectType.ALL,
+                                SandwichLevel(max(0, 4 - (count - cnt)))
+                            )
+                        )
+                    elif item_info.category not in (None, RaidRewardItemCategoryType.ITEM):
+                        self.rewards.append(
+                            (
+                                item_info.category.to_item_id(
+                                    self.species,
+                                    self.tera_type
+                                ),
+                                item_info.num,
+                                RaidRewardItemSubjectType.ALL,
+                                SandwichLevel(max(0, 4 - (count - cnt)))
+                            )
+                        )
+                    break
+                item_rand -= item_info.rate
 
     def rand_difficulty(
         self,
@@ -471,6 +585,7 @@ class RaidBlock:
     def initialize_data(
         self,
         raid_enemy_table_arrays: tuple[RaidEnemyTableArray],
+        raid_item_table_arrays: tuple[RaidFixedRewardItemArray | RaidLotteryRewardItemArray],
         story_progress: StoryProgress,
         game: Game,
         my_status: MyStatus9,
@@ -494,6 +609,7 @@ class RaidBlock:
                 i -= delivery_group_size
             raid.initialize_data(
                 raid_enemy_table_arrays,
+                raid_item_table_arrays,
                 story_progress,
                 game,
                 my_status,

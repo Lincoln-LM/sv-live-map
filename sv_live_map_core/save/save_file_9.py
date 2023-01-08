@@ -11,6 +11,8 @@ from ..save.my_status_9 import MyStatus9
 from ..save.raid_block import RaidBlock, process_raid_block
 from ..fbs.raid_enemy_table_array import RaidEnemyTableArray
 from ..fbs.delivery_raid_priority_array import DeliveryRaidPriorityArray
+from ..fbs.raid_fixed_reward_item_array import RaidFixedRewardItemArray
+from ..fbs.raid_lottery_reward_item_array import RaidLotteryRewardItemArray
 
 def parse_int(block_type: SCTypeCode, data: bytearray) -> int:
     """Parse bytes for integer SCTypeCodes"""
@@ -50,6 +52,8 @@ class SaveFile9:
     MY_STATUS_LOCATION = 0xE3E89BD1
     BCAT_RAID_BINARY_LOCATION = 0x520A1B0
     BCAT_RAID_PRIORITY_LOCATION = 0x95451E4
+    BCAT_RAID_FIXED_REWARD_LOCATION = 0x7D6C2B82
+    BCAT_RAID_LOTTERY_REWARD_LOCATION = 0xA52B4811
     RAID_BLOCK_LOCATION = 0xCAAC8800
 
     def __init__(self, save_data: bytearray):
@@ -168,6 +172,23 @@ class SaveFile9:
     def read_event_binary(self) -> RaidEnemyTableArray:
         """Read event binary from save"""
         return RaidEnemyTableArray(self.read_block(self.BCAT_RAID_BINARY_LOCATION))
+
+    def read_delivery_item_binaries(
+        self
+    ) -> tuple[RaidFixedRewardItemArray | RaidLotteryRewardItemArray, 2]:
+        """Read delivery item flatbuffer binaries from save blocks"""
+        return (
+            RaidFixedRewardItemArray(
+                self.read_block(
+                    self.BCAT_RAID_FIXED_REWARD_LOCATION
+                )
+            ),
+            RaidLotteryRewardItemArray(
+                self.read_block(
+                    self.BCAT_RAID_LOTTERY_REWARD_LOCATION
+                )
+            ),
+        )
 
     def read_event_priority(self) -> DeliveryRaidPriorityArray:
         """Read event priority binary from save"""

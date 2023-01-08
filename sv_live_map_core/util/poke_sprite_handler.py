@@ -32,7 +32,7 @@ class PokeSpriteHandler:
         form: int,
         female: bool
     ) -> Image.Image | ImageTk.PhotoImage:
-        """Grab a sprite from cache or request"""
+        """Grab a sprite from cache"""
         if form == 0:
             form = None
         return self.cache.get(
