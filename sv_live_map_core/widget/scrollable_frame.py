@@ -6,21 +6,41 @@ import customtkinter
 class ScrollableFrame(customtkinter.CTkFrame):
     """Scrollable customtkinter Frame"""
     # pylint: disable=too-many-ancestors
-    def __init__(self, master, *args, **kwargs):
-        super().__init__(master, *args, **kwargs)
+    def __init__(
+        self,
+        master,
+        *args,
+        width = 140,
+        height = 28,
+        **kwargs
+    ):
+        super().__init__(
+            master,
+            *args,
+            width = width,
+            height = height,
+            **kwargs
+        )
 
         self.canvas_inner = customtkinter.CTkCanvas(
             self,
             bg = self.fg_color[self._appearance_mode],
-            highlightthickness = 0
+            highlightthickness = 0,
+            width = width - 20,
+            height = height,
         )
 
         self.scrollbar = customtkinter.CTkScrollbar(
             self,
             orientation = "vertical",
-            command = self.canvas_inner.yview
+            command = self.canvas_inner.yview,
+            height = height,
         )
-        self.scrollable_frame = customtkinter.CTkFrame(self.canvas_inner)
+        self.scrollable_frame = customtkinter.CTkFrame(
+            self.canvas_inner,
+            width = width - 20,
+            height = height,
+        )
 
         self.scrollable_frame.bind(
             "<Configure>",

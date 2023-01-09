@@ -21,6 +21,7 @@ from ..util.raid_filter import RaidFilter
 from ..widget.iv_filter_widget import IVFilterWidget
 from ..enums import Nature, AbilityIndex, Gender, Species, StarLevel, Item
 from ..widget.checked_combobox import CheckedCombobox
+from ..widget.listviewcombobox import ListViewCombobox
 from ..widget.spinbox import Spinbox
 from ..util.path_handler import get_path
 from ..nxreader.nxreader import SocketError
@@ -644,47 +645,47 @@ class AutomationWindow(customtkinter.CTkToplevel):
         )
         self.species_label.grid(row = 3, column = 2)
 
-        self.species_filter = CheckedCombobox(
+        self.species_filter = ListViewCombobox(
             self.filter_frame,
-            values = sorted(list(Species), key = lambda species: species.name)
+            value_enum = Species
         )
-        self.species_filter.grid(row = 3, column = 3, padx = 10)
+        self.species_filter.grid(row = 3, column = 3, rowspan = 5, padx = 10)
 
         self.difficulty_label = customtkinter.CTkLabel(
             self.filter_frame,
             text = "Difficulty:"
         )
-        self.difficulty_label.grid(row = 4, column = 2)
+        self.difficulty_label.grid(row = 8, column = 2)
 
         self.difficulty_filter = CheckedCombobox(
             self.filter_frame,
             values = list(StarLevel)
         )
-        self.difficulty_filter.grid(row = 4, column = 3, padx = 10)
+        self.difficulty_filter.grid(row = 8, column = 3, padx = 10)
 
         self.reward_label = customtkinter.CTkLabel(
             self.filter_frame,
             text = "Reward Items:"
         )
-        self.reward_label.grid(row = 5, column = 2)
+        self.reward_label.grid(row = 9, column = 2)
 
         self.reward_filter = CheckedCombobox(
             self.filter_frame,
             values = sorted(list(Item), key = lambda item: item.name)
         )
-        self.reward_filter.grid(row = 5, column = 3, padx = 10)
+        self.reward_filter.grid(row = 9, column = 3, padx = 10)
 
         self.reward_count_filter_label = customtkinter.CTkLabel(
             self.filter_frame,
             text = "Min Reward Count:"
         )
-        self.reward_count_filter_label.grid(row = 6, column = 2)
+        self.reward_count_filter_label.grid(row = 10, column = 2)
 
         self.reward_count_filter = Spinbox(self.filter_frame)
-        self.reward_count_filter.grid(row = 6, column = 3, padx = 10)
+        self.reward_count_filter.grid(row = 10, column = 3, padx = 10)
 
         self.shiny_filter = customtkinter.CTkCheckBox(self.filter_frame, text = "Shiny Only")
-        self.shiny_filter.grid(row = 7, column = 2, columnspan = 2)
+        self.shiny_filter.grid(row = 11, column = 2, columnspan = 2)
 
         self.save_filter_button = customtkinter.CTkButton(
             self.filter_frame,
@@ -695,7 +696,7 @@ class AutomationWindow(customtkinter.CTkToplevel):
             height = self.SAVE_IMAGE.height(),
             command = self.save_filter
         )
-        self.save_filter_button.grid(row = 8, column = 0, padx = 5, pady = (125, 5))
+        self.save_filter_button.grid(row = 12, column = 0, padx = 5, pady = (125, 5))
 
         self.load_filter_button = customtkinter.CTkButton(
             self.filter_frame,
@@ -706,7 +707,7 @@ class AutomationWindow(customtkinter.CTkToplevel):
             height = self.LOAD_IMAGE.height(),
             command = self.load_filter
         )
-        self.load_filter_button.grid(row = 8, column = 1, padx = 5, pady = (125, 5))
+        self.load_filter_button.grid(row = 12, column = 1, padx = 5, pady = (125, 5))
 
     def save_filter(self):
         """Save current filter to file"""
@@ -805,12 +806,16 @@ class AutomationWindow(customtkinter.CTkToplevel):
         )
 
     @staticmethod
-    def load_combobox(combobox: CheckedCombobox, filter_json: dict, key: str):
+    def load_combobox(combobox: CheckedCombobox | ListViewCombobox, filter_json: dict, key: str):
         """Load combobox from filter_json"""
         filter_data = filter_json.get(key, [])
-        for variable, value in zip(
-            combobox.dropdown_menu.variables,
-            combobox.dropdown_menu.values
-        ):
-            variable.set(value in filter_data)
-        combobox.dropdown_callback()
+        if isinstance(combobox, CheckedCombobox):
+            for variable, value in zip(
+                combobox.dropdown_menu.variables,
+                combobox.dropdown_menu.values
+            ):
+                variable.set(value in filter_data)
+            combobox.dropdown_callback()
+        else:
+            for value in filter_data:
+                combobox.add_item(value)

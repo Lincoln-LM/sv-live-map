@@ -38,7 +38,7 @@ class Application(customtkinter.CTk):
     """Live Map GUI"""
     # pylint: disable=too-many-instance-attributes
     APP_NAME = "SV Live Map"
-    WIDTH = 1490
+    WIDTH = 1492
     HEIGHT = 512
     DEFAULT_IP = "192.168.0.0"
     PLAYER_POS_ADDRESS = 0x4380340
