@@ -140,6 +140,9 @@ class NXReader:
         """Press and release button"""
         self._send_command(f'click {button}')
 
+    def key(self, key: int) -> None:
+        self._send_command(f'key {key}')
+
     def press(self, button: str) -> None:
         """Press and hold button"""
         self._send_command(f'press {button}')

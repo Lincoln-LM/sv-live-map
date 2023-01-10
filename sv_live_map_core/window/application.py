@@ -29,6 +29,7 @@ from ..save.save_file_9 import SaveFile9
 from ..widget.corrected_marker import CorrectedMarker
 from ..util.personal_data_handler import PersonalDataHandler
 from .automation_window import AutomationWindow
+from .fast_code_window import FastCodeWindow
 from ..util.path_handler import get_path
 
 customtkinter.set_default_color_theme("blue")
@@ -51,6 +52,7 @@ class Application(customtkinter.CTk):
         # initialize for later
         self.reader: RaidReader = None
         self.automation_window: AutomationWindow = None
+        self.fast_code_window: FastCodeWindow = None
         self.render_thread: threading.Thread = None
         self.sprite_handler: PokeSpriteHandler = PokeSpriteHandler(tk_image = True)
         self.settings: dict[str, Any] = {}
@@ -269,6 +271,14 @@ class Application(customtkinter.CTk):
         )
         self.dump_button.grid(row = 12, column = 0, columnspan = 2, padx = 10, pady = 5)
 
+        self.fast_code_button = customtkinter.CTkButton(
+            master = self.settings_frame,
+            text = "Fast Code Entry",
+            width = 300,
+            command = self.open_fast_code_window
+        )
+        self.fast_code_button.grid(row = 14, column = 0, columnspan = 2, padx = 10, pady = 5)
+
     def load_from_save(self):
         """Load and display info from save"""
         # TODO: support raid_block.bin
@@ -368,6 +378,12 @@ class Application(customtkinter.CTk):
         if self.automation_window is None:
             self.automation_window = AutomationWindow(settings = self.settings)
         self.automation_window.focus_force()
+
+    def open_fast_code_window(self):
+        """Open Fast Code Window"""
+        if self.fast_code_window is None:
+            self.fast_code_window = FastCodeWindow(settings = self.settings)
+        self.fast_code_window.focus_force()
 
     def handle_close_events(self):
         """Handle close events"""
