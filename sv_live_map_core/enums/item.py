@@ -2206,6 +2206,8 @@ class Item(IntEnum):
         name = name.replace('_', ' ').title().replace(" Xs", " XS").replace(" Xl", " XL")
         if name.startswith("Tm"):
             name = f"TM{name[2:]}"
+        if name.startswith("Tr"):
+            name = f"TR{name[2:]}"
         if name.startswith("Pp"):
             name = f"PP{name[2:]}"
         return name

@@ -44,14 +44,14 @@ class AutomationWindow(customtkinter.CTkToplevel):
         **kwargs
     ):
         self.settings: dict = settings or {}
-        super().__init__(*args, master = master, fg_color=fg_color, **kwargs)
+        super().__init__(*args, master = master, fg_color = fg_color, **kwargs)
         self.master: Application
 
         self.target_found = False
         self.automation_thread: Thread = None
         self.update_check = None
 
-        self.title("Automation Settings")
+        self.title("Filters & Automation")
         self.handle_close_events()
         self.cache_images()
         self.draw_filter_frame()
@@ -395,12 +395,12 @@ class AutomationWindow(customtkinter.CTkToplevel):
 
     def draw_start_button_frame(self):
         """Draw start button frame"""
-        self.start_button_frame = customtkinter.CTkFrame(master = self, width = 850)
+        self.start_button_frame = customtkinter.CTkFrame(master = self, width = 1250)
         self.start_button_frame.grid(row = 1, column = 0, columnspan = 4, sticky = "nwse")
         self.start_button = customtkinter.CTkButton(
             master = self.start_button_frame,
             text = "Start Automation",
-            width = 850,
+            width = 1250,
             command = self.start_automation
         )
         self.start_button.grid(
@@ -409,12 +409,11 @@ class AutomationWindow(customtkinter.CTkToplevel):
             columnspan = 4,
             sticky = "nwse",
             padx = 5,
-            pady = 0
+            pady = 0,
         )
         self.advance_date_button = customtkinter.CTkButton(
             master = self.start_button_frame,
             text = "Advance Date",
-            width = 850,
             command = self.full_dateskip
         )
         self.advance_date_button.grid(
@@ -586,106 +585,121 @@ class AutomationWindow(customtkinter.CTkToplevel):
         self.grid_columnconfigure(0, minsize = 450)
 
         self.hp_filter = IVFilterWidget(self.filter_frame, title = "HP")
-        self.hp_filter.grid(row = 0, column = 0, padx = 10, pady = (10, 0), columnspan = 2)
+        self.hp_filter.grid(row = 0, column = 5, padx = 10, pady = (10, 0), columnspan = 1)
 
         self.atk_filter = IVFilterWidget(self.filter_frame, title = "ATK")
-        self.atk_filter.grid(row = 1, column = 0, padx = 10, columnspan = 2)
+        self.atk_filter.grid(row = 1, column = 5, padx = 10, columnspan = 1)
 
         self.def_filter = IVFilterWidget(self.filter_frame, title = "DEF")
-        self.def_filter.grid(row = 2, column = 0, padx = 10, columnspan = 2)
+        self.def_filter.grid(row = 2, column = 5, padx = 10, columnspan = 1)
 
         self.spa_filter = IVFilterWidget(self.filter_frame, title = "SPA")
-        self.spa_filter.grid(row = 3, column = 0, padx = 10, columnspan = 2)
+        self.spa_filter.grid(row = 3, column = 5, padx = 10, columnspan = 1)
 
         self.spd_filter = IVFilterWidget(self.filter_frame, title = "SPD")
-        self.spd_filter.grid(row = 4, column = 0, padx = 10, columnspan = 2)
+        self.spd_filter.grid(row = 4, column = 5, padx = 10, columnspan = 1)
 
         self.spe_filter = IVFilterWidget(self.filter_frame, title = "SPE")
-        self.spe_filter.grid(row = 5, column = 0, padx = 10, columnspan = 2)
+        self.spe_filter.grid(row = 5, column = 5, padx = 10, columnspan = 1)
 
         self.nature_label = customtkinter.CTkLabel(
             self.filter_frame,
             text = "Nature:"
         )
-        self.nature_label.grid(row = 0, column = 2, pady = (10, 0))
+        self.nature_label.grid(row = 6, column = 0, pady = (10, 0))
 
         self.nature_filter = CheckedCombobox(
             self.filter_frame,
             values = list(Nature)
         )
-        self.nature_filter.grid(row = 0, column = 3, padx = 10, pady = (10, 0))
+        self.nature_filter.grid(row = 6, column = 1, padx = 10, pady = (10, 0))
 
         self.ability_label = customtkinter.CTkLabel(
             self.filter_frame,
             text = "Ability:"
         )
-        self.ability_label.grid(row = 1, column = 2)
+        self.ability_label.grid(row = 7, column = 0)
 
         self.ability_filter = CheckedCombobox(
             self.filter_frame,
             values = list(AbilityIndex)
         )
-        self.ability_filter.grid(row = 1, column = 3, padx = 10)
+        self.ability_filter.grid(row = 7, column = 1, padx = 10)
 
         self.gender_label = customtkinter.CTkLabel(
             self.filter_frame,
             text = "Gender:"
         )
-        self.gender_label.grid(row = 2, column = 2)
+        self.gender_label.grid(row = 8, column = 0)
 
         self.gender_filter = CheckedCombobox(
             self.filter_frame,
             values = list(Gender)
         )
-        self.gender_filter.grid(row = 2, column = 3, padx = 10)
-
-        self.species_label = customtkinter.CTkLabel(
-            self.filter_frame,
-            text = "Species:"
-        )
-        self.species_label.grid(row = 3, column = 2)
-
-        self.species_filter = ListViewCombobox(
-            self.filter_frame,
-            value_enum = Species
-        )
-        self.species_filter.grid(row = 3, column = 3, rowspan = 5, padx = 10)
+        self.gender_filter.grid(row = 8, column = 1, padx = 10)
 
         self.difficulty_label = customtkinter.CTkLabel(
             self.filter_frame,
             text = "Difficulty:"
         )
-        self.difficulty_label.grid(row = 8, column = 2)
+        self.difficulty_label.grid(row = 9, column = 0)
 
         self.difficulty_filter = CheckedCombobox(
             self.filter_frame,
             values = list(StarLevel)
         )
-        self.difficulty_filter.grid(row = 8, column = 3, padx = 10)
+        self.difficulty_filter.grid(row = 9, column = 1, padx = 10)
+
+        self.shiny_filter = customtkinter.CTkCheckBox(self.filter_frame, text = "Shiny Only")
+        self.shiny_filter.grid(row = 10, column = 0, columnspan = 2)
+
+        self.species_label = customtkinter.CTkLabel(
+            self.filter_frame,
+            text = "Species:"
+        )
+        self.species_label.grid(row = 0, column = 0)
+
+        self.species_filter = ListViewCombobox(
+            self.filter_frame,
+            value_enum = Species
+        )
+        self.species_filter.grid(
+            row = 0,
+            column = 1,
+            rowspan = 5,
+            padx = 10,
+            pady = (10, 0),
+            sticky = "n"
+        )
 
         self.reward_label = customtkinter.CTkLabel(
             self.filter_frame,
             text = "Reward Items:"
         )
-        self.reward_label.grid(row = 9, column = 2)
+        self.reward_label.grid(row = 0, column = 3)
 
-        self.reward_filter = CheckedCombobox(
+        self.reward_filter = ListViewCombobox(
             self.filter_frame,
-            values = sorted(list(Item), key = lambda item: item.name)
+            value_enum = Item,
+            width = 200
         )
-        self.reward_filter.grid(row = 9, column = 3, padx = 10)
+        self.reward_filter.grid(
+            row = 0,
+            column = 4,
+            rowspan = 10,
+            padx = 10,
+            pady = (10, 0),
+            sticky = "n"
+        )
 
         self.reward_count_filter_label = customtkinter.CTkLabel(
             self.filter_frame,
             text = "Min Reward Count:"
         )
-        self.reward_count_filter_label.grid(row = 10, column = 2)
+        self.reward_count_filter_label.grid(row = 6, column = 3, pady = (10, 0))
 
-        self.reward_count_filter = Spinbox(self.filter_frame)
-        self.reward_count_filter.grid(row = 10, column = 3, padx = 10)
-
-        self.shiny_filter = customtkinter.CTkCheckBox(self.filter_frame, text = "Shiny Only")
-        self.shiny_filter.grid(row = 11, column = 2, columnspan = 2)
+        self.reward_count_filter = Spinbox(self.filter_frame, width = 200)
+        self.reward_count_filter.grid(row = 6, column = 4, padx = 10, sticky = "n", pady = (10, 0))
 
         self.save_filter_button = customtkinter.CTkButton(
             self.filter_frame,
@@ -817,5 +831,6 @@ class AutomationWindow(customtkinter.CTkToplevel):
                 variable.set(value in filter_data)
             combobox.dropdown_callback()
         else:
+            combobox.clear()
             for value in filter_data:
                 combobox.add_item(value)

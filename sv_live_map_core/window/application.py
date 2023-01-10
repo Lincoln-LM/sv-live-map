@@ -247,7 +247,7 @@ class Application(customtkinter.CTk):
 
         self.automation_button = customtkinter.CTkButton(
             master = self.settings_frame,
-            text = "Automation",
+            text = "Filters & Automation",
             width = 300,
             command = self.open_automation_window
         )

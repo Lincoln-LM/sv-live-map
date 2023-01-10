@@ -410,9 +410,10 @@ class ListViewCombobox(customtkinter.CTkFrame):
         )
         self.value_enum = value_enum
         self.values = list(sorted(list(self.value_enum), key = str))
+        self.value_lookup = {str(x): x for x in self.value_enum}
         self.list_widgets = {}
         self.combobox = CTkCombobox(
-            self.values,
+            list(map(str, self.values)),
             *args,
             master = self,
             width = width,
@@ -429,8 +430,8 @@ class ListViewCombobox(customtkinter.CTkFrame):
         """Toggle listview widget based on what is selected"""
         value = self.combobox.combobox.get()
         try:
-            value = list(map(str, self.value_enum)).index(value)
-        except ValueError:
+            value = self.value_lookup[value]
+        except KeyError:
             pass
         else:
             if not self.remove_item(value):
@@ -468,6 +469,11 @@ class ListViewCombobox(customtkinter.CTkFrame):
             del widget
             return True
         return False
+
+    def clear(self) -> None:
+        """Clear list"""
+        for value in self.list_widgets.copy():
+            self.remove_item(value)
 
     def get(self) -> list:
         """Get the value of the combobox"""
