@@ -40,7 +40,7 @@ class AutomationWindow(customtkinter.CTkToplevel):
         *args,
         settings: dict = None,
         master: Application = None,
-        fg_color="default_theme",
+        fg_color = "default_theme",
         **kwargs
     ):
         self.settings: dict = settings or {}

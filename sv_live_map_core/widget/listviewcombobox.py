@@ -30,8 +30,8 @@ class CTkCompatibleCombobox(ttk.Combobox):
             if value := self.get():
                 for option in self.values:
                     option = str(option)
-                    if option.startswith(value) and option != value:
-                        self.set(option)
+                    if option.lower().startswith(value.lower()) and option.lower() != value.lower():
+                        self.set(value + option[len(value):])
                         self.select_range(len(value), 'end')
                         break
 
@@ -429,6 +429,11 @@ class ListViewCombobox(customtkinter.CTkFrame):
     def combobox_selected(self, _ = None) -> None:
         """Toggle listview widget based on what is selected"""
         value = self.combobox.combobox.get()
+        for option in self.values:
+            option = str(option)
+            if option.lower().startswith(value.lower()):
+                value = option
+                break
         try:
             value = self.value_lookup[value]
         except KeyError:
