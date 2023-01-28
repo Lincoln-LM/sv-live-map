@@ -10,6 +10,7 @@ import customtkinter
 from PIL import Image, ImageTk
 from .corrected_marker import CorrectedMarker
 
+
 class PaldeaMapView(TkinterMapView):
     # pylint: disable=too-many-ancestors
     """Modified TkinterMapView for use with the paldea map"""

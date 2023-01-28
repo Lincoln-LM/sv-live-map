@@ -2,6 +2,7 @@
 
 import numpy as np
 
+
 class SCXorshift32:
     """Xorshift32 Implementation for saveblock decryption"""
     _SHIFT2: np.uint32 = np.uint32(2)

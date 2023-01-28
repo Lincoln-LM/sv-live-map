@@ -3,6 +3,7 @@
 
 from enum import IntEnum
 
+
 class Move(IntEnum):
     """Enum for pokemon moves"""
     NONE = 0

@@ -17,12 +17,14 @@ from .context import (
     Nature
 )
 
+
 class MockMyStatus9:
     """Mock version of MyStatus9"""
     def __init__(self, tid: int, sid: int):
         self.tid = tid
         self.sid = sid
         self.full_id = (sid << 16) | tid
+
 
 class MockParamSet:
     """Mock version of ParamSet"""
@@ -41,6 +43,7 @@ class MockParamSet:
         self.spa = spa
         self.spd = spd
         self.spe = spe
+
 
 class MockPokeDataBattle:
     """Mock version of PokeDataBattle"""
@@ -68,6 +71,7 @@ class MockPokeDataBattle:
         self.talent_vnum = talent_vnum
         self.rare_type = rare_type
 
+
 class MockRaidEnemyInfo:
     """Mock version of RaidEnemyInfo"""
     def __init__(
@@ -77,6 +81,7 @@ class MockRaidEnemyInfo:
     ) -> None:
         self.difficulty = difficulty
         self.boss_poke_para = boss_poke_para
+
 
 def test_basic_generation():
     """Basic test of tera raid generation"""
@@ -114,6 +119,7 @@ def test_basic_generation():
     assert dummy_raid.height == 124
     assert dummy_raid.weight == 205
     assert dummy_raid.scale == 94
+
 
 def test_guaranteed_iv_generation():
     """Test tera raid generation with guaranteed ivs"""
@@ -153,6 +159,7 @@ def test_guaranteed_iv_generation():
     assert dummy_raid.weight == 113
     assert dummy_raid.scale == 57
 
+
 def test_toxtricity_0_generation():
     """Test tera raid generation of Toxtricity-0"""
     seed = 0xDEADBEEF
@@ -191,6 +198,7 @@ def test_toxtricity_0_generation():
     assert dummy_raid.weight == 128
     assert dummy_raid.scale == 155
 
+
 def test_toxtricity_1_generation():
     """Test tera raid generation of Toxtricity-1"""
     seed = 0xDEADBEEF
@@ -228,6 +236,7 @@ def test_toxtricity_1_generation():
     assert dummy_raid.height == 140
     assert dummy_raid.weight == 128
     assert dummy_raid.scale == 155
+
 
 def test_forced_generation():
     """Test tera raid generation with forced info"""

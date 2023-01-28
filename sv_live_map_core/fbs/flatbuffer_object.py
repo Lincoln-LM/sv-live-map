@@ -2,7 +2,7 @@
 
 from io import FileIO
 from enum import IntEnum
-from typing import Type, Self, Callable
+from typing import Type, Self, Callable, Any
 import flatbuffers
 
 # type union not yet supported by pylint
@@ -28,6 +28,7 @@ INT_TYPES = (
     | Type[I64]
 )
 
+
 class FlatBufferObject:
     """Generic FlatBuffer object"""
     def __init__(self, buf: bytearray, offset: int = None):
@@ -49,7 +50,7 @@ class FlatBufferObject:
         """Dump binary to file stream"""
         stream.write(self._table.Bytes)
 
-    def read_int(self, _type: INT_TYPES, position: int, default = None):
+    def read_int(self, _type: INT_TYPES, position: int, default: int = None):
         """Read value of _type at position"""
         if pos_offset := self._table.Offset(position):
             return self._table.Get(_type, pos_offset + self._offset)
@@ -60,41 +61,46 @@ class FlatBufferObject:
         _type: INT_TYPES,
         position: int,
         _enum: Type[IntEnum] | Callable,
-        default = None
+        default: Any = None
     ):
         """Read value of _type at position as _enum"""
         if pos_offset := self._table.Offset(position):
             return _enum(self._table.Get(_type, pos_offset + self._offset))
         return default
 
-    def read_init_int(self, _type: INT_TYPES, default = None):
+    def read_init_int(self, _type: INT_TYPES, default: int = None):
         """Read value of _type at the position of self._counter
            and increment the counter"""
-        value = self.read_int(_type, self._counter, default = default)
+        value = self.read_int(_type, self._counter, default=default)
         self._counter += 2
         return value
 
-    def read_init_int_enum(self, _type: INT_TYPES, _enum: Type[IntEnum] | Callable, default = None):
+    def read_init_int_enum(
+        self,
+        _type: INT_TYPES,
+        _enum: Type[IntEnum] | Callable,
+        default: Any = None
+    ):
         """Read value of _type at the position of self._counter as _enum
            and increment the counter"""
-        value = self.read_int_enum(_type, self._counter, _enum, default = default)
+        value = self.read_int_enum(_type, self._counter, _enum, default=default)
         self._counter += 2
         return value
 
-    def read_object(self, _object_type: Type[Self], position: int, default = None):
+    def read_object(self, _object_type: Type[Self], position: int, default: Any = None):
         """Read FlatBufferObject of _object_type at position"""
         if pos_offset := self._table.Offset(position):
             val_offset = self._table.Indirect(pos_offset + self._offset)
             return _object_type(
                 self._table.Bytes,
-                offset = val_offset
+                offset=val_offset
             )
         return default
 
-    def read_init_object(self, _object_type: Type[Self], default = None):
+    def read_init_object(self, _object_type: Type[Self], default: Any = None):
         """Read FlatBufferObject of _object_type at the position of self._counter
            and increment the counter"""
-        value = self.read_object(_object_type, self._counter, default = default)
+        value = self.read_object(_object_type, self._counter, default=default)
         self._counter += 2
         return value
 
@@ -108,7 +114,7 @@ class FlatBufferObject:
                 val_offset = self._table.Indirect(array_offset)
                 array.append(_object_type(
                     self._table.Bytes,
-                    offset = val_offset
+                    offset=val_offset
                 ))
         return array
 

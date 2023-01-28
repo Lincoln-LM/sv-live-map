@@ -6,6 +6,7 @@ from .flatbuffer_object import (
     FlatBufferObject,
 )
 
+
 class DeliveryRaidPriorityArray(FlatBufferObject):
     """Array of DeliveryRaidPriority (root object)"""
     def __init__(self, buf: bytearray):
@@ -13,12 +14,14 @@ class DeliveryRaidPriorityArray(FlatBufferObject):
         self.delivery_raid_prioritys: list[DeliveryRaidPriority] = \
             self.read_init_object_array(DeliveryRaidPriority)
 
+
 class DeliveryRaidPriority(FlatBufferObject):
     """Data that describes the priority of event dens"""
     def __init__(self, buf: bytearray, offset: int):
         super().__init__(buf, offset)
         self.version_no: int = self.read_init_int(I32)
         self.delivery_group_id: DeliveryGroupID = self.read_init_object(DeliveryGroupID)
+
 
 class DeliveryGroupID(FlatBufferObject):
     """Data that describes how many dens are in each group"""
@@ -40,7 +43,7 @@ class DeliveryGroupID(FlatBufferObject):
     def group_counts(self) -> tuple[int]:
         """Grab the amount of each group in tuple form"""
         return (
-            0, # padding to ensure that id == index
+            0,  # padding to ensure that id == index
             self.group_id_01,
             self.group_id_02,
             self.group_id_03,

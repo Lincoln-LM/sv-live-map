@@ -14,13 +14,15 @@ from ..fbs.delivery_raid_priority_array import DeliveryRaidPriorityArray
 from ..fbs.raid_fixed_reward_item_array import RaidFixedRewardItemArray
 from ..fbs.raid_lottery_reward_item_array import RaidLotteryRewardItemArray
 
+
 def parse_int(block_type: SCTypeCode, data: bytearray) -> int:
     """Parse bytes for integer SCTypeCodes"""
     return int.from_bytes(
         data,
         'little',
-        signed = block_type.is_signed()
+        signed=block_type.is_signed()
     )[0]
+
 
 def parse_float(block_type: SCTypeCode, data: bytearray) -> float:
     """Parse bytes for float SCTypeCodes"""
@@ -28,6 +30,7 @@ def parse_float(block_type: SCTypeCode, data: bytearray) -> float:
         'f' if block_type == SCTypeCode.FLOAT else 'd',
         data
     )[0]
+
 
 class SaveFile9:
     """SV save file and save block accessor"""
@@ -92,7 +95,7 @@ class SaveFile9:
                 return self.decrypt_bytes(
                     rng,
                     ofs + 4,
-                    size = int.from_bytes(
+                    size=int.from_bytes(
                         self.save_data[ofs:ofs + 4],
                         'little'
                     ) ^ rng.next_32()

@@ -14,11 +14,14 @@ LIBUSB1_BACKEND = usb.backend.libusb1.get_backend(find_library=libusb_package.fi
 
 # TODO: exceptions.py
 
+
 class USBError(Exception):
     """Error to be raised for usb connections"""
 
+
 class SocketError(Exception):
     """Error to be raised for socket connections"""
+
 
 class NXReader:
     """Simplified class to read information from sys-botbase"""
@@ -33,23 +36,25 @@ class NXReader:
         if self.usb_connection:
             # nintendo switch vendor and product
             self.global_dev = usb.core.find(
-                idVendor = 0x057E,
-                idProduct = 0x3000,
-                backend = LIBUSB1_BACKEND
+                idVendor=0x057E,
+                idProduct=0x3000,
+                backend=LIBUSB1_BACKEND
             )
             if self.global_dev is None:
                 raise USBError("Unable to find switch usb connection")
             self.global_dev.set_configuration()
-            descriptor = self.global_dev.get_active_configuration()[(0,0)]
+            descriptor = self.global_dev.get_active_configuration()[(0, 0)]
             self.global_out = usb.util.find_descriptor(
                 descriptor,
-                custom_match =
-                  lambda e: usb.util.endpoint_direction(e.bEndpointAddress) == usb.util.ENDPOINT_OUT
+                custom_match=lambda e: (
+                    usb.util.endpoint_direction(e.bEndpointAddress) == usb.util.ENDPOINT_OUT
+                )
             )
             self.global_in = usb.util.find_descriptor(
                 descriptor,
-                custom_match =
-                  lambda e: usb.util.endpoint_direction(e.bEndpointAddress) == usb.util.ENDPOINT_IN
+                custom_match=lambda e: (
+                    usb.util.endpoint_direction(e.bEndpointAddress) == usb.util.ENDPOINT_IN
+                )
             )
         else:
             self.socket: socket.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -68,7 +73,7 @@ class NXReader:
             self.global_out.write(struct.pack("<I", len(content) + 2))
             self.global_out.write(content)
         else:
-            content += '\r\n' # important for the parser on the switch side
+            content += '\r\n'  # important for the parser on the switch side
             self.socket.sendall(content.encode())
 
     def _configure(self) -> None:
@@ -97,7 +102,7 @@ class NXReader:
             if len(read_data) == 0:
                 raise SocketError("Socket shut down on the switch's side.")
             # store in data
-            data[i : i + len(read_data)] = read_data
+            data[i: i + len(read_data)] = read_data
             i += len(read_data)
         return data
 
@@ -109,18 +114,18 @@ class NXReader:
                 self._read_chunks(
                     # * 2 because the data is sent as a hex string
                     # + 1 because it ends in \n
-                    size = size * 2 + 1,
-                    chunk_size = 1020,
-                    read_func = self.socket.recv
+                    size=size * 2 + 1,
+                    chunk_size=1020,
+                    read_func=self.socket.recv
                 )[:-1]
             )
         # usb tells us the size its sending
-        usb_size = int(struct.unpack("<L", self.global_in.read(4, timeout = 0).tobytes())[0])
+        usb_size = int(struct.unpack("<L", self.global_in.read(4, timeout=0).tobytes())[0])
         assert usb_size == size, "USB did not send the correct amount of bytes"
         return self._read_chunks(
             size,
             4080,
-            lambda size: self.global_in.read(size, timeout = 0).tobytes()
+            lambda size: self.global_in.read(size, timeout=0).tobytes()
         )
 
     def close(self) -> None:
@@ -148,7 +153,7 @@ class NXReader:
         """Release held button"""
         self._send_command(f'release {button}')
 
-    def manual_click(self, button: str, delay: float = 0.1, init_count = 1):
+    def manual_click(self, button: str, delay: float = 0.1, init_count: int = 1):
         """Manually press and release button"""
         for _ in range(init_count):
             self.press(button)

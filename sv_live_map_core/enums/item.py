@@ -5,6 +5,7 @@ from enum import IntEnum
 from .species import Species
 from .type_generation import TeraType
 
+
 class Item(IntEnum):
     """Enum for pokemon items"""
     NONE = 0
@@ -2212,6 +2213,7 @@ class Item(IntEnum):
             name = f"PP{name[2:]}"
         return name
 
+
 class SandwichLevel(IntEnum):
     """Sandwich boost level"""
     NONE = 0
@@ -2244,6 +2246,7 @@ class SandwichLevel(IntEnum):
                     return "LVL 3 only"
         return super().__format__(format_spec)
 
+
 class RaidRewardItemSubjectType(IntEnum):
     """Raid reward type"""
     ALL = 0
@@ -2275,6 +2278,7 @@ class RaidRewardItemSubjectType(IntEnum):
                 case RaidRewardItemSubjectType.ONCE:
                     return "Once Per Save"
         return super().__format__(format_spec)
+
 
 class RaidRewardItemCategoryType(IntEnum):
     """Raid reward category"""

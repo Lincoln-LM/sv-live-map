@@ -2,6 +2,7 @@
 
 from enum import IntEnum
 
+
 class SCTypeCode(IntEnum):
     """Save block type codes"""
     NONE = 0

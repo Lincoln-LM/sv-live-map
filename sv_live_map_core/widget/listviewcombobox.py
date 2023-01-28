@@ -3,11 +3,12 @@
 import sys
 import tkinter
 from tkinter import ttk
-from typing import Type
+from typing import Type, Any
 from enum import IntEnum
 import customtkinter
 from customtkinter import ThemeManager, CTkCanvas, DrawEngine, Settings
 from .scrollable_frame import ScrollableFrame
+
 
 class CTkCompatibleCombobox(ttk.Combobox):
     """CTk compatible ttk Combobox with autocomplete"""
@@ -15,14 +16,14 @@ class CTkCompatibleCombobox(ttk.Combobox):
         self.values = values or []
         self.style = ttk.Style(master)
         self.style.theme_use("default")
-        self.style.configure("CTkCombobox.TCombobox", borderwidth = 0)
-        super().__init__(master, style = "CTkCombobox.TCombobox", values = values, **kwargs)
+        self.style.configure("CTkCombobox.TCombobox", borderwidth=0)
+        super().__init__(master, style="CTkCombobox.TCombobox", values=values, **kwargs)
         self.tk.eval(f'ttk::combobox::ConfigureListbox {self}')
         self.listbox = tkinter.Listbox()
         self.listbox._w = f'{self}.popdown.f.l'
         self.bind('<KeyRelease>', self.on_key)
 
-    def on_key(self, event = None) -> None:
+    def on_key(self, event: Any = None) -> None:
         """Autocomplete to be run on keypress"""
         if event and event.keysym == "BackSpace":
             self.delete(self.index(tkinter.INSERT), tkinter.END)
@@ -56,27 +57,28 @@ class CTkCompatibleCombobox(ttk.Combobox):
         self.style.configure("CTkCombobox.TCombobox", **style_kwargs)
         ttk.Combobox.configure(self, kwargs)
 
+
 class CTkCombobox(customtkinter.CTkBaseClass):
     """ttk Combobox stylized for ctk"""
     def __init__(
         self,
         values: list,
         *args,
-        bg_color = None,
-        fg_color = "default_theme",
+        bg_color: str = None,
+        fg_color: str = "default_theme",
         button_color="default_theme",
-        button_hover_color = "default_theme",
-        text_color = "default_theme",
-        text_color_disabled = "default_theme",
-        placeholder_text_color = "default_theme",
-        text_font = "default_theme",
-        corner_radius = "default_theme",
-        border_width = "default_theme",
-        border_color = "default_theme",
-        width = 140,
-        height = 28,
-        hover = True,
-        state = tkinter.NORMAL,
+        button_hover_color: str = "default_theme",
+        text_color: str = "default_theme",
+        text_color_disabled: str = "default_theme",
+        placeholder_text_color: str = "default_theme",
+        text_font: str = "default_theme",
+        corner_radius: str = "default_theme",
+        border_width: str = "default_theme",
+        border_color: str = "default_theme",
+        width: int = 140,
+        height: int = 28,
+        hover: bool = True,
+        state: str = tkinter.NORMAL,
         textvariable: tkinter.Variable = None,
         **kwargs,
     ) -> None:
@@ -84,45 +86,45 @@ class CTkCombobox(customtkinter.CTkBaseClass):
         if "master" in kwargs:
             super().__init__(
                 *args,
-                bg_color = bg_color,
-                width = width,
-                height = height,
-                master = kwargs.pop("master"),
+                bg_color=bg_color,
+                width=width,
+                height=height,
+                master=kwargs.pop("master"),
             )
         else:
             super().__init__(
                 *args,
-                bg_color = bg_color,
-                width = width,
-                height = height,
+                bg_color=bg_color,
+                width=width,
+                height=height,
             )
 
         # grid settings
-        self.grid_rowconfigure(0, weight = 1)
-        self.grid_columnconfigure(0, weight = 1)
+        self.grid_rowconfigure(0, weight=1)
+        self.grid_columnconfigure(0, weight=1)
 
         # color
         self.fg_color = ThemeManager.theme["color"]["entry"] \
             if fg_color == "default_theme" \
-                else fg_color
+            else fg_color
         self.text_color = ThemeManager.theme["color"]["text"] \
             if text_color == "default_theme" \
-                else text_color
+            else text_color
         self.text_color_disabled = ThemeManager.theme["color"]["text_button_disabled"] \
             if text_color_disabled == "default_theme" \
-                else text_color_disabled
+            else text_color_disabled
         self.placeholder_text_color = ThemeManager.theme["color"]["entry_placeholder_text"] \
             if placeholder_text_color == "default_theme" \
-                else placeholder_text_color
+            else placeholder_text_color
         self.border_color = ThemeManager.theme["color"]["entry_border"] \
             if border_color == "default_theme" \
-                else border_color
+            else border_color
         self.button_color = ThemeManager.theme["color"]["combobox_border"] \
             if button_color == "default_theme" \
-                else button_color
+            else button_color
         self.button_hover_color = ThemeManager.theme["color"]["combobox_button_hover"] \
             if button_hover_color == "default_theme" \
-                else button_hover_color
+            else button_hover_color
 
         # border
         self.corner_radius = ThemeManager.theme["shape"]["button_corner_radius"] \

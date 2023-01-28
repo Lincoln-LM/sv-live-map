@@ -5,15 +5,18 @@ from bytechomp.datatypes import U16, U8
 from bytechomp import Annotated
 from ..enums import Game, Gender, Language
 
+
 @dataclass
 class CharacterByte:
     """Half of a utf16-le character"""
     value: U8
 
+
 @dataclass
 class UnusedByte:
     """Unused byte"""
     _unused: U8
+
 
 @dataclass
 class MyStatus9:

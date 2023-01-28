@@ -2,6 +2,7 @@
 
 import numpy as np
 
+
 class Xoroshiro128Plus:
     """Xoroshiro128+ Implementation"""
     _XORO_CONST: np.uint64 = np.uint64(0x82A2B175229D6A5B)

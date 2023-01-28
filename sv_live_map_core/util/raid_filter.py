@@ -3,6 +3,7 @@
 from ..save.raid_block import TeraRaid
 from ..enums import AbilityIndex, Gender, Nature, Species, StarLevel, Item
 
+
 class RaidFilter:
     """Filter for TeraRaids"""
     ANY_IV = range(0, 31)

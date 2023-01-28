@@ -16,6 +16,7 @@ from ..window.reward_window import RewardWindow
 # type union not yet supported by pylint
 # pylint: disable=unsupported-binary-operation
 
+
 class RaidInfoWidget(customtkinter.CTkFrame):
     """customtkinter widget for displaying raid info"""
     # pylint: disable=too-many-instance-attributes, too-many-ancestors
@@ -101,6 +102,7 @@ class RaidInfoWidget(customtkinter.CTkFrame):
             fill = "x",
             pady = (0, 6)
         )
+
     def draw_action_buttons(self, has_alternate_location: bool):
         """Draw swap button"""
         if not self.is_popup:

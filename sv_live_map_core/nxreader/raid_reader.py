@@ -17,18 +17,20 @@ from ..save.raid_block import RaidBlock, process_raid_block
 from ..rng import SCXorshift32
 from ..save.my_status_9 import MyStatus9
 
+
 # TODO: exceptions.py
 class SaveBlockError(Exception):
     """Error when reading save block"""
+
 
 class RaidReader(NXReader):
     """Subclass of NXReader with functions specifically for raids"""
     RAID_BINARY_SIZES = (0x3128, 0x3058, 0x4400, 0x5A78, 0x6690, 0x4FB0)
     RAID_BINARY_OFS = (0x8, 0x8, 0x4, 0x4, 0x4, 0x4, None)
     # https://github.com/Manu098vm/SVResearches/blob/master/RAM%20Pointers/RAM%20Pointers.txt
-    RAID_BLOCK_PTR = ("[[main+43A77C8]+160]+40", 0xC98) # ty skylink!
+    RAID_BLOCK_PTR = ("[[main+43A77C8]+160]+40", 0xC98)  # ty skylink!
     SAVE_BLOCK_PTR = "[[[main+4385F30]+80]+8]"
-    GAME_ID_OFS = 0x4385FD0 # game_id = *(main + GAME_ID_OFS)
+    GAME_ID_OFS = 0x4385FD0  # game_id = *(main + GAME_ID_OFS)
     # save block locations and keys: (ofs, key)
     DIFFICULTY_FLAG_LOCATIONS = (
         (0x2BF20, 0xEC95D8EF),
@@ -155,7 +157,7 @@ class RaidReader(NXReader):
         """Read and decrypt story progress from save blocks"""
         progress = StoryProgress.SIX_STAR_UNLOCKED
         for (ofs, key) in reversed(self.DIFFICULTY_FLAG_LOCATIONS):
-            if self.read_save_block_bool(ofs, key = key):
+            if self.read_save_block_bool(ofs, key=key):
                 return StoryProgress(progress)
             progress -= 1
         return StoryProgress.DEFAULT
@@ -163,7 +165,7 @@ class RaidReader(NXReader):
     def read_my_status(self) -> MyStatus9:
         """Read trainer info"""
         ofs, key = self.MY_STATUS_LOCATION
-        return self.read_save_block_struct(ofs, MyStatus9, key = key)
+        return self.read_save_block_struct(ofs, MyStatus9, key=key)
 
     def _search_save_block(self, base_offset: int, key: int = None) -> tuple[int, int]:
         """Search memory for the correct save block offset"""
@@ -201,11 +203,11 @@ class RaidReader(NXReader):
 
     def read_save_block_int(self, offset: int, key: int = None) -> int:
         """Read decrypted save block u32 at offset"""
-        return int.from_bytes(self.read_save_block(offset, 5, key = key)[1:], 'little')
+        return int.from_bytes(self.read_save_block(offset, 5, key=key)[1:], 'little')
 
     def read_save_block_bool(self, offset: int, key: int = None) -> int:
         """Read decrypted save block boolean at offset"""
-        return int.from_bytes(self.read_save_block(offset, 1, key = key), 'little') == 2
+        return int.from_bytes(self.read_save_block(offset, 1, key=key), 'little') == 2
 
     def read_save_block(self, offset: int, size: int, key: int = None) -> bytearray:
         """Read decrypted save block at offset"""

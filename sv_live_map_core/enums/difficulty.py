@@ -5,6 +5,7 @@ from __future__ import annotations
 from enum import IntEnum
 from typing import Self
 
+
 class StoryProgress(IntEnum):
     """Enum for story progress"""
     DEFAULT = 0
@@ -19,6 +20,7 @@ class StoryProgress(IntEnum):
 
     def __str__(self) -> str:
         return self.name.replace('_', ' ').title()
+
 
 class StarLevel(IntEnum):
     """Enum for the basic star levels"""

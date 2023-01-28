@@ -8,9 +8,10 @@ from .path_handler import get_path
 # type union not yet supported by pylint
 # pylint: disable=unsupported-binary-operation
 
+
 class PokeSpriteHandler:
     """Sprite handler to grab pokemon sprites"""
-    def __init__(self, tk_image = False):
+    def __init__(self, tk_image: bool = False):
         self.tk_image = tk_image
         self.cache: dict[(Species, int, bool), Image.Image | ImageTk.PhotoImage] = {}
         sprite_path = get_path("./resources/sprites/")

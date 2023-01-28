@@ -3,6 +3,7 @@
 from typing import Callable
 import customtkinter
 
+
 class Spinbox(customtkinter.CTkFrame):
     """Spinbox for integers in a range"""
     def __init__(

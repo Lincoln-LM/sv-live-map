@@ -5,6 +5,7 @@ from __future__ import annotations
 from enum import IntEnum
 from typing import Self
 
+
 class GenderGeneration(IntEnum):
     """Enum for pokemon gender generation"""
     RANDOM_GENDER = 0
@@ -14,6 +15,7 @@ class GenderGeneration(IntEnum):
 
     def __str__(self) -> str:
         return self.name.replace('_', ' ').title()
+
 
 class Gender(IntEnum):
     """Enum for genders"""

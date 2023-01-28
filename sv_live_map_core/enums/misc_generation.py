@@ -2,6 +2,7 @@
 
 from enum import IntEnum
 
+
 class IVGeneration(IntEnum):
     """Enum for pokemon IV generation"""
     RANDOM_IVS = 0
@@ -11,6 +12,7 @@ class IVGeneration(IntEnum):
     def __str__(self) -> str:
         return self.name.replace('_', ' ').title()
 
+
 class ShinyGeneration(IntEnum):
     """Enum for pokemon shininess generation"""
     RANDOM_SHININESS = 0
@@ -19,6 +21,7 @@ class ShinyGeneration(IntEnum):
 
     def __str__(self) -> str:
         return self.name.replace('_', ' ').title()
+
 
 class SizeGeneration(IntEnum):
     """Enum for pokemon size generation"""

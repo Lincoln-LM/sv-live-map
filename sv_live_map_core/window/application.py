@@ -34,6 +34,7 @@ from ..util.path_handler import get_path
 customtkinter.set_default_color_theme("blue")
 customtkinter.set_appearance_mode("dark")
 
+
 class Application(customtkinter.CTk):
     """Live Map GUI"""
     # pylint: disable=too-many-instance-attributes

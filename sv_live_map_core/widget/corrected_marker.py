@@ -1,9 +1,11 @@
 """CanvasPositionMarker that renders images correctly"""
 
 import tkinter
+from typing import Any
 from tkintermapview.canvas_position_marker import CanvasPositionMarker
 from tkintermapview import TkinterMapView
 from PIL import Image, ImageTk
+
 
 class CorrectedMarker(CanvasPositionMarker):
     """CanvasPositionMarker that renders images correctly"""
@@ -11,7 +13,7 @@ class CorrectedMarker(CanvasPositionMarker):
         self,
         map_widget: TkinterMapView,
         position: tuple,
-        scale_with_zoom = False,
+        scale_with_zoom: bool = False,
         **kwargs
     ):
         super().__init__(map_widget, position, **kwargs)
@@ -42,7 +44,7 @@ class CorrectedMarker(CanvasPositionMarker):
                 obj,
                 "<Double-Button-1>",
                 self.click
-        )
+            )
 
     def in_bounds(self):
         """Check if marker is in bounds"""
@@ -52,7 +54,7 @@ class CorrectedMarker(CanvasPositionMarker):
             0 < canvas_pos_y < self.map_widget.height + 70
         )
 
-    def draw(self, _ = None):
+    def draw(self, _: Any = None):
         if self.deleted:
             return
 
@@ -97,9 +99,9 @@ class CorrectedMarker(CanvasPositionMarker):
         """Check if images are visible based on map zoom"""
         return (
             self.image_zoom_visibility[0]
-              <= self.map_widget.zoom
-              <= self.image_zoom_visibility[1]
-            )
+            <= self.map_widget.zoom
+            <= self.image_zoom_visibility[1]
+        )
 
     def update_canvas_image(self, canvas_pos_x, canvas_pos_y):
         """Update canvas image"""
@@ -118,9 +120,9 @@ class CorrectedMarker(CanvasPositionMarker):
             self.canvas_image = self.map_widget.canvas.create_image(
                 canvas_pos_x,
                 canvas_pos_y,
-                anchor = tkinter.S,
-                image = self.image_copy,
-                tag = "marker"
+                anchor=tkinter.S,
+                image=self.image_copy,
+                tag="marker"
             )
             self.bind_click(self.canvas_image)
         # move image
@@ -134,11 +136,11 @@ class CorrectedMarker(CanvasPositionMarker):
             self.canvas_text = self.map_widget.canvas.create_text(
                 canvas_pos_x,
                 canvas_pos_y + self.text_y_offset,
-                anchor = tkinter.S,
-                text = self.text,
-                fill = self.text_color,
-                font = self.font,
-                tag = ("marker", "marker_text")
+                anchor=tkinter.S,
+                text=self.text,
+                fill=self.text_color,
+                font=self.font,
+                tag=("marker", "marker_text")
             )
             self.bind_click(self.canvas_text)
         # move text
@@ -148,7 +150,7 @@ class CorrectedMarker(CanvasPositionMarker):
                 canvas_pos_x,
                 canvas_pos_y + self.text_y_offset
             )
-            self.map_widget.canvas.itemconfig(self.canvas_text, text = self.text)
+            self.map_widget.canvas.itemconfig(self.canvas_text, text=self.text)
 
     def update_canvas_icon(self, canvas_pos_x, canvas_pos_y):
         """Update icon built from image"""
@@ -167,9 +169,9 @@ class CorrectedMarker(CanvasPositionMarker):
             self.canvas_icon = self.map_widget.canvas.create_image(
                 canvas_pos_x,
                 canvas_pos_y,
-                anchor = self.icon_anchor,
-                image = self.icon_copy,
-                tag = "marker"
+                anchor=self.icon_anchor,
+                image=self.icon_copy,
+                tag="marker"
             )
             self.bind_click(self.canvas_icon)
         # move icon
@@ -187,10 +189,10 @@ class CorrectedMarker(CanvasPositionMarker):
                 canvas_pos_y,
                 canvas_pos_x + 14,
                 canvas_pos_y - 23,
-                fill = self.marker_color_outside,
-                width = 2,
-                outline = self.marker_color_outside,
-                tag = "marker"
+                fill=self.marker_color_outside,
+                width=2,
+                outline=self.marker_color_outside,
+                tag="marker"
             )
             self.bind_click(self.polygon)
         # move polygon
@@ -211,10 +213,10 @@ class CorrectedMarker(CanvasPositionMarker):
                 canvas_pos_y - 45,
                 canvas_pos_x + 14,
                 canvas_pos_y - 17,
-                fill = self.marker_color_circle,
-                width = 6,
-                outline = self.marker_color_outside,
-                tag = "marker"
+                fill=self.marker_color_circle,
+                width=6,
+                outline=self.marker_color_outside,
+                tag="marker"
             )
             self.bind_click(self.big_circle)
         # move circle

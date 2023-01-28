@@ -4,14 +4,16 @@ import json
 from ..enums import Ability, AbilityIndex, Gender, GenderGeneration, Species
 from .path_handler import get_path
 
+
 class PersonalDataHandler:
     """Get data from personal_data"""
     _personal_data: dict[str, dict] = None
+
     def __init__(self) -> None:
         with open(
             get_path("./resources/personal_data_partial.json"),
             "r",
-            encoding = "utf-8"
+            encoding="utf-8"
         ) as personal_data_json:
             if PersonalDataHandler._personal_data is None:
                 PersonalDataHandler._personal_data = json.load(personal_data_json)

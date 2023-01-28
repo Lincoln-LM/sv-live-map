@@ -64,14 +64,17 @@ TOXTRICITY_LOWKEY_NATURES = (
     Nature.CAREFUL,
 )
 
+
 def shiny_xor(pid: int, sidtid: int) -> int:
     """Get shiny XOR"""
     temp = pid ^ sidtid
     return (temp & 0xFFFF) ^ (temp >> 16)
 
+
 def is_shiny(pid: int, sidtid: int) -> bool:
     """Check if a given pid is shiny"""
     return shiny_xor(pid, sidtid) < 0x10
+
 
 def force_shininess(
     lock_type: ShinyGeneration,
@@ -116,17 +119,17 @@ def calc_difficulty(story_progress: StoryProgress, difficulty_rand: int) -> Star
             return (
                 StarLevel.ONE_STAR
                 if difficulty_rand <= 80
-                else StarLevel.TWO_STAR # elif (difficulty_rand - 80) <= 20
+                else StarLevel.TWO_STAR  # elif (difficulty_rand - 80) <= 20
             )
         case StoryProgress.THREE_STAR_UNLOCKED:
             return (
                 StarLevel.ONE_STAR
                 if difficulty_rand <= 30
                 else (
-                    StarLevel.TWO_STAR # elif (difficulty_rand - 30) <= 40
+                    StarLevel.TWO_STAR  # elif (difficulty_rand - 30) <= 40
                     if difficulty_rand <= 70
                     else
-                    StarLevel.THREE_STAR # elif (difficulty_rand - 30 - 40) <= 30
+                    StarLevel.THREE_STAR  # elif (difficulty_rand - 30 - 40) <= 30
                 )
             )
         case StoryProgress.FOUR_STAR_UNLOCKED:
@@ -134,10 +137,10 @@ def calc_difficulty(story_progress: StoryProgress, difficulty_rand: int) -> Star
                 StarLevel.ONE_STAR
                 if difficulty_rand <= 20
                 else (
-                    StarLevel.TWO_STAR # elif (difficulty_rand - 20) <= 20
+                    StarLevel.TWO_STAR  # elif (difficulty_rand - 20) <= 20
                     if difficulty_rand <= 40
                     else (
-                        StarLevel.THREE_STAR # elif (difficulty_rand - 20 - 20) <= 30
+                        StarLevel.THREE_STAR  # elif (difficulty_rand - 20 - 20) <= 30
                         if difficulty_rand <= 70
                         else
                         StarLevel.FOUR_STAR
@@ -149,10 +152,10 @@ def calc_difficulty(story_progress: StoryProgress, difficulty_rand: int) -> Star
                 StarLevel.THREE_STAR
                 if difficulty_rand <= 40
                 else (
-                    StarLevel.FOUR_STAR # elif (difficulty_rand - 40) <= 35
+                    StarLevel.FOUR_STAR  # elif (difficulty_rand - 40) <= 35
                     if difficulty_rand <= 75
                     else
-                    StarLevel.FIVE_STAR # elif (difficulty_rand - 40 - 35) <= 25
+                    StarLevel.FIVE_STAR  # elif (difficulty_rand - 40 - 35) <= 25
                 )
             )
         case StoryProgress.SIX_STAR_UNLOCKED:
@@ -160,13 +163,14 @@ def calc_difficulty(story_progress: StoryProgress, difficulty_rand: int) -> Star
                 StarLevel.THREE_STAR
                 if difficulty_rand <= 30
                 else (
-                    StarLevel.FOUR_STAR # elif (difficulty_rand - 30) <= 40
+                    StarLevel.FOUR_STAR  # elif (difficulty_rand - 30) <= 40
                     if difficulty_rand <= 70
                     else
-                    StarLevel.FIVE_STAR # elif (difficulty_rand - 30 - 40) <= 30
+                    StarLevel.FIVE_STAR  # elif (difficulty_rand - 30 - 40) <= 30
                 )
             )
     return None
+
 
 def calc_reward_item_count(count_rand: int, difficulty: StarLevel):
     """Calculate the amount of lottery raid rewards based on difficulty and rand"""
@@ -199,6 +203,7 @@ def calc_reward_item_count(count_rand: int, difficulty: StarLevel):
             )
         )
     )
+
 
 @dataclass
 class TeraRaid:
@@ -246,7 +251,7 @@ class TeraRaid:
         # tid/sid used for pid generation
         self.my_status: MyStatus9 = None
 
-        self.hide_sensitive_info: bool = False # Default to false. Override later if needed
+        self.hide_sensitive_info: bool = False  # Default to false. Override later if needed
 
     def generate_pokemon(self, raid_enemy_info: RaidEnemyInfo):
         """Derive pokemon data from seed and slot"""
@@ -366,9 +371,9 @@ class TeraRaid:
             case None | NatureGeneration.NONE:
                 if self.species == Species.TOXTRICITY:
                     match self.form:
-                        case 0: # amped
+                        case 0:  # amped
                             return TOXTRICITY_AMPED_NATURES[rng.rand(13)]
-                        case 1: # lowkey
+                        case 1:  # lowkey
                             return TOXTRICITY_LOWKEY_NATURES[rng.rand(12)]
                 return Nature(rng.rand(25))
             case _:
@@ -563,17 +568,18 @@ class TeraRaid:
         event_str = "Event " if self.is_event else ""
         star_str = "★" * (self.difficulty + 1)
         display = f"{self.species}{form_str}\n" \
-                    f"{shiny_str}{event_str}{star_str}\n" \
-                    f"IVs: {'/'.join(map(str, self.ivs))}\n" \
-                    f"Nature: {self.nature}\n" \
-                    f"Ability: {self.ability}\n" \
-                    f"Gender: {self.gender}\n" \
-                    f"Tera Type: {self.tera_type}\n" \
-                    f"Location: {self.id_str}\n"
+                  f"{shiny_str}{event_str}{star_str}\n" \
+                  f"IVs: {'/'.join(map(str, self.ivs))}\n" \
+                  f"Nature: {self.nature}\n" \
+                  f"Ability: {self.ability}\n" \
+                  f"Gender: {self.gender}\n" \
+                  f"Tera Type: {self.tera_type}\n" \
+                  f"Location: {self.id_str}\n"
         if not self.hide_sensitive_info:
             display += f"Seed: {self.seed:08X} EC: {self.encryption_constant:08X}\n" \
                         f"PID: {self.pid:08X} SIDTID: {self.sidtid:08X}\n"
         return display
+
 
 @dataclass
 class RaidBlock:
@@ -625,20 +631,21 @@ class RaidBlock:
     ):
         """Check if a delivery group id has spawnable pokemon"""
         dummy_raid = TeraRaid(
-            is_enabled = 1,
-            area_id = 0,
-            display_type = 0,
-            den_id = 0,
-            seed = 0,
-            _unused_14 = 0,
-            content = 0,
-            collected_league_points = 0,
+            is_enabled=1,
+            area_id=0,
+            display_type=0,
+            den_id=0,
+            seed=0,
+            _unused_14=0,
+            content=0,
+            collected_league_points=0,
         )
         dummy_raid.delivery_group_id = delivery_group_id
         dummy_raid.is_event = True
         dummy_raid.difficulty = StarLevel.EVENT
         total = dummy_raid.build_encounter_table(raid_enemy_table_arrays, story_progress, game)[1]
         return total != 0
+
 
 def process_raid_block(raid_block: bytes) -> RaidBlock:
     """Process raid block with bytechomp"""

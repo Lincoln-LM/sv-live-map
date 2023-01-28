@@ -3,6 +3,7 @@
 
 from enum import IntEnum
 
+
 class Ability(IntEnum):
     """Enum for pokemon abilities"""
     NONE = 0
@@ -308,6 +309,7 @@ class Ability(IntEnum):
     def __str__(self) -> str:
         return self.name.replace('_', ' ').title()
 
+
 class AbilityIndex(IntEnum):
     """Enum for pokemon ability index"""
     ABILITY_1 = 0
@@ -316,6 +318,7 @@ class AbilityIndex(IntEnum):
 
     def __str__(self) -> str:
         return self.name.replace('_', ' ').title().replace("Ha", "HA")
+
 
 class AbilityGeneration(IntEnum):
     """Enum for pokemon ability generation"""

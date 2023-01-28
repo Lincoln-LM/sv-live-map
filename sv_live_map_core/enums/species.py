@@ -3,6 +3,7 @@
 
 from enum import IntEnum
 
+
 class Species(IntEnum):
     """Enum for pokemon species"""
     NONE = 0

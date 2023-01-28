@@ -3,6 +3,7 @@
 import sys
 import customtkinter
 
+
 class ScrollableFrame(customtkinter.CTkFrame):
     """Scrollable customtkinter Frame"""
     # pylint: disable=too-many-ancestors

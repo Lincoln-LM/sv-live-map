@@ -6,9 +6,11 @@ from ..save.raid_block import TeraRaid
 from ..enums import Item, RaidRewardItemSubjectType, SandwichLevel
 from ..widget.image_widget import ImageWidget
 
+
 class RewardWindow(customtkinter.CTkToplevel):
     """Window for displaying raid rewards"""
     ITEM_SPRITE_HANDLER: ItemSpriteHandler = None
+
     def __init__(
         self,
         *args,

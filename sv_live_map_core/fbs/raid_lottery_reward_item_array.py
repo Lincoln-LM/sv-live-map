@@ -9,6 +9,7 @@ from .flatbuffer_object import (
     FlatBufferObject,
 )
 
+
 class RaidLotteryRewardItemArray(FlatBufferObject):
     """Array of RaidLotteryRewardItem (root object)"""
     def __init__(self, buf: bytearray):
@@ -22,6 +23,7 @@ class RaidLotteryRewardItemArray(FlatBufferObject):
         return {
             table.table_name: table.reward_items for table in self.raid_lottery_reward_items
         }
+
 
 class RaidLotteryRewardItem(FlatBufferObject):
     """Table containing RaidLotteryRewardItemInfo"""
@@ -124,6 +126,7 @@ class RaidLotteryRewardItem(FlatBufferObject):
             self.reward_item_28,
             self.reward_item_29,
         )
+
 
 class RaidLotteryRewardItemInfo(FlatBufferObject):
     """Table describing a random raid drop item"""

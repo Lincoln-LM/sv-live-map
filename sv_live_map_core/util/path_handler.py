@@ -3,6 +3,7 @@
 import os
 import sys
 
+
 def get_path(local_path: str) -> str:
     """Get real path from local path"""
     is_frozen = getattr(sys, 'frozen', False)

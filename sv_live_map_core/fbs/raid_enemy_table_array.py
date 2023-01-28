@@ -28,17 +28,20 @@ from .flatbuffer_object import (
     FlatBufferObject,
 )
 
+
 class RaidEnemyTableArray(FlatBufferObject):
     """Array of RaidEnemyInfoTable (root object)"""
     def __init__(self, buf: bytearray):
         FlatBufferObject.__init__(self, buf)
         self.raid_enemy_tables: list[RaidEnemyTable] = self.read_init_object_array(RaidEnemyTable)
 
+
 class RaidEnemyTable(FlatBufferObject):
     """Table containing only RaidEnemyInfo"""
     def __init__(self, buf: bytearray, offset: int):
         FlatBufferObject.__init__(self, buf, offset)
         self.raid_enemy_info: RaidEnemyInfo = self.read_init_object(RaidEnemyInfo)
+
 
 class RaidEnemyInfo(FlatBufferObject):
     """Spawn info of raid pokemon"""
@@ -58,6 +61,7 @@ class RaidEnemyInfo(FlatBufferObject):
         self.boss_poke_size: RaidBossSizeData = self.read_init_object(RaidBossSizeData)
         self.boss_desc: RaidBossData = self.read_init_object(RaidBossData)
         self.raid_time_data: RaidTimeData = self.read_init_object(RaidTimeData)
+
 
 class PokeDataBattle(FlatBufferObject):
     """Data that describes attributes of the pokemon itself"""
@@ -86,12 +90,14 @@ class PokeDataBattle(FlatBufferObject):
         self.scale_type: SizeGeneration = self.read_init_int_enum(I32, SizeGeneration)
         self.scale_value: int = self.read_init_int(I16)
 
+
 class WazaSet(FlatBufferObject):
     """Data that describes a learnt move"""
     def __init__(self, buf: bytearray, offset: int):
         FlatBufferObject.__init__(self, buf, offset)
         self.waza_id: Move = self.read_init_int_enum(U16, Move)
         self.point_up: int = self.read_init_int(I8)
+
 
 class ParamSet(FlatBufferObject):
     """Data that describes pokemon stats (IVs or EVs)"""
@@ -104,6 +110,7 @@ class ParamSet(FlatBufferObject):
         self.spd: int = self.read_init_int(I32)
         self.spe: int = self.read_init_int(I32)
 
+
 class RaidBossSizeData(FlatBufferObject):
     """Data that describes the size of raid bosses"""
     def __init__(self, buf: bytearray, offset: int):
@@ -114,6 +121,7 @@ class RaidBossSizeData(FlatBufferObject):
         self.waight_value: int = self.read_init_int(I16)
         self.scale_type: SizeGeneration = self.read_init_int_enum(I32, SizeGeneration)
         self.scale_value: int = self.read_init_int(I16)
+
 
 class RaidBossData(FlatBufferObject):
     """Data that describes raid boss behavior"""
@@ -140,6 +148,7 @@ class RaidBossData(FlatBufferObject):
         self.double_action_triger_time: int = self.read_init_int(I8)
         self.double_action_rate: int = self.read_init_int(I8)
 
+
 class RaidBossExtraData(FlatBufferObject):
     """Data describing special actions a raid boss can do during a raid"""
     def __init__(self, buf: bytearray, offset: int):
@@ -148,6 +157,7 @@ class RaidBossExtraData(FlatBufferObject):
         self.action: ExtraActType = self.read_init_int_enum(I16, ExtraActType)
         self.value: int = self.read_init_int(I16)
         self.waza_no: Move = self.read_init_int_enum(U16, Move)
+
 
 class RaidTimeData(FlatBufferObject):
     """Data that describes the timer during raid battle"""

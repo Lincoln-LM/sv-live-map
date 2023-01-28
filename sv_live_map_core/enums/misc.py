@@ -5,6 +5,7 @@ from __future__ import annotations
 from enum import IntEnum
 from typing import Self
 
+
 class Game(IntEnum):
     """Enum for the game version"""
     BOTH = 0
@@ -18,6 +19,7 @@ class Game(IntEnum):
 
     def __str__(self) -> str:
         return self.name.replace('_', ' ').title()
+
 
 class Ball(IntEnum):
     """Enum for pokemon balls"""
@@ -52,6 +54,7 @@ class Ball(IntEnum):
     def __str__(self) -> str:
         return self.name.replace('_', ' ').title()
 
+
 class MovesetType(IntEnum):
     """Enum for pokemon moveset generation"""
     AUTO = 0
@@ -59,6 +62,7 @@ class MovesetType(IntEnum):
 
     def __str__(self) -> str:
         return self.name.replace('_', ' ').title()
+
 
 class ExtraActType(IntEnum):
     """Enum for raid boss extra act type"""
@@ -71,6 +75,7 @@ class ExtraActType(IntEnum):
     def __str__(self) -> str:
         return self.name.replace('_', ' ').title()
 
+
 class ExtraTimingType(IntEnum):
     """Enum for raid boss extra timing type"""
     NONE = 0
@@ -79,6 +84,7 @@ class ExtraTimingType(IntEnum):
 
     def __str__(self) -> str:
         return self.name.replace('_', ' ').title()
+
 
 class Language(IntEnum):
     """Enum for save language"""
