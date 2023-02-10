@@ -1,7 +1,8 @@
 """Filter for TeraRaids"""
 
+from typing import Self
 from ..save.raid_block import TeraRaid
-from ..enums import AbilityIndex, Gender, Nature, Species, StarLevel, Item
+from ..enums import AbilityIndex, Gender, Nature, Species, StarLevel, Item, TeraType
 
 
 class RaidFilter:
@@ -12,6 +13,7 @@ class RaidFilter:
     ANY_NATURE = list(Nature)
     ANY_SPECIES = list(Species)
     ANY_DIFFICULTY = list(StarLevel)
+    ANY_TERA_TYPE = list(TeraType)
     ANY_REWARD = list(Item)
 
     def __init__(
@@ -28,8 +30,10 @@ class RaidFilter:
         species_filter: list[Species] = None,
         shiny_filter: bool = False,
         star_filter: list[StarLevel] = None,
+        tera_type_filter: list[TeraType] = None,
         reward_filter: list[Item] = None,
         reward_count_filter: int = None,
+        is_enabled: bool = True
     ) -> None:
         self.hp_filter = hp_filter or self.ANY_IV
         self.atk_filter = atk_filter or self.ANY_IV
@@ -43,8 +47,45 @@ class RaidFilter:
         self.species_filter = species_filter or self.ANY_SPECIES.copy()
         self.shiny_filter = shiny_filter
         self.star_filter = star_filter or self.ANY_DIFFICULTY.copy()
+        self.tera_type_filter = tera_type_filter or self.ANY_TERA_TYPE.copy()
         self.reward_filter = reward_filter or self.ANY_REWARD.copy()
         self.reward_count_filter = reward_count_filter or 0
+        self.is_enabled = is_enabled
+
+    @staticmethod
+    def from_json(filter_json: dict[str]) -> Self:
+        """Build filter directly from json"""
+        iv_filters = filter_json.get(
+            "IVFilter",
+            [
+                (0, 31),
+                (0, 31),
+                (0, 31),
+                (0, 31),
+                (0, 31),
+                (0, 31),
+            ]
+        )
+        iv_filters = [range(x[0], x[1] + 1) for x in iv_filters]
+
+        return RaidFilter(
+            hp_filter=iv_filters[0],
+            atk_filter=iv_filters[1],
+            def_filter=iv_filters[2],
+            spa_filter=iv_filters[3],
+            spd_filter=iv_filters[4],
+            spe_filter=iv_filters[5],
+            ability_filter=filter_json.get("AbilityFilter", []),
+            gender_filter=filter_json.get("GenderFilter", []),
+            nature_filter=filter_json.get("NatureFilter", []),
+            species_filter=filter_json.get("SpeciesFilter", []),
+            star_filter=filter_json.get("DifficultyFilter", []),
+            tera_type_filter=filter_json.get("TeraTypeFilter", []),
+            reward_filter=filter_json.get("RewardFilter", []),
+            shiny_filter=filter_json.get("ShinyFilter", False),
+            reward_count_filter=filter_json.get("RewardCountFilter", 0),
+            is_enabled=filter_json.get("IsEnabled", False)
+        )
 
     @property
     def iv_filters(self) -> list[range]:
@@ -77,6 +118,9 @@ class RaidFilter:
             return False
 
         if raid.difficulty not in self.star_filter:
+            return False
+
+        if raid.tera_type not in self.tera_type_filter:
             return False
 
         if (

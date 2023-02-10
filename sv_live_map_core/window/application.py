@@ -373,8 +373,6 @@ class Application(customtkinter.CTk):
     def handle_close_events(self):
         """Handle close events"""
         self.protocol("WM_DELETE_WINDOW", self.on_closing)
-        self.bind("<Command-q>", self.on_closing)
-        self.bind("<Command-w>", self.on_closing)
         self.createcommand('tk::mac::Quit', self.on_closing)
 
     def set_window_settings(self):
@@ -613,14 +611,20 @@ class Application(customtkinter.CTk):
             self.map_widget.set_zoom(self.map_widget.max_zoom)
             self.map_widget.set_position(*self.raid_markers[raid.id_str].position)
 
-        raid_filter = None
+        raid_filters = None
         if self.use_filter_check.get() and self.automation_window:
-            raid_filter = self.automation_window.build_filter()
+            raid_filters = self.automation_window.filter_frame.get_filter_objects()
 
         for raid in raid_block_data.raids:
             if raid.is_enabled:
-                if raid_filter and not raid_filter.compare(raid):
-                    continue
+                if raid_filters:
+                    matches_filters = False
+                    for raid_filter in raid_filters:
+                        if not raid_filter.is_enabled:
+                            continue
+                        matches_filters |= raid_filter.compare(raid)
+                    if not matches_filters:
+                        continue
                 has_alternate_location = f"{raid.id_str}_" in self.den_locations
                 if raid.id_str in self.raid_markers:
                     print(f"WARNING duplicate raid id {raid.id_str} is treated as {raid.id_str}_")

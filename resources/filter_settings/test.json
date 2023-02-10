@@ -31,10 +31,8 @@
   "SpeciesFilter": [],
   "DifficultyFilter": [],
   "TeraTypeFilter": [],
-  "ShinyFilter": 0,
-  "RewardFilter": [
-    1606
-  ],
-  "RewardCountFilter": 1,
-  "IsEnabled": 0
+  "ShinyFilter": 1,
+  "RewardFilter": [],
+  "RewardCountFilter": 0,
+  "IsEnabled": 1
 }

@@ -30,6 +30,7 @@
   "GenderFilter": [],
   "SpeciesFilter": [],
   "DifficultyFilter": [],
+  "TeraTypeFilter": [],
   "ShinyFilter": 0,
   "RewardFilter": [
     1907,
@@ -38,5 +39,6 @@
     1908,
     1904
   ],
-  "RewardCountFilter": 4
+  "RewardCountFilter": 4,
+  "IsEnabled": 0
 }

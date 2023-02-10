@@ -107,7 +107,7 @@ class CheckedCombobox(customtkinter.CTkComboBox):
             state=state,
             **kwargs
         )
-        self.values = values
+        self.values = values or []
         self.dropdown_menu = CheckedDropdownMenu(
             master=self,
             values=self.values,

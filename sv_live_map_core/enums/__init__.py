@@ -1,6 +1,8 @@
 """Enums for SV"""
 
 from .ability import *
+from .button import *
+from .inputseq import *
 from .difficulty import *
 from .gender_generation import *
 from .item import *

@@ -5,10 +5,12 @@ import struct
 import socket
 import binascii
 from time import sleep
+from math import ceil
 import libusb_package
 import usb.core
 import usb.util
 import usb.backend.libusb1
+from ..enums import Button
 
 LIBUSB1_BACKEND = usb.backend.libusb1.get_backend(find_library=libusb_package.find_library)
 
@@ -67,7 +69,7 @@ class NXReader:
         self.rs_lasty: int = 0
         self._configure()
 
-    def _send_command(self, content: str) -> None:
+    def send_command(self, content: str) -> None:
         """Send a command to sys-botbase on the switch"""
         if self.usb_connection:
             self.global_out.write(struct.pack("<I", len(content) + 2))
@@ -77,11 +79,34 @@ class NXReader:
             self.socket.sendall(content.encode())
 
     def _configure(self) -> None:
-        self._send_command('configure echoCommands 0')
+        self.send_command('configure echoCommands 0')
 
     def detach(self) -> None:
         """Detach controller from switch"""
-        self._send_command('detachController')
+        self.send_command('detachController')
+
+    def wait_until_clickseq_done(self, assumed_time: float) -> bool:
+        """Read the 'done' output after a clickSeq"""
+        if self.usb_connection:
+            assumed_time = ceil(assumed_time * 1000)
+            return self._read_chunks(
+                int(
+                    struct.unpack(
+                        "<L", self.global_in.read(4, timeout=assumed_time).tobytes()
+                    )[0]
+                ),
+                4080,
+                lambda size: self.global_in.read(size, timeout=assumed_time).tobytes(),
+            ) == b'done\n'
+        self.socket.settimeout(assumed_time)
+        return (
+            self._read_chunks(
+                size=5,
+                chunk_size=1020,
+                read_func=self.socket.recv
+            )
+            == b'done\n'
+        )
 
     def _read_chunks(self, size: int, chunk_size: int, read_func: callable) -> bytes:
         """Read data from socket/usb in chunks"""
@@ -140,20 +165,19 @@ class NXReader:
             self.socket.close()
         print('Disconnected')
 
-    # TODO: button enum
-    def click(self, button: str) -> None:
+    def click(self, button: Button) -> None:
         """Press and release button"""
-        self._send_command(f'click {button}')
+        self.send_command(f'click {button.value}')
 
-    def press(self, button: str) -> None:
+    def press(self, button: Button) -> None:
         """Press and hold button"""
-        self._send_command(f'press {button}')
+        self.send_command(f'press {button.value}')
 
-    def release(self, button: str) -> None:
+    def release(self, button: Button) -> None:
         """Release held button"""
-        self._send_command(f'release {button}')
+        self.send_command(f'release {button.value}')
 
-    def manual_click(self, button: str, delay: float = 0.1, init_count: int = 1):
+    def manual_click(self, button: Button, delay: float = 0.1, init_count: int = 1):
         """Manually press and release button"""
         for _ in range(init_count):
             self.press(button)
@@ -162,11 +186,11 @@ class NXReader:
 
     def touch_hold(self, x_val: int, y_val: int, delay_ms: int) -> None:
         """Hold the touch screen at (x, y) for delay ms"""
-        self._send_command(f"touchHold {x_val} {y_val} {delay_ms}")
+        self.send_command(f"touchHold {x_val} {y_val} {delay_ms}")
 
     def move_stick(self, stick: str, x_val: int, y_val: int) -> None:
         """Move stick to position"""
-        self._send_command(f"setStick {stick} 0x{x_val:X} 0x{y_val:X}")
+        self.send_command(f"setStick {stick} 0x{x_val:X} 0x{y_val:X}")
 
     def move_left_stick(self, x_val: int = None, y_val: int = None) -> None:
         """Move the left stick to position"""
@@ -186,7 +210,7 @@ class NXReader:
 
     def read(self, address: int, size: int) -> bytes:
         """Read bytes from heap"""
-        self._send_command(f'peek 0x{address:X} 0x{size:X}')
+        self.send_command(f'peek 0x{address:X} 0x{size:X}')
         return self._recv(size)
 
     def read_int(self, address: int, size: int) -> int:
@@ -195,7 +219,7 @@ class NXReader:
 
     def read_absolute(self, address: int, size: int) -> bytes:
         """Read bytes from absolute address"""
-        self._send_command(f'peekAbsolute 0x{address:X} 0x{size:X}')
+        self.send_command(f'peekAbsolute 0x{address:X} 0x{size:X}')
         return self._recv(size)
 
     def read_absolute_int(self, address: int, size: int) -> int:
@@ -204,11 +228,11 @@ class NXReader:
 
     def write(self, address: int, data: str) -> None:
         """Write data to heap"""
-        self._send_command(f'poke 0x{address:X} 0x{data}')
+        self.send_command(f'poke 0x{address:X} 0x{data}')
 
     def read_main(self, address: int, size: int) -> bytes:
         """Read bytes from main"""
-        self._send_command(f'peekMain 0x{address:X} 0x{size:X}')
+        self.send_command(f'peekMain 0x{address:X} 0x{size:X}')
         return self._recv(size)
 
     def read_main_int(self, address: int, size: int) -> int:
@@ -217,13 +241,13 @@ class NXReader:
 
     def write_main(self, address, data) -> None:
         """Write data to main"""
-        self._send_command(f'pokeMain 0x{address:X} 0x{data}')
+        self.send_command(f'pokeMain 0x{address:X} 0x{data}')
 
     def read_pointer(self, pointer: str, size: int) -> bytes:
         """Read bytes from pointer"""
         jumps = pointer.replace('[', '').replace('main', '').split(']')
         command = f'pointerPeek 0x{size:X} 0x{" 0x".join(jump.replace("+", "") for jump in jumps)}'
-        self._send_command(command)
+        self.send_command(command)
         return self._recv(size)
 
     def read_pointer_int(self, pointer: str, size: int) -> int:
@@ -234,7 +258,7 @@ class NXReader:
         """Write data to pointer"""
         jumps = pointer.replace('[', '').replace('main', '').split(']')
         command = f'pointerPoke 0x{data} 0x{" 0x".join(jump.replace("+", "") for jump in jumps)}'
-        self._send_command(command)
+        self.send_command(command)
 
     @staticmethod
     def pause(duration: float):

@@ -136,5 +136,9 @@
     1010
   ],
   "DifficultyFilter": [],
-  "ShinyFilter": 0
+  "TeraTypeFilter": [],
+  "ShinyFilter": 0,
+  "RewardFilter": [],
+  "RewardCountFilter": 0,
+  "IsEnabled": 0
 }
