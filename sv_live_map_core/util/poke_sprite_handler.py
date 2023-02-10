@@ -11,6 +11,7 @@ from .path_handler import get_path
 
 class PokeSpriteHandler:
     """Sprite handler to grab pokemon sprites"""
+
     def __init__(self, tk_image: bool = False):
         self.tk_image = tk_image
         self.cache: dict[(Species, int, bool), Image.Image | ImageTk.PhotoImage] = {}
@@ -28,18 +29,11 @@ class PokeSpriteHandler:
             self.cache[(species, form, female)] = img
 
     def grab_sprite(
-        self,
-        species: Species,
-        form: int,
-        female: bool
+        self, species: Species, form: int, female: bool
     ) -> Image.Image | ImageTk.PhotoImage:
         """Grab a sprite from cache"""
         if form == 0:
             form = None
         return self.cache.get(
-            (species, form, female),
-            self.cache.get(
-                (species, form, False),
-                None
-            )
+            (species, form, female), self.cache.get((species, form, False), None)
         )

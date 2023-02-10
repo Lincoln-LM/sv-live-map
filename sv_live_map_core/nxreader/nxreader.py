@@ -12,7 +12,9 @@ import usb.util
 import usb.backend.libusb1
 from ..enums import Button
 
-LIBUSB1_BACKEND = usb.backend.libusb1.get_backend(find_library=libusb_package.find_library)
+LIBUSB1_BACKEND = usb.backend.libusb1.get_backend(
+    find_library=libusb_package.find_library
+)
 
 # TODO: exceptions.py
 
@@ -27,20 +29,16 @@ class SocketError(Exception):
 
 class NXReader:
     """Simplified class to read information from sys-botbase"""
+
     def __init__(
-        self,
-        ip_address: str = None,
-        port: int = 6000,
-        usb_connection: bool = False
+        self, ip_address: str = None, port: int = 6000, usb_connection: bool = False
     ) -> None:
         assert usb_connection or ip_address is not None
         self.usb_connection = usb_connection
         if self.usb_connection:
             # nintendo switch vendor and product
             self.global_dev = usb.core.find(
-                idVendor=0x057E,
-                idProduct=0x3000,
-                backend=LIBUSB1_BACKEND
+                idVendor=0x057E, idProduct=0x3000, backend=LIBUSB1_BACKEND
             )
             if self.global_dev is None:
                 raise USBError("Unable to find switch usb connection")
@@ -49,20 +47,24 @@ class NXReader:
             self.global_out = usb.util.find_descriptor(
                 descriptor,
                 custom_match=lambda e: (
-                    usb.util.endpoint_direction(e.bEndpointAddress) == usb.util.ENDPOINT_OUT
-                )
+                    usb.util.endpoint_direction(e.bEndpointAddress)
+                    == usb.util.ENDPOINT_OUT
+                ),
             )
             self.global_in = usb.util.find_descriptor(
                 descriptor,
                 custom_match=lambda e: (
-                    usb.util.endpoint_direction(e.bEndpointAddress) == usb.util.ENDPOINT_IN
-                )
+                    usb.util.endpoint_direction(e.bEndpointAddress)
+                    == usb.util.ENDPOINT_IN
+                ),
             )
         else:
-            self.socket: socket.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.socket: socket.socket = socket.socket(
+                socket.AF_INET, socket.SOCK_STREAM
+            )
             self.socket.settimeout(1)
             self.socket.connect((ip_address, port))
-        print('Connected')
+        print("Connected")
         self.ls_lastx: int = 0
         self.ls_lasty: int = 0
         self.rs_lastx: int = 0
@@ -75,37 +77,38 @@ class NXReader:
             self.global_out.write(struct.pack("<I", len(content) + 2))
             self.global_out.write(content)
         else:
-            content += '\r\n'  # important for the parser on the switch side
+            content += "\r\n"  # important for the parser on the switch side
             self.socket.sendall(content.encode())
 
     def _configure(self) -> None:
-        self.send_command('configure echoCommands 0')
+        self.send_command("configure echoCommands 0")
 
     def detach(self) -> None:
         """Detach controller from switch"""
-        self.send_command('detachController')
+        self.send_command("detachController")
 
     def wait_until_clickseq_done(self, assumed_time: float) -> bool:
         """Read the 'done' output after a clickSeq"""
         if self.usb_connection:
             assumed_time = ceil(assumed_time * 1000)
-            return self._read_chunks(
-                int(
-                    struct.unpack(
-                        "<L", self.global_in.read(4, timeout=assumed_time).tobytes()
-                    )[0]
-                ),
-                4080,
-                lambda size: self.global_in.read(size, timeout=assumed_time).tobytes(),
-            ) == b'done\n'
+            return (
+                self._read_chunks(
+                    int(
+                        struct.unpack(
+                            "<L", self.global_in.read(4, timeout=assumed_time).tobytes()
+                        )[0]
+                    ),
+                    4080,
+                    lambda size: self.global_in.read(
+                        size, timeout=assumed_time
+                    ).tobytes(),
+                )
+                == b"done\n"
+            )
         self.socket.settimeout(assumed_time)
         return (
-            self._read_chunks(
-                size=5,
-                chunk_size=1020,
-                read_func=self.socket.recv
-            )
-            == b'done\n'
+            self._read_chunks(size=5, chunk_size=1020, read_func=self.socket.recv)
+            == b"done\n"
         )
 
     def _read_chunks(self, size: int, chunk_size: int, read_func: callable) -> bytes:
@@ -127,7 +130,7 @@ class NXReader:
             if len(read_data) == 0:
                 raise SocketError("Socket shut down on the switch's side.")
             # store in data
-            data[i: i + len(read_data)] = read_data
+            data[i : i + len(read_data)] = read_data
             i += len(read_data)
         return data
 
@@ -141,16 +144,16 @@ class NXReader:
                     # + 1 because it ends in \n
                     size=size * 2 + 1,
                     chunk_size=1020,
-                    read_func=self.socket.recv
+                    read_func=self.socket.recv,
                 )[:-1]
             )
         # usb tells us the size its sending
-        usb_size = int(struct.unpack("<L", self.global_in.read(4, timeout=0).tobytes())[0])
+        usb_size = int(
+            struct.unpack("<L", self.global_in.read(4, timeout=0).tobytes())[0]
+        )
         assert usb_size == size, "USB did not send the correct amount of bytes"
         return self._read_chunks(
-            size,
-            4080,
-            lambda size: self.global_in.read(size, timeout=0).tobytes()
+            size, 4080, lambda size: self.global_in.read(size, timeout=0).tobytes()
         )
 
     def close(self) -> None:
@@ -163,19 +166,19 @@ class NXReader:
         else:
             self.socket.shutdown(socket.SHUT_RDWR)
             self.socket.close()
-        print('Disconnected')
+        print("Disconnected")
 
     def click(self, button: Button) -> None:
         """Press and release button"""
-        self.send_command(f'click {button.value}')
+        self.send_command(f"click {button.value}")
 
     def press(self, button: Button) -> None:
         """Press and hold button"""
-        self.send_command(f'press {button.value}')
+        self.send_command(f"press {button.value}")
 
     def release(self, button: Button) -> None:
         """Release held button"""
-        self.send_command(f'release {button.value}')
+        self.send_command(f"release {button.value}")
 
     def manual_click(self, button: Button, delay: float = 0.1, init_count: int = 1):
         """Manually press and release button"""
@@ -198,7 +201,7 @@ class NXReader:
             self.ls_lastx = x_val
         if y_val is not None:
             self.ls_lasty = y_val
-        self.move_stick('LEFT', self.ls_lastx, self.ls_lasty)
+        self.move_stick("LEFT", self.ls_lastx, self.ls_lasty)
 
     def move_right_stick(self, x_val: int = None, y_val: int = None) -> None:
         """Move the right stick to position"""
@@ -206,57 +209,57 @@ class NXReader:
             self.rs_lastx = x_val
         if y_val is not None:
             self.rs_lasty = y_val
-        self.move_stick('RIGHT', self.rs_lastx, self.rs_lasty)
+        self.move_stick("RIGHT", self.rs_lastx, self.rs_lasty)
 
     def read(self, address: int, size: int) -> bytes:
         """Read bytes from heap"""
-        self.send_command(f'peek 0x{address:X} 0x{size:X}')
+        self.send_command(f"peek 0x{address:X} 0x{size:X}")
         return self._recv(size)
 
     def read_int(self, address: int, size: int) -> int:
         """Read integer from heap"""
-        return int.from_bytes(self.read(address, size), 'little')
+        return int.from_bytes(self.read(address, size), "little")
 
     def read_absolute(self, address: int, size: int) -> bytes:
         """Read bytes from absolute address"""
-        self.send_command(f'peekAbsolute 0x{address:X} 0x{size:X}')
+        self.send_command(f"peekAbsolute 0x{address:X} 0x{size:X}")
         return self._recv(size)
 
     def read_absolute_int(self, address: int, size: int) -> int:
         """Read integer from absolute address"""
-        return int.from_bytes(self.read_absolute(address, size), 'little')
+        return int.from_bytes(self.read_absolute(address, size), "little")
 
     def write(self, address: int, data: str) -> None:
         """Write data to heap"""
-        self.send_command(f'poke 0x{address:X} 0x{data}')
+        self.send_command(f"poke 0x{address:X} 0x{data}")
 
     def read_main(self, address: int, size: int) -> bytes:
         """Read bytes from main"""
-        self.send_command(f'peekMain 0x{address:X} 0x{size:X}')
+        self.send_command(f"peekMain 0x{address:X} 0x{size:X}")
         return self._recv(size)
 
     def read_main_int(self, address: int, size: int) -> int:
         """Read integer from main"""
-        return int.from_bytes(self.read_main(address, size), 'little')
+        return int.from_bytes(self.read_main(address, size), "little")
 
     def write_main(self, address, data) -> None:
         """Write data to main"""
-        self.send_command(f'pokeMain 0x{address:X} 0x{data}')
+        self.send_command(f"pokeMain 0x{address:X} 0x{data}")
 
     def read_pointer(self, pointer: str, size: int) -> bytes:
         """Read bytes from pointer"""
-        jumps = pointer.replace('[', '').replace('main', '').split(']')
+        jumps = pointer.replace("[", "").replace("main", "").split("]")
         command = f'pointerPeek 0x{size:X} 0x{" 0x".join(jump.replace("+", "") for jump in jumps)}'
         self.send_command(command)
         return self._recv(size)
 
     def read_pointer_int(self, pointer: str, size: int) -> int:
         """Read integer from pointer"""
-        return int.from_bytes(self.read_pointer(pointer, size), 'little')
+        return int.from_bytes(self.read_pointer(pointer, size), "little")
 
     def write_pointer(self, pointer: str, data: str) -> None:
         """Write data to pointer"""
-        jumps = pointer.replace('[', '').replace('main', '').split(']')
+        jumps = pointer.replace("[", "").replace("main", "").split("]")
         command = f'pointerPoke 0x{data} 0x{" 0x".join(jump.replace("+", "") for jump in jumps)}'
         self.send_command(command)
 

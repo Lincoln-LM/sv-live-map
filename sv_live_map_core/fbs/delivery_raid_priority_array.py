@@ -9,14 +9,17 @@ from .flatbuffer_object import (
 
 class DeliveryRaidPriorityArray(FlatBufferObject):
     """Array of DeliveryRaidPriority (root object)"""
+
     def __init__(self, buf: bytearray):
         FlatBufferObject.__init__(self, buf)
-        self.delivery_raid_prioritys: list[DeliveryRaidPriority] = \
-            self.read_init_object_array(DeliveryRaidPriority)
+        self.delivery_raid_prioritys: list[
+            DeliveryRaidPriority
+        ] = self.read_init_object_array(DeliveryRaidPriority)
 
 
 class DeliveryRaidPriority(FlatBufferObject):
     """Data that describes the priority of event dens"""
+
     def __init__(self, buf: bytearray, offset: int):
         super().__init__(buf, offset)
         self.version_no: int = self.read_init_int(I32)
@@ -25,6 +28,7 @@ class DeliveryRaidPriority(FlatBufferObject):
 
 class DeliveryGroupID(FlatBufferObject):
     """Data that describes how many dens are in each group"""
+
     # pylint: disable=too-many-instance-attributes
     def __init__(self, buf: bytearray, offset: int):
         super().__init__(buf, offset)

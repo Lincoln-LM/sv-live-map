@@ -12,6 +12,7 @@ from ..util.path_handler import get_path
 
 class WebhookSettingsWidget(customtkinter.CTkFrame):
     """Webhook settings widget"""
+
     EDIT_IMAGE: ImageTk.PhotoImage = None
     NEW_IMAGE: ImageTk.PhotoImage = None
     DELETE_IMAGE: ImageTk.PhotoImage = None
@@ -26,21 +27,15 @@ class WebhookSettingsWidget(customtkinter.CTkFrame):
         """Cache GUI images"""
         if WebhookSettingsWidget.EDIT_IMAGE is None:
             WebhookSettingsWidget.EDIT_IMAGE = ImageTk.PhotoImage(
-                Image.open(
-                    get_path("./resources/icons8/pencil.png")
-                )
+                Image.open(get_path("./resources/icons8/pencil.png"))
             )
         if WebhookSettingsWidget.NEW_IMAGE is None:
             WebhookSettingsWidget.NEW_IMAGE = ImageTk.PhotoImage(
-                Image.open(
-                    get_path("./resources/icons8/plus.png")
-                )
+                Image.open(get_path("./resources/icons8/plus.png"))
             )
         if WebhookSettingsWidget.DELETE_IMAGE is None:
             WebhookSettingsWidget.DELETE_IMAGE = ImageTk.PhotoImage(
-                Image.open(
-                    get_path("./resources/icons8/trash.png")
-                )
+                Image.open(get_path("./resources/icons8/trash.png"))
             )
 
     def draw_webhook_frame(self):
@@ -50,13 +45,10 @@ class WebhookSettingsWidget(customtkinter.CTkFrame):
         )
         self.webhook_combobox_label.grid(row=0, column=0)
         self.webhook_combobox = customtkinter.CTkComboBox(
-            self,
-            values=self.get_webhooks(),
-            width=220,
-            command=self.select_webhook
+            self, values=self.get_webhooks(), width=220, command=self.select_webhook
         )
         self.webhook_combobox.grid(row=0, column=1, columnspan=4)
-        self.webhook_combobox.entry.configure(state='disabled')
+        self.webhook_combobox.entry.configure(state="disabled")
 
         self.new_webhook_button = customtkinter.CTkButton(
             self,
@@ -65,7 +57,7 @@ class WebhookSettingsWidget(customtkinter.CTkFrame):
             fg_color=customtkinter.ThemeManager.theme["color"]["frame_low"],
             width=self.NEW_IMAGE.width(),
             height=self.NEW_IMAGE.height(),
-            command=self.new_webhook
+            command=self.new_webhook,
         )
         self.new_webhook_button.grid(row=0, column=5)
 
@@ -76,7 +68,7 @@ class WebhookSettingsWidget(customtkinter.CTkFrame):
             fg_color=customtkinter.ThemeManager.theme["color"]["frame_low"],
             width=self.EDIT_IMAGE.width(),
             height=self.EDIT_IMAGE.height(),
-            command=self.edit_webhook
+            command=self.edit_webhook,
         )
         self.edit_webhook_button.grid(row=0, column=6)
         self.delete_webhook_button = customtkinter.CTkButton(
@@ -86,7 +78,7 @@ class WebhookSettingsWidget(customtkinter.CTkFrame):
             fg_color=customtkinter.ThemeManager.theme["color"]["frame_low"],
             width=self.DELETE_IMAGE.width(),
             height=self.DELETE_IMAGE.height(),
-            command=self.delete_webhook
+            command=self.delete_webhook,
         )
         self.delete_webhook_button.grid(row=0, column=7)
 
@@ -125,15 +117,14 @@ class WebhookSettingsWidget(customtkinter.CTkFrame):
             fg_color=customtkinter.ThemeManager.theme["color"]["frame_low"],
         )
         self.widget_label = customtkinter.CTkLabel(
-            master=self.embed_frame,
-            text="Widget display"
+            master=self.embed_frame, text="Widget display"
         )
         self.widget_label.grid(row=0, column=0, padx=(10, 0))
 
         self.embed_select = customtkinter.CTkSwitch(
             master=self.embed_frame,
             # padding
-            text="     Embed display"
+            text="     Embed display",
         )
         self.embed_select.grid(row=0, column=1, padx=(0, 10))
         self.embed_frame.grid(row=6, column=0, columnspan=7, pady=10)
@@ -143,14 +134,12 @@ class WebhookSettingsWidget(customtkinter.CTkFrame):
             fg_color=customtkinter.ThemeManager.theme["color"]["frame_low"],
         )
         self.ping_entry_label = customtkinter.CTkLabel(
-            master=self.ping_entry_frame,
-            text="ID to Ping:"
+            master=self.ping_entry_frame, text="ID to Ping:"
         )
         self.ping_entry_label.grid(row=0, column=0)
 
         self.ping_entry = customtkinter.CTkEntry(
-            master=self.ping_entry_frame,
-            width=150
+            master=self.ping_entry_frame, width=150
         )
         self.ping_entry.grid(row=0, column=1)
         self.ping_entry_frame.grid(row=7, column=0, columnspan=7, padx=10, pady=10)
@@ -160,31 +149,25 @@ class WebhookSettingsWidget(customtkinter.CTkFrame):
             fg_color=customtkinter.ThemeManager.theme["color"]["frame_low"],
         )
         self.webhook_url_entry_label = customtkinter.CTkLabel(
-            master=self.webhook_url_entry_frame,
-            text="Webhook URL:"
+            master=self.webhook_url_entry_frame, text="Webhook URL:"
         )
         self.webhook_url_entry_label.grid(row=0, column=0)
 
         self.webhook_url_entry = customtkinter.CTkEntry(
-            master=self.webhook_url_entry_frame,
-            width=150
+            master=self.webhook_url_entry_frame, width=150
         )
         self.webhook_url_entry.grid(row=0, column=1)
-        self.webhook_url_entry_frame.grid(row=8, column=0, columnspan=7, padx=10, pady=10)
+        self.webhook_url_entry_frame.grid(
+            row=8, column=0, columnspan=7, padx=10, pady=10
+        )
 
     def save_webhook(self):
         """Save currently selected webhook"""
         if name := self.webhook_combobox.get():
             with open(
-                get_path(f"./resources/webhook_settings/{name}"),
-                "w+",
-                encoding="utf-8"
+                get_path(f"./resources/webhook_settings/{name}"), "w+", encoding="utf-8"
             ) as webhook_file:
-                json.dump(
-                    self.build_webhook_json(),
-                    webhook_file,
-                    indent=2
-                )
+                json.dump(self.build_webhook_json(), webhook_file, indent=2)
 
     def build_webhook_json(self):
         """Build webhook json"""
@@ -203,9 +186,9 @@ class WebhookSettingsWidget(customtkinter.CTkFrame):
         """To be run when a webhook is selected"""
         if name and name != self.webhook_combobox.get():
             self.save_webhook()
-        self.webhook_combobox.entry.configure(state='normal')
+        self.webhook_combobox.entry.configure(state="normal")
         self.webhook_combobox.set(name)
-        self.webhook_combobox.entry.configure(state='disabled')
+        self.webhook_combobox.entry.configure(state="disabled")
 
         if name:
             file_path = get_path(f"./resources/webhook_settings/{name}")
@@ -218,9 +201,13 @@ class WebhookSettingsWidget(customtkinter.CTkFrame):
         """Load webhook settings into gui"""
         self.webhook_active.check_state = bool(webhook_json.get("Active", False))
         self.webhook_active.draw()
-        self.include_rewards_check.check_state = bool(webhook_json.get("IncludeRewards", False))
+        self.include_rewards_check.check_state = bool(
+            webhook_json.get("IncludeRewards", False)
+        )
         self.include_rewards_check.draw()
-        self.send_exception_check.check_state = bool(webhook_json.get("SendExceptions", False))
+        self.send_exception_check.check_state = bool(
+            webhook_json.get("SendExceptions", False)
+        )
         self.send_exception_check.draw()
         self.send_logs_check.check_state = bool(webhook_json.get("SendLogs", False))
         self.send_logs_check.draw()
@@ -238,7 +225,7 @@ class WebhookSettingsWidget(customtkinter.CTkFrame):
         TextInputDialogueWindow(
             title="Webhook Creation",
             text="Enter New Webhook Name:",
-            command=self.new_webhook_action
+            command=self.new_webhook_action,
         )
 
     def new_webhook_action(self, name: str):
@@ -248,7 +235,7 @@ class WebhookSettingsWidget(customtkinter.CTkFrame):
         with open(
             get_path(f"./resources/webhook_settings/{name}.json"),
             "w+",
-            encoding="utf-8"
+            encoding="utf-8",
         ) as new_webhook:
             new_webhook.write("{}")
         self.webhook_combobox.configure(values=self.get_webhooks())
@@ -259,7 +246,7 @@ class WebhookSettingsWidget(customtkinter.CTkFrame):
         TextInputDialogueWindow(
             title="Webhook Edit",
             text="Enter New Webhook Name:",
-            command=self.edit_webhook_action
+            command=self.edit_webhook_action,
         )
 
     def edit_webhook_action(self, name: str):
@@ -268,7 +255,7 @@ class WebhookSettingsWidget(customtkinter.CTkFrame):
             return
         os.rename(
             get_path(f"./resources/webhook_settings/{self.webhook_combobox.get()}"),
-            get_path(f"./resources/webhook_settings/{name}.json")
+            get_path(f"./resources/webhook_settings/{name}.json"),
         )
         self.webhook_combobox.configure(values=self.get_webhooks())
         self.select_webhook(f"{name}.json")
@@ -278,13 +265,15 @@ class WebhookSettingsWidget(customtkinter.CTkFrame):
         BoolInputDialogueWindow(
             title="Delete Webhook",
             text=f"Delete the webhook {self.webhook_combobox.get()}?",
-            command=self.delete_webhook_action
+            command=self.delete_webhook_action,
         )
 
     def delete_webhook_action(self, confirm: bool):
         """Delete webhook file"""
         if confirm:
-            os.remove(get_path(f"./resources/webhook_settings/{self.webhook_combobox.get()}"))
+            os.remove(
+                get_path(f"./resources/webhook_settings/{self.webhook_combobox.get()}")
+            )
             self.select_webhook("")
             self.webhook_combobox.configure(values=self.get_webhooks())
             # TODO: default case when no webhooks

@@ -6,6 +6,7 @@ from enum import IntEnum
 
 class Ability(IntEnum):
     """Enum for pokemon abilities"""
+
     NONE = 0
     STENCH = 1
     DRIZZLE = 2
@@ -307,21 +308,23 @@ class Ability(IntEnum):
     MYCELIUM_MIGHT = 298
 
     def __str__(self) -> str:
-        return self.name.replace('_', ' ').title()
+        return self.name.replace("_", " ").title()
 
 
 class AbilityIndex(IntEnum):
     """Enum for pokemon ability index"""
+
     ABILITY_1 = 0
     ABILITY_2 = 1
     ABILITY_HA = 2
 
     def __str__(self) -> str:
-        return self.name.replace('_', ' ').title().replace("Ha", "HA")
+        return self.name.replace("_", " ").title().replace("Ha", "HA")
 
 
 class AbilityGeneration(IntEnum):
     """Enum for pokemon ability generation"""
+
     RANDOM_12 = 0
     RANDOM_12HA = 1
     ABILITY_1 = 2
@@ -333,4 +336,4 @@ class AbilityGeneration(IntEnum):
         return AbilityIndex(self.value - AbilityGeneration.ABILITY_1)
 
     def __str__(self) -> str:
-        return self.name.replace('_', ' ').title().replace("Ha", "HA")
+        return self.name.replace("_", " ").title().replace("Ha", "HA")

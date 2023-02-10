@@ -17,33 +17,145 @@ from ..fbs.raid_lottery_reward_item_array import RaidLotteryRewardItemArray
 
 def parse_int(block_type: SCTypeCode, data: bytearray) -> int:
     """Parse bytes for integer SCTypeCodes"""
-    return int.from_bytes(
-        data,
-        'little',
-        signed=block_type.is_signed()
-    )[0]
+    return int.from_bytes(data, "little", signed=block_type.is_signed())[0]
 
 
 def parse_float(block_type: SCTypeCode, data: bytearray) -> float:
     """Parse bytes for float SCTypeCodes"""
-    return struct.unpack(
-        'f' if block_type == SCTypeCode.FLOAT else 'd',
-        data
-    )[0]
+    return struct.unpack("f" if block_type == SCTypeCode.FLOAT else "d", data)[0]
 
 
 class SaveFile9:
     """SV save file and save block accessor"""
+
     STATIC_XORPAD = [
-        0xA0, 0x92, 0xD1, 0x06, 0x07, 0xDB, 0x32, 0xA1, 0xAE, 0x01, 0xF5, 0xC5, 0x1E, 0x84, 0x4F,
-        0xE3, 0x53, 0xCA, 0x37, 0xF4, 0xA7, 0xB0, 0x4D, 0xA0, 0x18, 0xB7, 0xC2, 0x97, 0xDA, 0x5F,
-        0x53, 0x2B, 0x75, 0xFA, 0x48, 0x16, 0xF8, 0xD4, 0x8A, 0x6F, 0x61, 0x05, 0xF4, 0xE2, 0xFD,
-        0x04, 0xB5, 0xA3, 0x0F, 0xFC, 0x44, 0x92, 0xCB, 0x32, 0xE6, 0x1B, 0xB9, 0xB1, 0x2E, 0x01,
-        0xB0, 0x56, 0x53, 0x36, 0xD2, 0xD1, 0x50, 0x3D, 0xDE, 0x5B, 0x2E, 0x0E, 0x52, 0xFD, 0xDF,
-        0x2F, 0x7B, 0xCA, 0x63, 0x50, 0xA4, 0x67, 0x5D, 0x23, 0x17, 0xC0, 0x52, 0xE1, 0xA6, 0x30,
-        0x7C, 0x2B, 0xB6, 0x70, 0x36, 0x5B, 0x2A, 0x27, 0x69, 0x33, 0xF5, 0x63, 0x7B, 0x36, 0x3F,
-        0x26, 0x9B, 0xA3, 0xED, 0x7A, 0x53, 0x00, 0xA4, 0x48, 0xB3, 0x50, 0x9E, 0x14, 0xA0, 0x52,
-        0xDE, 0x7E, 0x10, 0x2B, 0x1B, 0x77, 0x6E,
+        0xA0,
+        0x92,
+        0xD1,
+        0x06,
+        0x07,
+        0xDB,
+        0x32,
+        0xA1,
+        0xAE,
+        0x01,
+        0xF5,
+        0xC5,
+        0x1E,
+        0x84,
+        0x4F,
+        0xE3,
+        0x53,
+        0xCA,
+        0x37,
+        0xF4,
+        0xA7,
+        0xB0,
+        0x4D,
+        0xA0,
+        0x18,
+        0xB7,
+        0xC2,
+        0x97,
+        0xDA,
+        0x5F,
+        0x53,
+        0x2B,
+        0x75,
+        0xFA,
+        0x48,
+        0x16,
+        0xF8,
+        0xD4,
+        0x8A,
+        0x6F,
+        0x61,
+        0x05,
+        0xF4,
+        0xE2,
+        0xFD,
+        0x04,
+        0xB5,
+        0xA3,
+        0x0F,
+        0xFC,
+        0x44,
+        0x92,
+        0xCB,
+        0x32,
+        0xE6,
+        0x1B,
+        0xB9,
+        0xB1,
+        0x2E,
+        0x01,
+        0xB0,
+        0x56,
+        0x53,
+        0x36,
+        0xD2,
+        0xD1,
+        0x50,
+        0x3D,
+        0xDE,
+        0x5B,
+        0x2E,
+        0x0E,
+        0x52,
+        0xFD,
+        0xDF,
+        0x2F,
+        0x7B,
+        0xCA,
+        0x63,
+        0x50,
+        0xA4,
+        0x67,
+        0x5D,
+        0x23,
+        0x17,
+        0xC0,
+        0x52,
+        0xE1,
+        0xA6,
+        0x30,
+        0x7C,
+        0x2B,
+        0xB6,
+        0x70,
+        0x36,
+        0x5B,
+        0x2A,
+        0x27,
+        0x69,
+        0x33,
+        0xF5,
+        0x63,
+        0x7B,
+        0x36,
+        0x3F,
+        0x26,
+        0x9B,
+        0xA3,
+        0xED,
+        0x7A,
+        0x53,
+        0x00,
+        0xA4,
+        0x48,
+        0xB3,
+        0x50,
+        0x9E,
+        0x14,
+        0xA0,
+        0x52,
+        0xDE,
+        0x7E,
+        0x10,
+        0x2B,
+        0x1B,
+        0x77,
+        0x6E,
     ]
 
     DIFFICULTY_FLAG_LOCATIONS = (
@@ -70,18 +182,14 @@ class SaveFile9:
 
     def decrypt_bytes(self, rng: SCXorshift32, ofs: int, size: int):
         """Decrypt SCXorshift encrypted bytearray"""
-        return bytearray(
-            byte ^ rng.next()
-            for byte in self.save_data[ofs:ofs + size]
-        )
+        return bytearray(byte ^ rng.next() for byte in self.save_data[ofs : ofs + size])
 
     def read_block(
-        self,
-        block_key: int
+        self, block_key: int
     ) -> bool | bytearray | int | float | list[bytearray] | list[int] | list[float]:
         """Read and decrypt save block from block_key"""
         rng = SCXorshift32(block_key)
-        ofs = self.save_data.find(block_key.to_bytes(4, 'little')) + 4
+        ofs = self.save_data.find(block_key.to_bytes(4, "little")) + 4
         block_type = SCTypeCode(self.save_data[ofs] ^ rng.next())
         ofs += 1
         match block_type:
@@ -95,13 +203,14 @@ class SaveFile9:
                 return self.decrypt_bytes(
                     rng,
                     ofs + 4,
-                    size=int.from_bytes(
-                        self.save_data[ofs:ofs + 4],
-                        'little'
-                    ) ^ rng.next_32()
+                    size=int.from_bytes(self.save_data[ofs : ofs + 4], "little")
+                    ^ rng.next_32(),
                 )
             case SCTypeCode.ARRAY:
-                arr_size = int.from_bytes(self.save_data[ofs:ofs + 4], 'little') ^ rng.next_32()
+                arr_size = (
+                    int.from_bytes(self.save_data[ofs : ofs + 4], "little")
+                    ^ rng.next_32()
+                )
                 ofs += 4
                 sub_type = SCTypeCode(self.save_data[ofs] ^ rng.next())
                 ofs += 1
@@ -133,24 +242,16 @@ class SaveFile9:
                 | SCTypeCode.I32
             ):
                 return parse_int(
-                    block_type,
-                    self.decrypt_bytes(
-                        rng,
-                        ofs,
-                        block_type.byte_size()
-                    )
+                    block_type, self.decrypt_bytes(rng, ofs, block_type.byte_size())
                 )
             case SCTypeCode.FLOAT | SCTypeCode.DOUBLE:
                 return parse_float(
-                    block_type,
-                    self.decrypt_bytes(
-                        rng,
-                        ofs,
-                        block_type.byte_size()
-                    )
+                    block_type, self.decrypt_bytes(rng, ofs, block_type.byte_size())
                 )
             case _:
-                raise NotImplementedError(f"{block_type:!r} is not an implemented block type.")
+                raise NotImplementedError(
+                    f"{block_type:!r} is not an implemented block type."
+                )
 
     def read_block_struct(self, key: int, _struct: Type):
         """Read decrypted save block as bytechomp struct"""
@@ -177,32 +278,28 @@ class SaveFile9:
         return RaidEnemyTableArray(self.read_block(self.BCAT_RAID_BINARY_LOCATION))
 
     def read_delivery_item_binaries(
-        self
+        self,
     ) -> tuple[RaidFixedRewardItemArray | RaidLotteryRewardItemArray, 2]:
         """Read delivery item flatbuffer binaries from save blocks"""
         return (
             RaidFixedRewardItemArray(
-                self.read_block(
-                    self.BCAT_RAID_FIXED_REWARD_LOCATION
-                )
+                self.read_block(self.BCAT_RAID_FIXED_REWARD_LOCATION)
             ),
             RaidLotteryRewardItemArray(
-                self.read_block(
-                    self.BCAT_RAID_LOTTERY_REWARD_LOCATION
-                )
+                self.read_block(self.BCAT_RAID_LOTTERY_REWARD_LOCATION)
             ),
         )
 
     def read_event_priority(self) -> DeliveryRaidPriorityArray:
         """Read event priority binary from save"""
-        delivery_raid_priority_array = \
-            DeliveryRaidPriorityArray(self.read_block(self.BCAT_RAID_PRIORITY_LOCATION))
+        delivery_raid_priority_array = DeliveryRaidPriorityArray(
+            self.read_block(self.BCAT_RAID_PRIORITY_LOCATION)
+        )
         if len(delivery_raid_priority_array.delivery_raid_prioritys) == 0:
             return (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
-        return delivery_raid_priority_array \
-            .delivery_raid_prioritys[0] \
-            .delivery_group_id \
-            .group_counts
+        return delivery_raid_priority_array.delivery_raid_prioritys[
+            0
+        ].delivery_group_id.group_counts
 
     def read_raid_block(self) -> RaidBlock:
         """Read and process raid block"""

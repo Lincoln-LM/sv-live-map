@@ -9,7 +9,9 @@ class ClickSeq:
     """Class for building sysbot-base clickseq commands"""
 
     def __init__(self) -> None:
-        self.actions: list[tuple[InputSeqEvent, Button | int] | tuple[InputSeqEvent, int, int]] = []
+        self.actions: list[
+            tuple[InputSeqEvent, Button | int] | tuple[InputSeqEvent, int, int]
+        ] = []
         self.command_modified = True
         self._built_command: str = ""
         self._assumed_time: float = 0
@@ -56,9 +58,7 @@ class ClickSeq:
 
     def hold(self, button: Button, ms_duration: int) -> Self:
         """Add a press, wait, then release event to hold a button"""
-        return self.press(button) \
-                   .wait(ms_duration) \
-                   .release(button)
+        return self.press(button).wait(ms_duration).release(button)
 
     def move_stick(self, stick: Stick, x_value: int, y_value: int) -> Self:
         """Add a move right or left stick event depending on stick input"""
@@ -72,11 +72,15 @@ class ClickSeq:
         """Reset stick to (0, 0)"""
         return self.move_stick(stick, 0, 0)
 
-    def hold_stick(self, stick: Stick, x_value: int, y_value: int, ms_duration: int) -> Self:
+    def hold_stick(
+        self, stick: Stick, x_value: int, y_value: int, ms_duration: int
+    ) -> Self:
         """Add move right or left stick event, wait event, normalizing right/left stick event"""
-        return self.move_stick(stick, x_value, y_value) \
-                   .wait(ms_duration) \
-                   .release_stick(stick)
+        return (
+            self.move_stick(stick, x_value, y_value)
+            .wait(ms_duration)
+            .release_stick(stick)
+        )
 
     def build(self) -> str:
         """Build click seq command, update built_command and return"""
@@ -91,7 +95,7 @@ class ClickSeq:
         """Build clickSeq command"""
         assumed_time = 0
         built_command = "clickSeq "
-        for (event_type, *arguments) in actions:
+        for event_type, *arguments in actions:
             match event_type:
                 case InputSeqEvent.CLICK:
                     button: Button = arguments[0]

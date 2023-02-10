@@ -7,6 +7,7 @@ from ..enums import AbilityIndex, Gender, Nature, Species, StarLevel, Item, Tera
 
 class RaidFilter:
     """Filter for TeraRaids"""
+
     ANY_IV = range(0, 31)
     ANY_ABILITY = list(AbilityIndex)
     ANY_GENDER = list(Gender)
@@ -33,7 +34,7 @@ class RaidFilter:
         tera_type_filter: list[TeraType] = None,
         reward_filter: list[Item] = None,
         reward_count_filter: int = None,
-        is_enabled: bool = True
+        is_enabled: bool = True,
     ) -> None:
         self.hp_filter = hp_filter or self.ANY_IV
         self.atk_filter = atk_filter or self.ANY_IV
@@ -64,7 +65,7 @@ class RaidFilter:
                 (0, 31),
                 (0, 31),
                 (0, 31),
-            ]
+            ],
         )
         iv_filters = [range(x[0], x[1] + 1) for x in iv_filters]
 
@@ -84,7 +85,7 @@ class RaidFilter:
             reward_filter=filter_json.get("RewardFilter", []),
             shiny_filter=filter_json.get("ShinyFilter", False),
             reward_count_filter=filter_json.get("RewardCountFilter", 0),
-            is_enabled=filter_json.get("IsEnabled", False)
+            is_enabled=filter_json.get("IsEnabled", False),
         )
 
     @property
@@ -96,7 +97,7 @@ class RaidFilter:
             self.def_filter,
             self.spa_filter,
             self.spd_filter,
-            self.spe_filter
+            self.spe_filter,
         ]
 
     def compare(self, raid: TeraRaid) -> bool:
@@ -124,9 +125,7 @@ class RaidFilter:
             return False
 
         if (
-            sum(
-                reward[1] for reward in raid.rewards if reward[0] in self.reward_filter
-            )
+            sum(reward[1] for reward in raid.rewards if reward[0] in self.reward_filter)
             < self.reward_count_filter
         ):
             return False

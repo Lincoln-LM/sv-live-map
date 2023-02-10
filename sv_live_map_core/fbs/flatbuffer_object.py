@@ -31,18 +31,12 @@ INT_TYPES = (
 
 class FlatBufferObject:
     """Generic FlatBuffer object"""
+
     def __init__(self, buf: bytearray, offset: int = None):
         # offset is None implies this is a root object
         if offset is None:
-            offset = flatbuffers.encode.Get(
-                flatbuffers.packer.uoffset,
-                buf,
-                0
-            )
-        self._table = flatbuffers.table.Table(
-            buf,
-            offset
-        )
+            offset = flatbuffers.encode.Get(flatbuffers.packer.uoffset, buf, 0)
+        self._table = flatbuffers.table.Table(buf, offset)
         self._offset = offset
         self._counter = 4
 
@@ -61,7 +55,7 @@ class FlatBufferObject:
         _type: INT_TYPES,
         position: int,
         _enum: Type[IntEnum] | Callable,
-        default: Any = None
+        default: Any = None,
     ):
         """Read value of _type at position as _enum"""
         if pos_offset := self._table.Offset(position):
@@ -70,19 +64,16 @@ class FlatBufferObject:
 
     def read_init_int(self, _type: INT_TYPES, default: int = None):
         """Read value of _type at the position of self._counter
-           and increment the counter"""
+        and increment the counter"""
         value = self.read_int(_type, self._counter, default=default)
         self._counter += 2
         return value
 
     def read_init_int_enum(
-        self,
-        _type: INT_TYPES,
-        _enum: Type[IntEnum] | Callable,
-        default: Any = None
+        self, _type: INT_TYPES, _enum: Type[IntEnum] | Callable, default: Any = None
     ):
         """Read value of _type at the position of self._counter as _enum
-           and increment the counter"""
+        and increment the counter"""
         value = self.read_int_enum(_type, self._counter, _enum, default=default)
         self._counter += 2
         return value
@@ -91,15 +82,12 @@ class FlatBufferObject:
         """Read FlatBufferObject of _object_type at position"""
         if pos_offset := self._table.Offset(position):
             val_offset = self._table.Indirect(pos_offset + self._offset)
-            return _object_type(
-                self._table.Bytes,
-                offset=val_offset
-            )
+            return _object_type(self._table.Bytes, offset=val_offset)
         return default
 
     def read_init_object(self, _object_type: Type[Self], default: Any = None):
         """Read FlatBufferObject of _object_type at the position of self._counter
-           and increment the counter"""
+        and increment the counter"""
         value = self.read_object(_object_type, self._counter, default=default)
         self._counter += 2
         return value
@@ -112,15 +100,12 @@ class FlatBufferObject:
             array_len = self._table.VectorLen(pos_offset)
             for array_offset in range(array_offset, array_offset + array_len * 4, 4):
                 val_offset = self._table.Indirect(array_offset)
-                array.append(_object_type(
-                    self._table.Bytes,
-                    offset=val_offset
-                ))
+                array.append(_object_type(self._table.Bytes, offset=val_offset))
         return array
 
     def read_init_object_array(self, _object_type: Type[Self]):
         """Read an array of FlatBufferObjects of _object_type at the position of self._counter
-           and increment the counter"""
+        and increment the counter"""
         array = self.read_object_array(_object_type, self._counter)
         self._counter += 2
         return array

@@ -37,12 +37,11 @@ class BaseRoutine(ABC):
                     if webhook.get("SendExceptions"):
                         webhook_message = discord_webhook.webhook.DiscordWebhook(
                             url=webhook.get("WebhookURL", False),
-                            content=f"<@{webhook.get('IDToPing', '')}> {log_message}"
+                            content=f"<@{webhook.get('IDToPing', '')}> {log_message}",
                         )
                         webhook_message.execute()
                 elif webhook.get("SendLogs"):
                     webhook_message = discord_webhook.webhook.DiscordWebhook(
-                        url=webhook.get("WebhookURL", False),
-                        content=log_message
+                        url=webhook.get("WebhookURL", False), content=log_message
                     )
                     webhook_message.execute()

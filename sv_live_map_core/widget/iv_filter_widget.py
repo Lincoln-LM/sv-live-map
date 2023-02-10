@@ -5,13 +5,9 @@ import customtkinter
 
 class IVFilterWidget(customtkinter.CTkFrame):
     """IV filter widget"""
+
     def __init__(
-        self,
-        *args,
-        title: str = "IV",
-        width: int = 100,
-        height: int = 32,
-        **kwargs
+        self, *args, title: str = "IV", width: int = 100, height: int = 32, **kwargs
     ):
         super().__init__(*args, width=width, height=height, **kwargs)
 

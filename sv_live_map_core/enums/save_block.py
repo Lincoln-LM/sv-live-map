@@ -5,6 +5,7 @@ from enum import IntEnum
 
 class SCTypeCode(IntEnum):
     """Save block type codes"""
+
     NONE = 0
     BOOL_FALSE = 1
     BOOL_TRUE = 2
@@ -34,7 +35,9 @@ class SCTypeCode(IntEnum):
             case SCTypeCode.U64 | SCTypeCode.I64 | SCTypeCode.DOUBLE:
                 return 8
             case _:
-                raise NotImplementedError(f"{self:!r} does not have an implemented size.")
+                raise NotImplementedError(
+                    f"{self:!r} does not have an implemented size."
+                )
 
     def is_signed(self) -> bool:
         """Whether or not a type is a signed int"""

@@ -9,18 +9,21 @@ from ..enums import Game, Gender, Language
 @dataclass
 class CharacterByte:
     """Half of a utf16-le character"""
+
     value: U8
 
 
 @dataclass
 class UnusedByte:
     """Unused byte"""
+
     _unused: U8
 
 
 @dataclass
 class MyStatus9:
     """MyStatus9 Save Block"""
+
     tid: U16
     sid: U16
     _game: U8
@@ -33,7 +36,7 @@ class MyStatus9:
     birth_day: U8
 
     def __post_init__(self):
-        self.full_id = ((self.sid << 16) | self.tid)
+        self.full_id = (self.sid << 16) | self.tid
         self.g9tid = self.full_id % 1000000
         self.g9sid = self.full_id // 1000000
         self.game = Game.from_game_id(self._game)

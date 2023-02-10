@@ -6,6 +6,7 @@ from enum import IntEnum
 
 class Move(IntEnum):
     """Enum for pokemon moves"""
+
     NONE = 0
     POUND = 1
     KARATE_CHOP = 2
@@ -909,4 +910,4 @@ class Move(IntEnum):
     MAGICAL_TORQUE = 900
 
     def __str__(self) -> str:
-        return self.name.replace('_', ' ').title()
+        return self.name.replace("_", " ").title()

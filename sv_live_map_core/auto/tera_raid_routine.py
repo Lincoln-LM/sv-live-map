@@ -85,8 +85,12 @@ class TeraRaidRoutine(BaseRoutine):
         last_seed = None
         while self.thread_alive:
             try:
-                total_raid_count, total_reset_count, last_seed, raid_block = \
-                    self.read_raids(total_raid_count, total_reset_count, last_seed)
+                (
+                    total_raid_count,
+                    total_reset_count,
+                    last_seed,
+                    raid_block,
+                ) = self.read_raids(total_raid_count, total_reset_count, last_seed)
 
                 target_found = False
 
@@ -103,7 +107,7 @@ class TeraRaidRoutine(BaseRoutine):
                         target_found |= matches_filters
 
                     if matches_filters:
-                        if self.settings.get('Popup', False):
+                        if self.settings.get("Popup", False):
                             self.open_raid_popup(raid)
                         for webhook in self.webhooks:
                             self.send_raid_webhook(raid, webhook)
@@ -134,19 +138,20 @@ class TeraRaidRoutine(BaseRoutine):
         Thread(target=lambda: self.date_skip_routine.execute(self.reader)).start()
 
     def read_raids(
-        self,
-        total_raid_count: int,
-        total_reset_count: int,
-        last_seed: int
+        self, total_raid_count: int, total_reset_count: int, last_seed: int
     ) -> tuple[int, int, int, RaidBlock]:
         """Read and parse raids"""
-        raid_block = self.parent_application.read_all_raids(self.settings.get("MapRender", False))
+        raid_block = self.parent_application.read_all_raids(
+            self.settings.get("MapRender", False)
+        )
         if raid_block.current_seed != last_seed:
             last_seed = raid_block.current_seed
             total_reset_count += 1
             total_raid_count += 69
         else:
-            self.send_webhook_log("Raid seed is a duplicate of the previous day, unsuccessful skip")
+            self.send_webhook_log(
+                "Raid seed is a duplicate of the previous day, unsuccessful skip"
+            )
         print(
             f"Raid Block Processsed: {total_reset_count=} "
             f"{total_raid_count=} "
@@ -160,8 +165,7 @@ class TeraRaidRoutine(BaseRoutine):
     def open_raid_popup(self, raid: TeraRaid):
         """Open Raid Popup"""
         return self.parent_application.widget_message_window(
-            f"Shiny {raid.species} ★"
-            if raid.is_shiny else str(raid.species),
+            f"Shiny {raid.species} ★" if raid.is_shiny else str(raid.species),
             RaidInfoWidget,
             poke_sprite_handler=self.parent_application.sprite_handler,
             raid_data=raid,
@@ -195,7 +199,7 @@ class TeraRaidRoutine(BaseRoutine):
         with open(get_path(f"./found_screenshots/{raid.seed}.png"), "rb") as img:
             webhook_message = discord_webhook.webhook.DiscordWebhook(
                 url=webhook.get("WebhookURL", ""),
-                content=f"<@{webhook.get('IDToPing', '')}>"
+                content=f"<@{webhook.get('IDToPing', '')}>",
             )
             webhook_message.add_file(img.read(), "img.png")
             webhook_message.execute()
@@ -204,17 +208,15 @@ class TeraRaidRoutine(BaseRoutine):
         """Send Raid Webhook as embed"""
         webhook_message = discord_webhook.webhook.DiscordWebhook(
             url=webhook.get("WebhookURL", ""),
-            content=f"<@{webhook.get('IDToPing', '')}>"
+            content=f"<@{webhook.get('IDToPing', '')}>",
         )
         embed = discord_webhook.webhook.DiscordEmbed(
-            title=f"Shiny {raid.species} ★"
-            if raid.is_shiny else str(raid.species),
-            color=0xF8C8DC
+            title=f"Shiny {raid.species} ★" if raid.is_shiny else str(raid.species),
+            color=0xF8C8DC,
         )
         embed.set_image("attachment://poke.png")
         embed.set_author(
-            f"{raid.tera_type} Tera Type",
-            icon_url="attachment://tera.png"
+            f"{raid.tera_type} Tera Type", icon_url="attachment://tera.png"
         )
         dummy_widget = RaidInfoWidget(
             poke_sprite_handler=self.parent_application.sprite_handler,
@@ -225,29 +227,20 @@ class TeraRaidRoutine(BaseRoutine):
         poke_sprite_img: Image = ImageTk.getimage(dummy_widget.poke_sprite)
         with io.BytesIO() as poke_sprite_bytes:
             poke_sprite_img.save(poke_sprite_bytes, format="PNG")
-            webhook_message.add_file(
-                poke_sprite_bytes.getvalue(),
-                "poke.png"
-            )
+            webhook_message.add_file(poke_sprite_bytes.getvalue(), "poke.png")
 
         tera_sprite_img: Image = ImageTk.getimage(dummy_widget.tera_sprite)
         with io.BytesIO() as tera_sprite_bytes:
             tera_sprite_img.save(tera_sprite_bytes, format="PNG")
-            webhook_message.add_file(
-                tera_sprite_bytes.getvalue(),
-                "tera.png"
-            )
+            webhook_message.add_file(tera_sprite_bytes.getvalue(), "tera.png")
         embed.add_embed_field("Info", str(dummy_widget.info_display.text))
         if webhook.get("IncludeRewards", False):
             item_embed = discord_webhook.webhook.DiscordEmbed(
-                title=f"{raid.species} Items",
-                color=0xF8C8DC
+                title=f"{raid.species} Items", color=0xF8C8DC
             )
             item_embed.add_embed_field(
                 "Items",
-                "\n".join(
-                    f"{reward[1]}x {reward[0]}" for reward in raid.rewards
-                )
+                "\n".join(f"{reward[1]}x {reward[0]}" for reward in raid.rewards),
             )
 
         webhook_message.add_embed(embed)

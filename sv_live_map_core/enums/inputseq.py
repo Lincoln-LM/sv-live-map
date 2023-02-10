@@ -5,6 +5,7 @@ from enum import IntEnum
 
 class InputSeqEvent(IntEnum):
     """Enum for clickseq events"""
+
     CLICK = 0
     WAIT = 1
     PRESS = 2

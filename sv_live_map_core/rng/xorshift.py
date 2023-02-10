@@ -5,6 +5,7 @@ import numpy as np
 
 class SCXorshift32:
     """Xorshift32 Implementation for saveblock decryption"""
+
     _SHIFT2: np.uint32 = np.uint32(2)
     _SHIFT15: np.uint32 = np.uint32(15)
     _SHIFT13: np.uint32 = np.uint32(13)
@@ -47,9 +48,9 @@ class SCXorshift32:
     @staticmethod
     def pop_count(val: np.uint32) -> np.uint32:
         """Count of bits set in value"""
-        val -= ((val >> 1) & 0x55555555)
+        val -= (val >> 1) & 0x55555555
         val = (val & 0x33333333) + ((val >> 2) & 0x33333333)
         val = (val + (val >> 4)) & 0x0F0F0F0F
-        val += (val >> SCXorshift32._SHIFT8)
-        val += (val >> SCXorshift32._SHIFT16)
+        val += val >> SCXorshift32._SHIFT8
+        val += val >> SCXorshift32._SHIFT16
         return val & 0x3F

@@ -10,7 +10,9 @@ class InputSeq(ClickSeq):
     """Class for building sysbot-base input sequences"""
 
     def __init__(self) -> None:
-        self.actions: list[tuple[InputSeqEvent, Button | int] | tuple[InputSeqEvent, int, int]] = []
+        self.actions: list[
+            tuple[InputSeqEvent, Button | int] | tuple[InputSeqEvent, int, int]
+        ] = []
         self.command_modified = True
         self._built_commands: list[str] = []
         self._assumed_time: float = 0
@@ -31,11 +33,13 @@ class InputSeq(ClickSeq):
         """Build input seq command, update built_command and return"""
         total_assumed_time = 0
         current_actions = []
-        for (event_type, *arguments) in self.actions:
+        for event_type, *arguments in self.actions:
             if event_type >= InputSeqEvent.TOUCH:
                 # touch event, clickseq must be split
                 if len(current_actions) > 0:
-                    current_assumed_time, current_action = self.build_click_seq(current_actions)
+                    current_assumed_time, current_action = self.build_click_seq(
+                        current_actions
+                    )
                     total_assumed_time += current_assumed_time
                     current_actions = []
                     self._built_commands.append(
@@ -56,7 +60,7 @@ class InputSeq(ClickSeq):
                         (
                             InputSeqEvent.TOUCH_HOLD,
                             ms_duration / 1000,
-                            f"touchHold {x_value} {y_value} {ms_duration}"
+                            f"touchHold {x_value} {y_value} {ms_duration}",
                         )
                     )
             else:
@@ -77,7 +81,7 @@ class InputSeq(ClickSeq):
         """Send clickseq command to a NXReader object"""
         if self.command_modified:
             self.build()
-        for (command_type, assumed_time, command) in self._built_commands:
+        for command_type, assumed_time, command in self._built_commands:
             reader.send_command(command)
             if command_type < InputSeqEvent.TOUCH:
                 reader.wait_until_clickseq_done(assumed_time * 1.5 + 1)
@@ -86,4 +90,4 @@ class InputSeq(ClickSeq):
     def __str__(self) -> str:
         if self.command_modified:
             self.build()
-        return '\n'.join(x[2] for x in self._built_commands)
+        return "\n".join(x[2] for x in self._built_commands)

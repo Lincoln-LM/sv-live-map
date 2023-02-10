@@ -8,17 +8,19 @@ from typing import Self
 
 class GenderGeneration(IntEnum):
     """Enum for pokemon gender generation"""
+
     RANDOM_GENDER = 0
     MALE = 1
     FEMALE = 2
     GENDERLESS = 3
 
     def __str__(self) -> str:
-        return self.name.replace('_', ' ').title()
+        return self.name.replace("_", " ").title()
 
 
 class Gender(IntEnum):
     """Enum for genders"""
+
     MALE = 0
     FEMALE = 1
     GENDERLESS = 2
@@ -29,4 +31,4 @@ class Gender(IntEnum):
         return Gender(value - 1)
 
     def __str__(self) -> str:
-        return self.name.replace('_', ' ').title()
+        return self.name.replace("_", " ").title()

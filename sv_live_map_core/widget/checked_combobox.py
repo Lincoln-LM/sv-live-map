@@ -9,6 +9,7 @@ from customtkinter.widgets.dropdown_menu import DropdownMenu
 
 class CheckedDropdownMenu(DropdownMenu):
     """Checked DropdownMenu"""
+
     def __init__(
         self,
         *args,
@@ -19,7 +20,7 @@ class CheckedDropdownMenu(DropdownMenu):
         text_font: str = "default_theme",
         command: Callable = None,
         values: list = None,
-        **kwargs
+        **kwargs,
     ):
         self.variables = [tkinter.BooleanVar() for _ in values]
         super().__init__(
@@ -31,7 +32,7 @@ class CheckedDropdownMenu(DropdownMenu):
             text_font=text_font,
             command=command,
             values=values,
-            **kwargs
+            **kwargs,
         )
 
     def add_menu_commands(self):
@@ -41,7 +42,7 @@ class CheckedDropdownMenu(DropdownMenu):
                     label=f"  {str(value).ljust(self.min_character_width)}  ",
                     command=lambda v=value: self.button_callback(v),
                     compound="left",
-                    variable=variable
+                    variable=variable,
                 )
         else:
             for variable, value in zip(self.variables, self.values):
@@ -49,12 +50,13 @@ class CheckedDropdownMenu(DropdownMenu):
                     label=str(value).ljust(self.min_character_width),
                     command=lambda v=value: self.button_callback(v),
                     compound="left",
-                    variable=variable
+                    variable=variable,
                 )
 
 
 class CheckedCombobox(customtkinter.CTkComboBox):
     """Checked Combobox"""
+
     def __init__(
         self,
         *args,
@@ -79,7 +81,7 @@ class CheckedCombobox(customtkinter.CTkComboBox):
         text_color_disabled: str = "default_theme",
         hover: bool = True,
         state: str = tkinter.NORMAL,
-        **kwargs
+        **kwargs,
     ):
         super().__init__(
             *args,
@@ -105,7 +107,7 @@ class CheckedCombobox(customtkinter.CTkComboBox):
             text_color_disabled=text_color_disabled,
             hover=hover,
             state=state,
-            **kwargs
+            **kwargs,
         )
         self.values = values or []
         self.dropdown_menu = CheckedDropdownMenu(
@@ -115,14 +117,16 @@ class CheckedCombobox(customtkinter.CTkComboBox):
             fg_color=dropdown_color,
             hover_color=dropdown_hover_color,
             text_color=dropdown_text_color,
-            text_font=dropdown_text_font
+            text_font=dropdown_text_font,
         )
         self.dropdown_callback()
 
     def dropdown_callback(self, _: Any = None):
         set_values = [
-            value for variable, value
-            in zip(self.dropdown_menu.variables, self.dropdown_menu.values)
+            value
+            for variable, value in zip(
+                self.dropdown_menu.variables, self.dropdown_menu.values
+            )
             if variable.get()
         ]
         text = "|".join(str(value) for value in set_values) if set_values else "Any"
@@ -141,8 +145,10 @@ class CheckedCombobox(customtkinter.CTkComboBox):
     def get(self) -> list:
         """Get set values"""
         if set_values := [
-            value for variable, value
-            in zip(self.dropdown_menu.variables, self.dropdown_menu.values)
+            value
+            for variable, value in zip(
+                self.dropdown_menu.variables, self.dropdown_menu.values
+            )
             if variable.get()
         ]:
             return set_values
@@ -154,6 +160,5 @@ class CheckedCombobox(customtkinter.CTkComboBox):
         lookup_table = {value.name: value for value in type(self.values[0])}
         return [
             lookup_table[value.replace(" ", "_").upper()]
-            for value
-            in str_repr.split("|")
+            for value in str_repr.split("|")
         ]

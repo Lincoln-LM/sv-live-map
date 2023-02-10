@@ -15,10 +15,7 @@ class BoolInputDialogueWindow(customtkinter.CTkToplevel):
         command: Callable[[bool | None], None] = None,
         **kwargs
     ):
-        super().__init__(
-            *args,
-            **kwargs
-        )
+        super().__init__(*args, **kwargs)
         self.title(title)
         self.draw_input_dialogue(text)
         self.command = command
@@ -29,7 +26,9 @@ class BoolInputDialogueWindow(customtkinter.CTkToplevel):
         """Draw input dialouge widgets"""
         self.input_checkbox = customtkinter.CTkCheckBox(self, text=text)
         self.input_checkbox.pack(side="top", padx=10, pady=5)
-        self.input_confirm = customtkinter.CTkButton(self, text="Confirm", command=self.on_closing)
+        self.input_confirm = customtkinter.CTkButton(
+            self, text="Confirm", command=self.on_closing
+        )
         self.input_confirm.pack(side="bottom", padx=10, pady=(0, 10))
 
     def handle_close_events(self):

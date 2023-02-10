@@ -16,6 +16,7 @@ if TYPE_CHECKING:
 
 class AutomationWindow(customtkinter.CTkToplevel):
     """Automation window"""
+
     SETTINGS_IMAGE: ImageTk.PhotoImage = None
 
     def __init__(
@@ -24,7 +25,7 @@ class AutomationWindow(customtkinter.CTkToplevel):
         settings: dict = None,
         master: Application = None,
         fg_color: str = "default_theme",
-        **kwargs
+        **kwargs,
     ):
         self.settings: dict = settings or {}
         super().__init__(*args, master=master, fg_color=fg_color, **kwargs)
@@ -43,9 +44,7 @@ class AutomationWindow(customtkinter.CTkToplevel):
         """Cache GUI images"""
         if AutomationWindow.SETTINGS_IMAGE is None:
             AutomationWindow.SETTINGS_IMAGE = ImageTk.PhotoImage(
-                Image.open(
-                    get_path("./resources/icons8/gear.png")
-                )
+                Image.open(get_path("./resources/icons8/gear.png"))
             )
 
     def start_routine(self):
@@ -120,7 +119,7 @@ class AutomationWindow(customtkinter.CTkToplevel):
             text="Start Automation",
             width=1220,
             height=30,
-            command=self.start_routine
+            command=self.start_routine,
         )
         self.start_button.grid(
             row=0,
@@ -137,7 +136,7 @@ class AutomationWindow(customtkinter.CTkToplevel):
             fg_color=customtkinter.ThemeManager.theme["color"]["frame_low"],
             width=self.SETTINGS_IMAGE.width(),
             height=self.SETTINGS_IMAGE.height() * 2,
-            command=self.open_automation_settings
+            command=self.open_automation_settings,
         )
         self.automation_settings_button.grid(
             row=0,
@@ -150,13 +149,8 @@ class AutomationWindow(customtkinter.CTkToplevel):
             master=self.start_button_frame,
             text="Advance Date (Singular)",
             command=self.advance_date,
-            height=30
+            height=30,
         )
         self.advance_date_button.grid(
-            row=2,
-            column=0,
-            columnspan=4,
-            sticky="nwse",
-            padx=5,
-            pady=5
+            row=2, column=0, columnspan=4, sticky="nwse", padx=5, pady=5
         )

@@ -5,6 +5,7 @@ from enum import Enum
 
 class Button(Enum):
     """Enum for sysbot-base buttons"""
+
     A = "A"
     B = "B"
     X = "X"
@@ -33,5 +34,6 @@ class Button(Enum):
 
 class Stick(Enum):
     """Enum for sysbot-base sticks"""
+
     LEFT = "LEFT"
     RIGHT = "RIGHT"
