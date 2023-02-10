@@ -30,9 +30,15 @@ from ..widget.corrected_marker import CorrectedMarker
 from ..util.personal_data_handler import PersonalDataHandler
 from .automation_window import AutomationWindow
 from ..util.path_handler import get_path
+from http.server import BaseHTTPRequestHandler, HTTPServer
+import threading
+import json
+from bytechomp import serialize
 
 customtkinter.set_default_color_theme("blue")
 customtkinter.set_appearance_mode("dark")
+
+referenceToApp = None;
 
 class Application(customtkinter.CTk):
     """Live Map GUI"""
@@ -45,7 +51,9 @@ class Application(customtkinter.CTk):
     ICON_PATH = "./resources/icons8/icon.png"
     SEPARATOR_COLOR = "#949392"
 
+
     def __init__(self, *args, **kwargs):
+        global referenceToApp
         super().__init__(*args, **kwargs)
 
         # initialize for later
@@ -68,6 +76,9 @@ class Application(customtkinter.CTk):
         self.draw_settings_frame()
         self.draw_map_frame()
         self.draw_info_frame()
+        referenceToApp = self
+        LocalServ()
+
 
     def load_settings_and_data(self):
         """Load settings information and den locations"""
@@ -784,3 +795,52 @@ class Application(customtkinter.CTk):
             self.reader.close()
 
         self.destroy()
+
+hostName = "localhost"
+serverPort = 8080
+
+class MyServer(BaseHTTPRequestHandler):
+
+    def do_GET(self):
+        if self.path == '/fetchTeraRaids':
+            # TODO make sure socket is connected
+            raidblock = referenceToApp.read_all_raids(render = False)
+            self.send_response(200)
+            self.send_header('Content-type', 'application/json')
+            self.end_headers()
+            # Send the html message
+            jsonResponse=json.dumps(raidblock.to_json())
+            self.wfile.write(jsonResponse.encode())
+    def do_POST(self):
+        if self.path == '/postTeraRaids':
+            content_length = int(self.headers['Content-Length'])  # <--- Gets the size of data
+            post_data = self.rfile.read(content_length)  # <--- Gets the data itself
+            postdataasjson = post_data.decode('utf-8')
+            print(postdataasjson)
+            jsonDctForRaidBlock=json.loads(postdataasjson)
+            raidblockToWrite=RaidBlock.from_json(jsonDctForRaidBlock)
+
+            serialized_struct: bytes = serialize(raidblockToWrite);
+            #TODO make sure socket is connected
+            #TODO call sysbot with new ram bytes
+            resultsHex = serialized_struct.hex()
+
+            self.send_response(200)
+            self.send_header('Content-type', 'text/html')
+            self.end_headers()
+            self.wfile.write(bytes(resultsHex, "utf8"))
+
+server = None
+
+def LocalServ():
+    global server
+    def server_task():
+        httpd = HTTPServer(('localhost', 8080), MyServer)
+        print('Server Starting at ...')
+        print(httpd.server_address)
+        httpd.serve_forever()
+
+    if server is None:
+        server = threading.Thread(target=server_task, daemon=True)
+        server.start()
+    # make sure only one server task is running

@@ -33,6 +33,7 @@ from ..fbs.raid_lottery_reward_item_array import RaidLotteryRewardItemArray
 from ..util.personal_data_handler import PersonalDataHandler
 from .my_status_9 import MyStatus9
 
+
 RAID_COUNT = 72
 TOXTRICITY_AMPED_NATURES = (
     Nature.ADAMANT,
@@ -64,14 +65,17 @@ TOXTRICITY_LOWKEY_NATURES = (
     Nature.CAREFUL,
 )
 
+
 def shiny_xor(pid: int, sidtid: int) -> int:
     """Get shiny XOR"""
     temp = pid ^ sidtid
     return (temp & 0xFFFF) ^ (temp >> 16)
 
+
 def is_shiny(pid: int, sidtid: int) -> bool:
     """Check if a given pid is shiny"""
     return shiny_xor(pid, sidtid) < 0x10
+
 
 def force_shininess(
     lock_type: ShinyGeneration,
@@ -200,6 +204,7 @@ def calc_reward_item_count(count_rand: int, difficulty: StarLevel):
         )
     )
 
+
 @dataclass
 class TeraRaid:
     """Single Tera Raid Data"""
@@ -213,6 +218,33 @@ class TeraRaid:
     _unused_14: U32
     content: U32
     collected_league_points: U32
+
+    def to_json(self):
+        return {
+            'is_enabled':self.is_enabled,
+            'area_id':self.area_id,
+            'display_type':self.display_type,
+            'den_id':self.den_id,
+            'seed':hex(self.seed),
+            '_unused_14':self._unused_14,
+            'content':self.content,
+            'collected_league_points':self.collected_league_points
+        }
+
+    def from_json(json_dct):
+        teraRaid = TeraRaid(None,None,None,None,None,None,None,None);
+        #unsignedInthexcurrentSeed = int(json_dct['seed'], 0) + (1 << 32);
+        unsignedInthexcurrentSeed = int(json_dct['seed'], 0);
+
+        teraRaid.is_enabled = U32(int(json_dct['is_enabled']));
+        teraRaid.area_id= U32(int(json_dct['area_id']));
+        teraRaid.display_type=U32(json_dct['display_type'])
+        teraRaid.den_id= U32(int(json_dct['den_id']))
+        teraRaid.seed= U32(unsignedInthexcurrentSeed)
+        teraRaid._unused_14= U32(int(json_dct['_unused_14']))
+        teraRaid.content= U32(int(json_dct['content']))
+        teraRaid.collected_league_points= U32(int(json_dct['collected_league_points']))
+        return teraRaid
 
     def __post_init__(self) -> None:
         # information that needs to be derived
@@ -575,12 +607,34 @@ class TeraRaid:
                         f"PID: {self.pid:08X} SIDTID: {self.sidtid:08X}\n"
         return display
 
+
 @dataclass
 class RaidBlock:
     """Full Raid Block Data"""
     current_seed: U64
     tomorrow_seed: U64
     raids: Annotated[list[TeraRaid], RAID_COUNT]
+
+    def to_json(self):
+        return {
+            'currentSeed': hex(self.current_seed),
+            'tomorrowSeed': hex(self.tomorrow_seed),
+            'teraRaids': [ob.to_json() for ob in self.raids]
+        }
+
+    def from_json(json_dct):
+        raidblock=RaidBlock(None, None, None)
+        unsignedInthexcurrentSeed = int(json_dct['currentSeed'], 0)
+        unsignedInthextomorrowSeed = int(json_dct['tomorrowSeed'], 0)
+
+        raidblock.current_seed = U64(unsignedInthexcurrentSeed)
+
+        raidblock.tomorrow_seed= U64(unsignedInthextomorrowSeed)
+        raidblock.raids=  []
+        for raid in json_dct['teraRaids']:
+            realRaid = TeraRaid.from_json(raid)
+            raidblock.raids.append(realRaid)
+        return raidblock
 
     def initialize_data(
         self,
