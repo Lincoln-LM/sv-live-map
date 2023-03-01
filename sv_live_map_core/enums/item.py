@@ -5,8 +5,10 @@ from enum import IntEnum
 from .species import Species
 from .type_generation import TeraType
 
+
 class Item(IntEnum):
     """Enum for pokemon items"""
+
     NONE = 0
     MASTER_BALL = 1
     ULTRA_BALL = 2
@@ -2203,15 +2205,21 @@ class Item(IntEnum):
             item_iteration += 1
         if item_iteration > 0:
             name = f"{name}-{item_iteration}"
-        name = name.replace('_', ' ').title().replace(" Xs", " XS").replace(" Xl", " XL")
+        name = (
+            name.replace("_", " ").title().replace(" Xs", " XS").replace(" Xl", " XL")
+        )
         if name.startswith("Tm"):
             name = f"TM{name[2:]}"
+        if name.startswith("Tr"):
+            name = f"TR{name[2:]}"
         if name.startswith("Pp"):
             name = f"PP{name[2:]}"
         return name
 
+
 class SandwichLevel(IntEnum):
     """Sandwich boost level"""
+
     NONE = 0
     LVL_1 = 1
     LVL_2 = 2
@@ -2230,7 +2238,7 @@ class SandwichLevel(IntEnum):
         return ""
 
     def __format__(self, format_spec: str) -> str:
-        if format_spec == 'img':
+        if format_spec == "img":
             match self:
                 case SandwichLevel.NONE:
                     return ""
@@ -2242,8 +2250,10 @@ class SandwichLevel(IntEnum):
                     return "LVL 3 only"
         return super().__format__(format_spec)
 
+
 class RaidRewardItemSubjectType(IntEnum):
     """Raid reward type"""
+
     ALL = 0
     HOST = 1
     CLIENT = 2
@@ -2262,7 +2272,7 @@ class RaidRewardItemSubjectType(IntEnum):
         return ""
 
     def __format__(self, format_spec: str) -> str:
-        if format_spec == 'img':
+        if format_spec == "img":
             match self:
                 case RaidRewardItemSubjectType.ALL:
                     return ""
@@ -2274,8 +2284,10 @@ class RaidRewardItemSubjectType(IntEnum):
                     return "Once Per Save"
         return super().__format__(format_spec)
 
+
 class RaidRewardItemCategoryType(IntEnum):
     """Raid reward category"""
+
     ITEM = 0
     POKE = 1
     GEM = 2
@@ -2287,206 +2299,407 @@ class RaidRewardItemCategoryType(IntEnum):
             case RaidRewardItemCategoryType.GEM:
                 # not in order (thanks GF)
                 match tera_type:
-                    case TeraType.NORMAL: return Item.NORMAL_TERA_SHARD
-                    case TeraType.FIGHTING: return Item.FIGHTING_TERA_SHARD
-                    case TeraType.FLYING: return Item.FLYING_TERA_SHARD
-                    case TeraType.POISON: return Item.POISON_TERA_SHARD
-                    case TeraType.GROUND: return Item.GROUND_TERA_SHARD
-                    case TeraType.ROCK: return Item.ROCK_TERA_SHARD
-                    case TeraType.BUG: return Item.BUG_TERA_SHARD
-                    case TeraType.GHOST: return Item.GHOST_TERA_SHARD
-                    case TeraType.STEEL: return Item.STEEL_TERA_SHARD
-                    case TeraType.FIRE: return Item.FIRE_TERA_SHARD
-                    case TeraType.WATER: return Item.WATER_TERA_SHARD
-                    case TeraType.GRASS: return Item.GRASS_TERA_SHARD
-                    case TeraType.ELECTRIC: return Item.ELECTRIC_TERA_SHARD
-                    case TeraType.PSYCHIC: return Item.PSYCHIC_TERA_SHARD
-                    case TeraType.ICE: return Item.ICE_TERA_SHARD
-                    case TeraType.DRAGON: return Item.DRAGON_TERA_SHARD
-                    case TeraType.DARK: return Item.DARK_TERA_SHARD
-                    case TeraType.FAIRY: return Item.FAIRY_TERA_SHARD
-                    case _: return Item.NONE
+                    case TeraType.NORMAL:
+                        return Item.NORMAL_TERA_SHARD
+                    case TeraType.FIGHTING:
+                        return Item.FIGHTING_TERA_SHARD
+                    case TeraType.FLYING:
+                        return Item.FLYING_TERA_SHARD
+                    case TeraType.POISON:
+                        return Item.POISON_TERA_SHARD
+                    case TeraType.GROUND:
+                        return Item.GROUND_TERA_SHARD
+                    case TeraType.ROCK:
+                        return Item.ROCK_TERA_SHARD
+                    case TeraType.BUG:
+                        return Item.BUG_TERA_SHARD
+                    case TeraType.GHOST:
+                        return Item.GHOST_TERA_SHARD
+                    case TeraType.STEEL:
+                        return Item.STEEL_TERA_SHARD
+                    case TeraType.FIRE:
+                        return Item.FIRE_TERA_SHARD
+                    case TeraType.WATER:
+                        return Item.WATER_TERA_SHARD
+                    case TeraType.GRASS:
+                        return Item.GRASS_TERA_SHARD
+                    case TeraType.ELECTRIC:
+                        return Item.ELECTRIC_TERA_SHARD
+                    case TeraType.PSYCHIC:
+                        return Item.PSYCHIC_TERA_SHARD
+                    case TeraType.ICE:
+                        return Item.ICE_TERA_SHARD
+                    case TeraType.DRAGON:
+                        return Item.DRAGON_TERA_SHARD
+                    case TeraType.DARK:
+                        return Item.DARK_TERA_SHARD
+                    case TeraType.FAIRY:
+                        return Item.FAIRY_TERA_SHARD
+                    case _:
+                        return Item.NONE
             case RaidRewardItemCategoryType.POKE:
                 match species:
-                    case Species.VENONAT | Species.VENOMOTH: return Item.VENONAT_FANG
-                    case Species.DIGLETT | Species.DUGTRIO: return Item.DIGLETT_DIRT
-                    case Species.MEOWTH | Species.PERSIAN: return Item.MEOWTH_FUR
-                    case Species.PSYDUCK | Species.GOLDUCK: return Item.PSYDUCK_DOWN
-                    case Species.MANKEY | Species.PRIMEAPE | Species.ANNIHILAPE: return Item.MANKEY_FUR
-                    case Species.GROWLITHE | Species.ARCANINE: return Item.GROWLITHE_FUR
-                    case Species.SLOWPOKE | Species.SLOWBRO | Species.SLOWKING: return Item.SLOWPOKE_CUP
-                    case Species.MAGNEMITE | Species.MAGNETON | Species.MAGNEZONE: return Item.MAGNEMITE_SCREW
-                    case Species.GRIMER | Species.MUK: return Item.GRIMER_TOXIN
-                    case Species.SHELLDER | Species.CLOYSTER: return Item.SHELLDER_PEARL
-                    case Species.GASTLY | Species.HAUNTER | Species.GENGAR: return Item.GASTLY_GAS
-                    case Species.DROWZEE | Species.HYPNO: return Item.DROWZEE_FUR
-                    case Species.VOLTORB | Species.ELECTRODE: return Item.VOLTORB_SPARKS
-                    case Species.SCYTHER | Species.SCIZOR | Species.KLEAVOR: return Item.SCYTHER_CLAW
-                    case Species.TAUROS: return Item.TAUROS_HAIR
-                    case Species.MAGIKARP | Species.GYARADOS: return Item.MAGIKARP_SCALES
-                    case Species.DITTO: return Item.DITTO_GOO
-                    case Species.EEVEE | Species.VAPOREON | Species.JOLTEON | Species.FLAREON | Species.ESPEON | Species.UMBREON | Species.LEAFEON | Species.GLACEON | Species.SYLVEON: return Item.EEVEE_CUP
-                    case Species.DRATINI | Species.DRAGONAIR | Species.DRAGONITE: return Item.DRATINI_SCALES
-                    case Species.PICHU | Species.PIKACHU | Species.RAICHU: return Item.PICHU_FUR
-                    case Species.IGGLYBUFF | Species.JIGGLYPUFF | Species.WIGGLYTUFF: return Item.IGGLYBUFF_FLUFF
-                    case Species.MAREEP | Species.FLAAFFY | Species.AMPHAROS: return Item.MAREEP_WOOL
-                    case Species.HOPPIP | Species.SKIPLOOM | Species.JUMPLUFF: return Item.HOPPIP_LEAF
-                    case Species.SUNKERN | Species.SUNFLORA: return Item.SUNKERN_LEAF
-                    case Species.MURKROW | Species.HONCHKROW: return Item.MURKROW_BAUBLE
-                    case Species.MISDREAVUS | Species.MISMAGIUS: return Item.MISDREAVUS_TEARS
-                    case Species.GIRAFARIG | Species.FARIGIRAF: return Item.GIRAFARIG_FUR
-                    case Species.PINECO | Species.FORRETRESS: return Item.PINECO_HUSK
-                    case Species.DUNSPARCE | Species.DUDUNSPARCE: return Item.DUNSPARCE_SCALES
-                    case Species.QWILFISH | Species.OVERQWIL: return Item.QWILFISH_SPINES
-                    case Species.HERACROSS: return Item.HERACROSS_CLAW
-                    case Species.SNEASEL | Species.WEAVILE | Species.SNEASLER: return Item.SNEASEL_CLAW
-                    case Species.TEDDIURSA | Species.URSARING | Species.URSALUNA: return Item.TEDDIURSA_CLAW
-                    case Species.DELIBIRD: return Item.DELIBIRD_PARCEL
-                    case Species.HOUNDOUR | Species.HOUNDOOM: return Item.HOUNDOUR_FANG
-                    case Species.PHANPY | Species.DONPHAN: return Item.PHANPY_NAIL
-                    case Species.STANTLER | Species.WYRDEER: return Item.STANTLER_HAIR
-                    case Species.LARVITAR | Species.PUPITAR | Species.TYRANITAR: return Item.LARVITAR_CLAW
-                    case Species.WINGULL | Species.PELIPPER: return Item.WINGULL_FEATHER
-                    case Species.RALTS | Species.KIRLIA | Species.GARDEVOIR | Species.GALLADE: return Item.RALTS_DUST
-                    case Species.SURSKIT | Species.MASQUERAIN: return Item.SURSKIT_SYRUP
-                    case Species.SHROOMISH | Species.BRELOOM: return Item.SHROOMISH_SPORES
-                    case Species.SLAKOTH | Species.VIGOROTH | Species.SLAKING: return Item.SLAKOTH_FUR
-                    case Species.MAKUHITA | Species.HARIYAMA: return Item.MAKUHITA_SWEAT
-                    case Species.AZURILL | Species.MARILL | Species.AZUMARILL: return Item.AZURILL_FUR
-                    case Species.SABLEYE: return Item.SABLEYE_GEM
-                    case Species.MEDITITE | Species.MEDICHAM: return Item.MEDITITE_SWEAT
-                    case Species.GULPIN | Species.SWALOT: return Item.GULPIN_MUCUS
-                    case Species.NUMEL | Species.CAMERUPT: return Item.NUMEL_LAVA
-                    case Species.TORKOAL: return Item.TORKOAL_COAL
-                    case Species.SPOINK | Species.GRUMPIG: return Item.SPOINK_PEARL
-                    case Species.CACNEA | Species.CACTURNE: return Item.CACNEA_NEEDLE
-                    case Species.SWABLU | Species.ALTARIA: return Item.SWABLU_FLUFF
-                    case Species.ZANGOOSE: return Item.ZANGOOSE_CLAW
-                    case Species.SEVIPER: return Item.SEVIPER_FANG
-                    case Species.BARBOACH | Species.WHISCASH: return Item.BARBOACH_SLIME
-                    case Species.SHUPPET | Species.BANETTE: return Item.SHUPPET_SCRAP
-                    case Species.TROPIUS: return Item.TROPIUS_LEAF
-                    case Species.SNORUNT | Species.GLALIE | Species.FROSLASS: return Item.SNORUNT_FUR
-                    case Species.LUVDISC: return Item.LUVDISC_SCALES
-                    case Species.BAGON | Species.SHELGON | Species.SALAMENCE: return Item.BAGON_SCALES
-                    case Species.STARLY | Species.STARAVIA | Species.STARAPTOR: return Item.STARLY_FEATHER
-                    case Species.KRICKETOT | Species.KRICKETUNE: return Item.KRICKETOT_SHELL
-                    case Species.SHINX | Species.LUXIO | Species.LUXRAY: return Item.SHINX_FANG
-                    case Species.COMBEE | Species.VESPIQUEN: return Item.COMBEE_HONEY
-                    case Species.PACHIRISU: return Item.PACHIRISU_FUR
-                    case Species.BUIZEL | Species.FLOATZEL: return Item.BUIZEL_FUR
-                    case Species.SHELLOS | Species.GASTRODON: return Item.SHELLOS_MUCUS
-                    case Species.DRIFLOON | Species.DRIFBLIM: return Item.DRIFLOON_GAS
-                    case Species.STUNKY | Species.SKUNTANK: return Item.STUNKY_FUR
-                    case Species.BRONZOR | Species.BRONZONG: return Item.BRONZOR_FRAGMENT
-                    case Species.BONSLY | Species.SUDOWOODO: return Item.BONSLY_TEARS
-                    case Species.HAPPINY | Species.CHANSEY | Species.BLISSEY: return Item.HAPPINY_DUST
-                    case Species.SPIRITOMB: return Item.SPIRITOMB_FRAGMENT
-                    case Species.GIBLE | Species.GABITE | Species.GARCHOMP: return Item.GIBLE_SCALES
-                    case Species.RIOLU | Species.LUCARIO: return Item.RIOLU_FUR
-                    case Species.HIPPOPOTAS | Species.HIPPOWDON: return Item.HIPPOPOTAS_SAND
-                    case Species.CROAGUNK | Species.TOXICROAK: return Item.CROAGUNK_POISON
-                    case Species.FINNEON | Species.LUMINEON: return Item.FINNEON_SCALES
-                    case Species.SNOVER | Species.ABOMASNOW: return Item.SNOVER_BERRIES
-                    case Species.ROTOM: return Item.ROTOM_SPARKS
-                    case Species.PETILIL | Species.LILLIGANT: return Item.PETILIL_LEAF
-                    case Species.BASCULIN | Species.BASCULEGION: return Item.BASCULIN_FANG
-                    case Species.SANDILE | Species.KROKOROK | Species.KROOKODILE: return Item.SANDILE_CLAW
-                    case Species.ZORUA | Species.ZOROARK: return Item.ZORUA_FUR
-                    case Species.GOTHITA | Species.GOTHORITA | Species.GOTHITELLE: return Item.GOTHITA_EYELASH
-                    case Species.DEERLING | Species.SAWSBUCK: return Item.DEERLING_HAIR
-                    case Species.FOONGUS | Species.AMOONGUSS: return Item.FOONGUS_SPORES
-                    case Species.ALOMOMOLA: return Item.ALOMOMOLA_MUCUS
-                    case Species.TYNAMO | Species.EELEKTRIK | Species.EELEKTROSS: return Item.TYNAMO_SLIME
-                    case Species.AXEW | Species.FRAXURE | Species.HAXORUS: return Item.AXEW_SCALES
-                    case Species.CUBCHOO | Species.BEARTIC: return Item.CUBCHOO_FUR
-                    case Species.CRYOGONAL: return Item.CRYOGONAL_ICE
-                    case Species.PAWNIARD | Species.BISHARP | Species.KINGAMBIT: return Item.PAWNIARD_BLADE
-                    case Species.RUFFLET | Species.BRAVIARY: return Item.RUFFLET_FEATHER
-                    case Species.DEINO | Species.ZWEILOUS | Species.HYDREIGON: return Item.DEINO_SCALES
-                    case Species.LARVESTA | Species.VOLCARONA: return Item.LARVESTA_FUZZ
-                    case Species.FLETCHLING | Species.FLETCHINDER | Species.TALONFLAME: return Item.FLETCHLING_FEATHER
-                    case Species.SCATTERBUG | Species.SPEWPA | Species.VIVILLON: return Item.SCATTERBUG_POWDER
-                    case Species.LITLEO | Species.PYROAR: return Item.LITLEO_TUFT
-                    case Species.FLABEBE | Species.FLOETTE | Species.FLORGES: return Item.FLABEBE_POLLEN
-                    case Species.SKIDDO | Species.GOGOAT: return Item.SKIDDO_LEAF
-                    case Species.SKRELP | Species.DRAGALGE: return Item.SKRELP_KELP
-                    case Species.CLAUNCHER | Species.CLAWITZER: return Item.CLAUNCHER_CLAW
-                    case Species.HAWLUCHA: return Item.HAWLUCHA_DOWN
-                    case Species.DEDENNE: return Item.DEDENNE_FUR
-                    case Species.GOOMY | Species.SLIGGOO | Species.GOODRA: return Item.GOOMY_GOO
-                    case Species.KLEFKI: return Item.KLEFKI_KEY
-                    case Species.BERGMITE | Species.AVALUGG: return Item.BERGMITE_ICE
-                    case Species.NOIBAT | Species.NOIVERN: return Item.NOIBAT_FUR
-                    case Species.YUNGOOS | Species.GUMSHOOS: return Item.YUNGOOS_FUR
-                    case Species.CRABRAWLER | Species.CRABOMINABLE: return Item.CRABRAWLER_SHELL
-                    case Species.ORICORIO: return Item.ORICORIO_FEATHER
-                    case Species.ROCKRUFF | Species.LYCANROC: return Item.ROCKRUFF_ROCK
-                    case Species.MAREANIE | Species.TOXAPEX: return Item.MAREANIE_SPIKE
-                    case Species.MUDBRAY | Species.MUDSDALE: return Item.MUDBRAY_MUD
-                    case Species.FOMANTIS | Species.LURANTIS: return Item.FOMANTIS_LEAF
-                    case Species.SALANDIT | Species.SALAZZLE: return Item.SALANDIT_GAS
-                    case Species.BOUNSWEET | Species.STEENEE | Species.TSAREENA: return Item.BOUNSWEET_SWEAT
-                    case Species.ORANGURU: return Item.ORANGURU_FUR
-                    case Species.PASSIMIAN: return Item.PASSIMIAN_FUR
-                    case Species.SANDYGAST | Species.PALOSSAND: return Item.SANDYGAST_SAND
-                    case Species.KOMALA: return Item.KOMALA_CLAW
-                    case Species.MIMIKYU: return Item.MIMIKYU_SCRAP
-                    case Species.BRUXISH: return Item.BRUXISH_TOOTH
-                    case Species.CHEWTLE | Species.DREDNAW: return Item.CHEWTLE_CLAW
-                    case Species.SKWOVET | Species.GREEDENT: return Item.SKWOVET_FUR
-                    case Species.ARROKUDA | Species.BARRASKEWDA: return Item.ARROKUDA_SCALES
-                    case Species.ROOKIDEE | Species.CORVISQUIRE | Species.CORVIKNIGHT: return Item.ROOKIDEE_FEATHER
-                    case Species.TOXEL | Species.TOXTRICITY: return Item.TOXEL_SPARKS
-                    case Species.FALINKS: return Item.FALINKS_SWEAT
-                    case Species.CUFANT | Species.COPPERAJAH: return Item.CUFANT_TARNISH
-                    case Species.ROLYCOLY | Species.CARKOL | Species.COALOSSAL: return Item.ROLYCOLY_COAL
-                    case Species.SILICOBRA | Species.SANDACONDA: return Item.SILICOBRA_SAND
-                    case Species.INDEEDEE: return Item.INDEEDEE_FUR
-                    case Species.PINCURCHIN: return Item.PINCURCHIN_SPINES
-                    case Species.SNOM | Species.FROSMOTH: return Item.SNOM_THREAD
-                    case Species.IMPIDIMP | Species.MORGREM | Species.GRIMMSNARL: return Item.IMPIDIMP_HAIR
-                    case Species.APPLIN | Species.FLAPPLE | Species.APPLETUN: return Item.APPLIN_JUICE
-                    case Species.SINISTEA | Species.POLTEAGEIST: return Item.SINISTEA_CHIP
-                    case Species.HATENNA | Species.HATTREM | Species.HATTERENE: return Item.HATENNA_DUST
-                    case Species.STONJOURNER: return Item.STONJOURNER_STONE
-                    case Species.EISCUE: return Item.EISCUE_DOWN
-                    case Species.DREEPY | Species.DRAKLOAK | Species.DRAGAPULT: return Item.DREEPY_POWDER
-                    case Species.LECHONK | Species.OINKOLOGNE: return Item.LECHONK_HAIR
-                    case Species.TAROUNTULA | Species.SPIDOPS: return Item.TAROUNTULA_THREAD
-                    case Species.NYMBLE | Species.LOKIX: return Item.NYMBLE_CLAW
-                    case Species.RELLOR | Species.RABSCA: return Item.RELLOR_MUD
-                    case Species.GREAVARD | Species.HOUNDSTONE: return Item.GREAVARD_WAX
-                    case Species.FLITTLE | Species.ESPATHRA: return Item.FLITTLE_DOWN
-                    case Species.WIGLETT | Species.WUGTRIO: return Item.WIGLETT_SAND
-                    case Species.DONDOZO: return Item.DONDOZO_WHISKER
-                    case Species.VELUZA: return Item.VELUZA_FILLET
-                    case Species.FINIZEN | Species.PALAFIN: return Item.FINIZEN_MUCUS
-                    case Species.SMOLIV | Species.DOLLIV | Species.ARBOLIVA: return Item.SMOLIV_OIL
-                    case Species.CAPSAKID | Species.SCOVILLAIN: return Item.CAPSAKID_SEED
-                    case Species.TADBULB | Species.BELLIBOLT: return Item.TADBULB_MUCUS
-                    case Species.VAROOM | Species.REVAVROOM: return Item.VAROOM_FUME
-                    case Species.ORTHWORM: return Item.ORTHWORM_TARNISH
-                    case Species.TANDEMAUS | Species.MAUSHOLD: return Item.TANDEMAUS_FUR
-                    case Species.CETODDLE | Species.CETITAN: return Item.CETODDLE_GREASE
-                    case Species.FRIGIBAX | Species.ARCTIBAX | Species.BAXCALIBUR: return Item.FRIGIBAX_SCALES
-                    case Species.TATSUGIRI: return Item.TATSUGIRI_SCALES
-                    case Species.CYCLIZAR: return Item.CYCLIZAR_SCALES
-                    case Species.PAWMI | Species.PAWMO | Species.PAWMOT: return Item.PAWMI_FUR
-                    case Species.WATTREL | Species.KILOWATTREL: return Item.WATTREL_FEATHER
-                    case Species.BOMBIRDIER: return Item.BOMBIRDIER_FEATHER
-                    case Species.SQUAWKABILLY: return Item.SQUAWKABILLY_FEATHER
-                    case Species.FLAMIGO: return Item.FLAMIGO_DOWN
-                    case Species.KLAWF: return Item.KLAWF_CLAW
-                    case Species.NACLI | Species.NACLSTACK | Species.GARGANACL: return Item.NACLI_SALT
-                    case Species.GLIMMET | Species.GLIMMORA: return Item.GLIMMET_CRYSTAL
-                    case Species.SHROODLE | Species.GRAFAIAI: return Item.SHROODLE_INK
-                    case Species.FIDOUGH | Species.DACHSBUN: return Item.FIDOUGH_FUR
-                    case Species.MASCHIFF | Species.MABOSSTIFF: return Item.MASCHIFF_FANG
-                    case Species.BRAMBLIN | Species.BRAMBLEGHAST: return Item.BRAMBLIN_TWIG
-                    case Species.GIMMIGHOUL | Species.GHOLDENGO: return Item.GIMMIGHOUL_COIN
-                    case Species.TINKATINK | Species.TINKATUFF | Species.TINKATON: return Item.TINKATINK_HAIR
-                    case Species.CHARCADET | Species.ARMAROUGE | Species.CERULEDGE: return Item.CHARCADET_SOOT
-                    case Species.TOEDSCOOL | Species.TOEDSCRUEL: return Item.TOEDSCOOL_FLAPS
-                    case Species.WOOPER | Species.QUAGSIRE | Species.CLODSIRE: return Item.WOOPER_SLIME
-                    case _: return Item.NONE
+                    case Species.VENONAT | Species.VENOMOTH:
+                        return Item.VENONAT_FANG
+                    case Species.DIGLETT | Species.DUGTRIO:
+                        return Item.DIGLETT_DIRT
+                    case Species.MEOWTH | Species.PERSIAN:
+                        return Item.MEOWTH_FUR
+                    case Species.PSYDUCK | Species.GOLDUCK:
+                        return Item.PSYDUCK_DOWN
+                    case Species.MANKEY | Species.PRIMEAPE | Species.ANNIHILAPE:
+                        return Item.MANKEY_FUR
+                    case Species.GROWLITHE | Species.ARCANINE:
+                        return Item.GROWLITHE_FUR
+                    case Species.SLOWPOKE | Species.SLOWBRO | Species.SLOWKING:
+                        return Item.SLOWPOKE_CUP
+                    case Species.MAGNEMITE | Species.MAGNETON | Species.MAGNEZONE:
+                        return Item.MAGNEMITE_SCREW
+                    case Species.GRIMER | Species.MUK:
+                        return Item.GRIMER_TOXIN
+                    case Species.SHELLDER | Species.CLOYSTER:
+                        return Item.SHELLDER_PEARL
+                    case Species.GASTLY | Species.HAUNTER | Species.GENGAR:
+                        return Item.GASTLY_GAS
+                    case Species.DROWZEE | Species.HYPNO:
+                        return Item.DROWZEE_FUR
+                    case Species.VOLTORB | Species.ELECTRODE:
+                        return Item.VOLTORB_SPARKS
+                    case Species.SCYTHER | Species.SCIZOR | Species.KLEAVOR:
+                        return Item.SCYTHER_CLAW
+                    case Species.TAUROS:
+                        return Item.TAUROS_HAIR
+                    case Species.MAGIKARP | Species.GYARADOS:
+                        return Item.MAGIKARP_SCALES
+                    case Species.DITTO:
+                        return Item.DITTO_GOO
+                    case Species.EEVEE | Species.VAPOREON | Species.JOLTEON | Species.FLAREON | Species.ESPEON | Species.UMBREON | Species.LEAFEON | Species.GLACEON | Species.SYLVEON:
+                        return Item.EEVEE_CUP
+                    case Species.DRATINI | Species.DRAGONAIR | Species.DRAGONITE:
+                        return Item.DRATINI_SCALES
+                    case Species.PICHU | Species.PIKACHU | Species.RAICHU:
+                        return Item.PICHU_FUR
+                    case Species.IGGLYBUFF | Species.JIGGLYPUFF | Species.WIGGLYTUFF:
+                        return Item.IGGLYBUFF_FLUFF
+                    case Species.MAREEP | Species.FLAAFFY | Species.AMPHAROS:
+                        return Item.MAREEP_WOOL
+                    case Species.HOPPIP | Species.SKIPLOOM | Species.JUMPLUFF:
+                        return Item.HOPPIP_LEAF
+                    case Species.SUNKERN | Species.SUNFLORA:
+                        return Item.SUNKERN_LEAF
+                    case Species.MURKROW | Species.HONCHKROW:
+                        return Item.MURKROW_BAUBLE
+                    case Species.MISDREAVUS | Species.MISMAGIUS:
+                        return Item.MISDREAVUS_TEARS
+                    case Species.GIRAFARIG | Species.FARIGIRAF:
+                        return Item.GIRAFARIG_FUR
+                    case Species.PINECO | Species.FORRETRESS:
+                        return Item.PINECO_HUSK
+                    case Species.DUNSPARCE | Species.DUDUNSPARCE:
+                        return Item.DUNSPARCE_SCALES
+                    case Species.QWILFISH | Species.OVERQWIL:
+                        return Item.QWILFISH_SPINES
+                    case Species.HERACROSS:
+                        return Item.HERACROSS_CLAW
+                    case Species.SNEASEL | Species.WEAVILE | Species.SNEASLER:
+                        return Item.SNEASEL_CLAW
+                    case Species.TEDDIURSA | Species.URSARING | Species.URSALUNA:
+                        return Item.TEDDIURSA_CLAW
+                    case Species.DELIBIRD:
+                        return Item.DELIBIRD_PARCEL
+                    case Species.HOUNDOUR | Species.HOUNDOOM:
+                        return Item.HOUNDOUR_FANG
+                    case Species.PHANPY | Species.DONPHAN:
+                        return Item.PHANPY_NAIL
+                    case Species.STANTLER | Species.WYRDEER:
+                        return Item.STANTLER_HAIR
+                    case Species.LARVITAR | Species.PUPITAR | Species.TYRANITAR:
+                        return Item.LARVITAR_CLAW
+                    case Species.WINGULL | Species.PELIPPER:
+                        return Item.WINGULL_FEATHER
+                    case Species.RALTS | Species.KIRLIA | Species.GARDEVOIR | Species.GALLADE:
+                        return Item.RALTS_DUST
+                    case Species.SURSKIT | Species.MASQUERAIN:
+                        return Item.SURSKIT_SYRUP
+                    case Species.SHROOMISH | Species.BRELOOM:
+                        return Item.SHROOMISH_SPORES
+                    case Species.SLAKOTH | Species.VIGOROTH | Species.SLAKING:
+                        return Item.SLAKOTH_FUR
+                    case Species.MAKUHITA | Species.HARIYAMA:
+                        return Item.MAKUHITA_SWEAT
+                    case Species.AZURILL | Species.MARILL | Species.AZUMARILL:
+                        return Item.AZURILL_FUR
+                    case Species.SABLEYE:
+                        return Item.SABLEYE_GEM
+                    case Species.MEDITITE | Species.MEDICHAM:
+                        return Item.MEDITITE_SWEAT
+                    case Species.GULPIN | Species.SWALOT:
+                        return Item.GULPIN_MUCUS
+                    case Species.NUMEL | Species.CAMERUPT:
+                        return Item.NUMEL_LAVA
+                    case Species.TORKOAL:
+                        return Item.TORKOAL_COAL
+                    case Species.SPOINK | Species.GRUMPIG:
+                        return Item.SPOINK_PEARL
+                    case Species.CACNEA | Species.CACTURNE:
+                        return Item.CACNEA_NEEDLE
+                    case Species.SWABLU | Species.ALTARIA:
+                        return Item.SWABLU_FLUFF
+                    case Species.ZANGOOSE:
+                        return Item.ZANGOOSE_CLAW
+                    case Species.SEVIPER:
+                        return Item.SEVIPER_FANG
+                    case Species.BARBOACH | Species.WHISCASH:
+                        return Item.BARBOACH_SLIME
+                    case Species.SHUPPET | Species.BANETTE:
+                        return Item.SHUPPET_SCRAP
+                    case Species.TROPIUS:
+                        return Item.TROPIUS_LEAF
+                    case Species.SNORUNT | Species.GLALIE | Species.FROSLASS:
+                        return Item.SNORUNT_FUR
+                    case Species.LUVDISC:
+                        return Item.LUVDISC_SCALES
+                    case Species.BAGON | Species.SHELGON | Species.SALAMENCE:
+                        return Item.BAGON_SCALES
+                    case Species.STARLY | Species.STARAVIA | Species.STARAPTOR:
+                        return Item.STARLY_FEATHER
+                    case Species.KRICKETOT | Species.KRICKETUNE:
+                        return Item.KRICKETOT_SHELL
+                    case Species.SHINX | Species.LUXIO | Species.LUXRAY:
+                        return Item.SHINX_FANG
+                    case Species.COMBEE | Species.VESPIQUEN:
+                        return Item.COMBEE_HONEY
+                    case Species.PACHIRISU:
+                        return Item.PACHIRISU_FUR
+                    case Species.BUIZEL | Species.FLOATZEL:
+                        return Item.BUIZEL_FUR
+                    case Species.SHELLOS | Species.GASTRODON:
+                        return Item.SHELLOS_MUCUS
+                    case Species.DRIFLOON | Species.DRIFBLIM:
+                        return Item.DRIFLOON_GAS
+                    case Species.STUNKY | Species.SKUNTANK:
+                        return Item.STUNKY_FUR
+                    case Species.BRONZOR | Species.BRONZONG:
+                        return Item.BRONZOR_FRAGMENT
+                    case Species.BONSLY | Species.SUDOWOODO:
+                        return Item.BONSLY_TEARS
+                    case Species.HAPPINY | Species.CHANSEY | Species.BLISSEY:
+                        return Item.HAPPINY_DUST
+                    case Species.SPIRITOMB:
+                        return Item.SPIRITOMB_FRAGMENT
+                    case Species.GIBLE | Species.GABITE | Species.GARCHOMP:
+                        return Item.GIBLE_SCALES
+                    case Species.RIOLU | Species.LUCARIO:
+                        return Item.RIOLU_FUR
+                    case Species.HIPPOPOTAS | Species.HIPPOWDON:
+                        return Item.HIPPOPOTAS_SAND
+                    case Species.CROAGUNK | Species.TOXICROAK:
+                        return Item.CROAGUNK_POISON
+                    case Species.FINNEON | Species.LUMINEON:
+                        return Item.FINNEON_SCALES
+                    case Species.SNOVER | Species.ABOMASNOW:
+                        return Item.SNOVER_BERRIES
+                    case Species.ROTOM:
+                        return Item.ROTOM_SPARKS
+                    case Species.PETILIL | Species.LILLIGANT:
+                        return Item.PETILIL_LEAF
+                    case Species.BASCULIN | Species.BASCULEGION:
+                        return Item.BASCULIN_FANG
+                    case Species.SANDILE | Species.KROKOROK | Species.KROOKODILE:
+                        return Item.SANDILE_CLAW
+                    case Species.ZORUA | Species.ZOROARK:
+                        return Item.ZORUA_FUR
+                    case Species.GOTHITA | Species.GOTHORITA | Species.GOTHITELLE:
+                        return Item.GOTHITA_EYELASH
+                    case Species.DEERLING | Species.SAWSBUCK:
+                        return Item.DEERLING_HAIR
+                    case Species.FOONGUS | Species.AMOONGUSS:
+                        return Item.FOONGUS_SPORES
+                    case Species.ALOMOMOLA:
+                        return Item.ALOMOMOLA_MUCUS
+                    case Species.TYNAMO | Species.EELEKTRIK | Species.EELEKTROSS:
+                        return Item.TYNAMO_SLIME
+                    case Species.AXEW | Species.FRAXURE | Species.HAXORUS:
+                        return Item.AXEW_SCALES
+                    case Species.CUBCHOO | Species.BEARTIC:
+                        return Item.CUBCHOO_FUR
+                    case Species.CRYOGONAL:
+                        return Item.CRYOGONAL_ICE
+                    case Species.PAWNIARD | Species.BISHARP | Species.KINGAMBIT:
+                        return Item.PAWNIARD_BLADE
+                    case Species.RUFFLET | Species.BRAVIARY:
+                        return Item.RUFFLET_FEATHER
+                    case Species.DEINO | Species.ZWEILOUS | Species.HYDREIGON:
+                        return Item.DEINO_SCALES
+                    case Species.LARVESTA | Species.VOLCARONA:
+                        return Item.LARVESTA_FUZZ
+                    case Species.FLETCHLING | Species.FLETCHINDER | Species.TALONFLAME:
+                        return Item.FLETCHLING_FEATHER
+                    case Species.SCATTERBUG | Species.SPEWPA | Species.VIVILLON:
+                        return Item.SCATTERBUG_POWDER
+                    case Species.LITLEO | Species.PYROAR:
+                        return Item.LITLEO_TUFT
+                    case Species.FLABEBE | Species.FLOETTE | Species.FLORGES:
+                        return Item.FLABEBE_POLLEN
+                    case Species.SKIDDO | Species.GOGOAT:
+                        return Item.SKIDDO_LEAF
+                    case Species.SKRELP | Species.DRAGALGE:
+                        return Item.SKRELP_KELP
+                    case Species.CLAUNCHER | Species.CLAWITZER:
+                        return Item.CLAUNCHER_CLAW
+                    case Species.HAWLUCHA:
+                        return Item.HAWLUCHA_DOWN
+                    case Species.DEDENNE:
+                        return Item.DEDENNE_FUR
+                    case Species.GOOMY | Species.SLIGGOO | Species.GOODRA:
+                        return Item.GOOMY_GOO
+                    case Species.KLEFKI:
+                        return Item.KLEFKI_KEY
+                    case Species.BERGMITE | Species.AVALUGG:
+                        return Item.BERGMITE_ICE
+                    case Species.NOIBAT | Species.NOIVERN:
+                        return Item.NOIBAT_FUR
+                    case Species.YUNGOOS | Species.GUMSHOOS:
+                        return Item.YUNGOOS_FUR
+                    case Species.CRABRAWLER | Species.CRABOMINABLE:
+                        return Item.CRABRAWLER_SHELL
+                    case Species.ORICORIO:
+                        return Item.ORICORIO_FEATHER
+                    case Species.ROCKRUFF | Species.LYCANROC:
+                        return Item.ROCKRUFF_ROCK
+                    case Species.MAREANIE | Species.TOXAPEX:
+                        return Item.MAREANIE_SPIKE
+                    case Species.MUDBRAY | Species.MUDSDALE:
+                        return Item.MUDBRAY_MUD
+                    case Species.FOMANTIS | Species.LURANTIS:
+                        return Item.FOMANTIS_LEAF
+                    case Species.SALANDIT | Species.SALAZZLE:
+                        return Item.SALANDIT_GAS
+                    case Species.BOUNSWEET | Species.STEENEE | Species.TSAREENA:
+                        return Item.BOUNSWEET_SWEAT
+                    case Species.ORANGURU:
+                        return Item.ORANGURU_FUR
+                    case Species.PASSIMIAN:
+                        return Item.PASSIMIAN_FUR
+                    case Species.SANDYGAST | Species.PALOSSAND:
+                        return Item.SANDYGAST_SAND
+                    case Species.KOMALA:
+                        return Item.KOMALA_CLAW
+                    case Species.MIMIKYU:
+                        return Item.MIMIKYU_SCRAP
+                    case Species.BRUXISH:
+                        return Item.BRUXISH_TOOTH
+                    case Species.CHEWTLE | Species.DREDNAW:
+                        return Item.CHEWTLE_CLAW
+                    case Species.SKWOVET | Species.GREEDENT:
+                        return Item.SKWOVET_FUR
+                    case Species.ARROKUDA | Species.BARRASKEWDA:
+                        return Item.ARROKUDA_SCALES
+                    case Species.ROOKIDEE | Species.CORVISQUIRE | Species.CORVIKNIGHT:
+                        return Item.ROOKIDEE_FEATHER
+                    case Species.TOXEL | Species.TOXTRICITY:
+                        return Item.TOXEL_SPARKS
+                    case Species.FALINKS:
+                        return Item.FALINKS_SWEAT
+                    case Species.CUFANT | Species.COPPERAJAH:
+                        return Item.CUFANT_TARNISH
+                    case Species.ROLYCOLY | Species.CARKOL | Species.COALOSSAL:
+                        return Item.ROLYCOLY_COAL
+                    case Species.SILICOBRA | Species.SANDACONDA:
+                        return Item.SILICOBRA_SAND
+                    case Species.INDEEDEE:
+                        return Item.INDEEDEE_FUR
+                    case Species.PINCURCHIN:
+                        return Item.PINCURCHIN_SPINES
+                    case Species.SNOM | Species.FROSMOTH:
+                        return Item.SNOM_THREAD
+                    case Species.IMPIDIMP | Species.MORGREM | Species.GRIMMSNARL:
+                        return Item.IMPIDIMP_HAIR
+                    case Species.APPLIN | Species.FLAPPLE | Species.APPLETUN:
+                        return Item.APPLIN_JUICE
+                    case Species.SINISTEA | Species.POLTEAGEIST:
+                        return Item.SINISTEA_CHIP
+                    case Species.HATENNA | Species.HATTREM | Species.HATTERENE:
+                        return Item.HATENNA_DUST
+                    case Species.STONJOURNER:
+                        return Item.STONJOURNER_STONE
+                    case Species.EISCUE:
+                        return Item.EISCUE_DOWN
+                    case Species.DREEPY | Species.DRAKLOAK | Species.DRAGAPULT:
+                        return Item.DREEPY_POWDER
+                    case Species.LECHONK | Species.OINKOLOGNE:
+                        return Item.LECHONK_HAIR
+                    case Species.TAROUNTULA | Species.SPIDOPS:
+                        return Item.TAROUNTULA_THREAD
+                    case Species.NYMBLE | Species.LOKIX:
+                        return Item.NYMBLE_CLAW
+                    case Species.RELLOR | Species.RABSCA:
+                        return Item.RELLOR_MUD
+                    case Species.GREAVARD | Species.HOUNDSTONE:
+                        return Item.GREAVARD_WAX
+                    case Species.FLITTLE | Species.ESPATHRA:
+                        return Item.FLITTLE_DOWN
+                    case Species.WIGLETT | Species.WUGTRIO:
+                        return Item.WIGLETT_SAND
+                    case Species.DONDOZO:
+                        return Item.DONDOZO_WHISKER
+                    case Species.VELUZA:
+                        return Item.VELUZA_FILLET
+                    case Species.FINIZEN | Species.PALAFIN:
+                        return Item.FINIZEN_MUCUS
+                    case Species.SMOLIV | Species.DOLLIV | Species.ARBOLIVA:
+                        return Item.SMOLIV_OIL
+                    case Species.CAPSAKID | Species.SCOVILLAIN:
+                        return Item.CAPSAKID_SEED
+                    case Species.TADBULB | Species.BELLIBOLT:
+                        return Item.TADBULB_MUCUS
+                    case Species.VAROOM | Species.REVAVROOM:
+                        return Item.VAROOM_FUME
+                    case Species.ORTHWORM:
+                        return Item.ORTHWORM_TARNISH
+                    case Species.TANDEMAUS | Species.MAUSHOLD:
+                        return Item.TANDEMAUS_FUR
+                    case Species.CETODDLE | Species.CETITAN:
+                        return Item.CETODDLE_GREASE
+                    case Species.FRIGIBAX | Species.ARCTIBAX | Species.BAXCALIBUR:
+                        return Item.FRIGIBAX_SCALES
+                    case Species.TATSUGIRI:
+                        return Item.TATSUGIRI_SCALES
+                    case Species.CYCLIZAR:
+                        return Item.CYCLIZAR_SCALES
+                    case Species.PAWMI | Species.PAWMO | Species.PAWMOT:
+                        return Item.PAWMI_FUR
+                    case Species.WATTREL | Species.KILOWATTREL:
+                        return Item.WATTREL_FEATHER
+                    case Species.BOMBIRDIER:
+                        return Item.BOMBIRDIER_FEATHER
+                    case Species.SQUAWKABILLY:
+                        return Item.SQUAWKABILLY_FEATHER
+                    case Species.FLAMIGO:
+                        return Item.FLAMIGO_DOWN
+                    case Species.KLAWF:
+                        return Item.KLAWF_CLAW
+                    case Species.NACLI | Species.NACLSTACK | Species.GARGANACL:
+                        return Item.NACLI_SALT
+                    case Species.GLIMMET | Species.GLIMMORA:
+                        return Item.GLIMMET_CRYSTAL
+                    case Species.SHROODLE | Species.GRAFAIAI:
+                        return Item.SHROODLE_INK
+                    case Species.FIDOUGH | Species.DACHSBUN:
+                        return Item.FIDOUGH_FUR
+                    case Species.MASCHIFF | Species.MABOSSTIFF:
+                        return Item.MASCHIFF_FANG
+                    case Species.BRAMBLIN | Species.BRAMBLEGHAST:
+                        return Item.BRAMBLIN_TWIG
+                    case Species.GIMMIGHOUL | Species.GHOLDENGO:
+                        return Item.GIMMIGHOUL_COIN
+                    case Species.TINKATINK | Species.TINKATUFF | Species.TINKATON:
+                        return Item.TINKATINK_HAIR
+                    case Species.CHARCADET | Species.ARMAROUGE | Species.CERULEDGE:
+                        return Item.CHARCADET_SOOT
+                    case Species.TOEDSCOOL | Species.TOEDSCRUEL:
+                        return Item.TOEDSCOOL_FLAPS
+                    case Species.WOOPER | Species.QUAGSIRE | Species.CLODSIRE:
+                        return Item.WOOPER_SLIME
+                    case _:
+                        return Item.NONE

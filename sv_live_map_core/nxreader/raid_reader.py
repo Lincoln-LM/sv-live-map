@@ -17,24 +17,27 @@ from ..save.raid_block import RaidBlock, process_raid_block
 from ..rng import SCXorshift32
 from ..save.my_status_9 import MyStatus9
 
+
 # TODO: exceptions.py
 class SaveBlockError(Exception):
     """Error when reading save block"""
 
+
 class RaidReader(NXReader):
     """Subclass of NXReader with functions specifically for raids"""
+
     RAID_BINARY_SIZES = (0x3128, 0x3058, 0x4400, 0x5A78, 0x6690, 0x4FB0)
     RAID_BINARY_OFS = (0x8, 0x8, 0x4, 0x4, 0x4, 0x4, None)
     # https://github.com/Manu098vm/SVResearches/blob/master/RAM%20Pointers/RAM%20Pointers.txt
-    RAID_BLOCK_PTR = ("[[main+43A77C8]+160]+40", 0xC98) # ty skylink!
+    RAID_BLOCK_PTR = ("[[main+43A77C8]+160]+40", 0xC98)  # ty skylink!
     SAVE_BLOCK_PTR = "[[[main+4385F30]+80]+8]"
-    GAME_ID_OFS = 0x4385FD0 # game_id = *(main + GAME_ID_OFS)
+    GAME_ID_OFS = 0x4385FD0  # game_id = *(main + GAME_ID_OFS)
     # save block locations and keys: (ofs, key)
     DIFFICULTY_FLAG_LOCATIONS = (
         (0x2BF20, 0xEC95D8EF),
         (0x1F400, 0xA9428DFE),
         (0x1B640, 0x9535F471),
-        (0x13EC0, 0x6E7F8220)
+        (0x13EC0, 0x6E7F8220),
     )
     MY_STATUS_LOCATION = (0x29F40, 0xE3E89BD1)
     BCAT_RAID_BINARY_LOCATION = (0x1040, 0x520A1B0)
@@ -57,29 +60,28 @@ class RaidReader(NXReader):
         super().__init__(ip_address, port, usb_connection)
         self.read_safety = read_safety
         if raid_enemy_table_arrays is None:
-            self.raid_enemy_table_arrays: tuple[RaidEnemyTableArray, 7] = \
-                self.read_raid_enemy_table_arrays()
+            self.raid_enemy_table_arrays: tuple[
+                RaidEnemyTableArray, 7
+            ] = self.read_raid_enemy_table_arrays()
         else:
-            self.raid_enemy_table_arrays = \
-                [RaidEnemyTableArray(table) for table in raid_enemy_table_arrays]
+            self.raid_enemy_table_arrays = [
+                RaidEnemyTableArray(table) for table in raid_enemy_table_arrays
+            ]
             self.raid_enemy_table_arrays.append(
-                RaidEnemyTableArray(
-                    self.read_raid_binary(
-                        StarLevel.EVENT
-                    )
-                )
+                RaidEnemyTableArray(self.read_raid_binary(StarLevel.EVENT))
             )
         if raid_item_table_arrays is None:
-            self.raid_item_table_arrays: \
-                tuple[RaidFixedRewardItemArray | RaidLotteryRewardItemArray, 4] = \
-                self.read_raid_item_table_arrays()
+            self.raid_item_table_arrays: tuple[
+                RaidFixedRewardItemArray | RaidLotteryRewardItemArray, 4
+            ] = self.read_raid_item_table_arrays()
         else:
-            self.raid_item_table_arrays: \
-                tuple[RaidFixedRewardItemArray | RaidLotteryRewardItemArray, 4] = (
-                    RaidFixedRewardItemArray(raid_item_table_arrays[0]),
-                    RaidLotteryRewardItemArray(raid_item_table_arrays[1]),
-                    *self.read_delivery_item_binaries()
-                )
+            self.raid_item_table_arrays: tuple[
+                RaidFixedRewardItemArray | RaidLotteryRewardItemArray, 4
+            ] = (
+                RaidFixedRewardItemArray(raid_item_table_arrays[0]),
+                RaidLotteryRewardItemArray(raid_item_table_arrays[1]),
+                *self.read_delivery_item_binaries(),
+            )
         self.delivery_raid_priority: tuple[int] = self.read_delivery_raid_priority()
         self.story_progress: StoryProgress = self.read_story_progess()
         self.game_version: Game = self.read_game_version()
@@ -93,50 +95,45 @@ class RaidReader(NXReader):
         )
         if len(delivery_raid_priority_array.delivery_raid_prioritys) == 0:
             return (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
-        return delivery_raid_priority_array \
-            .delivery_raid_prioritys[0] \
-            .delivery_group_id \
-            .group_counts
+        return delivery_raid_priority_array.delivery_raid_prioritys[
+            0
+        ].delivery_group_id.group_counts
 
     def read_raid_fixed_item_binary(self) -> bytes:
         """Read raid fixed item flatbuffer binary from memory"""
-        return self.read_pointer("[[[[[[[[main+43A77B8]+20]+2B0]+60]+30]+208]]+5D0]", 0x1CA8)
+        return self.read_pointer(
+            "[[[[[[[[main+43A77B8]+20]+2B0]+60]+30]+208]]+5D0]", 0x1CA8
+        )
 
     def read_raid_lottery_item_binary(self) -> bytes:
         """Read raid lottery item flatbuffer binary from memory"""
         return self.read_absolute(
-            self.read_pointer_int(
-                "[[[[[[[main+43A77B8]+20]+2B0]+60]+28]+200]]+E8",
-                8
-            ) - 0xC,
-            0x3AC8
+            self.read_pointer_int("[[[[[[[main+43A77B8]+20]+2B0]+60]+28]+200]]+E8", 8)
+            - 0xC,
+            0x3AC8,
         )
 
     def read_delivery_item_binaries(
-        self
+        self,
     ) -> tuple[RaidFixedRewardItemArray | RaidLotteryRewardItemArray, 2]:
         """Read delivery item flatbuffer binaries from save blocks"""
         return (
             RaidFixedRewardItemArray(
-                self.read_save_block_object(
-                    *self.BCAT_RAID_FIXED_REWARD_LOCATION
-                )
+                self.read_save_block_object(*self.BCAT_RAID_FIXED_REWARD_LOCATION)
             ),
             RaidLotteryRewardItemArray(
-                self.read_save_block_object(
-                    *self.BCAT_RAID_LOTTERY_REWARD_LOCATION
-                )
+                self.read_save_block_object(*self.BCAT_RAID_LOTTERY_REWARD_LOCATION)
             ),
         )
 
     def read_raid_item_table_arrays(
-        self
+        self,
     ) -> tuple[RaidFixedRewardItemArray | RaidLotteryRewardItemArray, 4]:
         """Read raid item table arrays from flatbuffer binaries stored in memory"""
         return (
             RaidFixedRewardItemArray(self.read_raid_fixed_item_binary()),
             RaidLotteryRewardItemArray(self.read_raid_lottery_item_binary()),
-            *self.read_delivery_item_binaries()
+            *self.read_delivery_item_binaries(),
         )
 
     def read_raid_binary(self, star_level: StarLevel) -> bytes:
@@ -146,16 +143,17 @@ class RaidReader(NXReader):
         return self.read_absolute(
             self.read_pointer_int(
                 f"[[[[[[[[main+43A77B8]+20]+2B0]+60]+10]+208]]+198]+{(star_level + 1) * 0xB0:X}",
-                8
-            ) - self.RAID_BINARY_OFS[star_level],
-            self.RAID_BINARY_SIZES[star_level]
+                8,
+            )
+            - self.RAID_BINARY_OFS[star_level],
+            self.RAID_BINARY_SIZES[star_level],
         )
 
     def read_story_progess(self) -> StoryProgress:
         """Read and decrypt story progress from save blocks"""
         progress = StoryProgress.SIX_STAR_UNLOCKED
-        for (ofs, key) in reversed(self.DIFFICULTY_FLAG_LOCATIONS):
-            if self.read_save_block_bool(ofs, key = key):
+        for ofs, key in reversed(self.DIFFICULTY_FLAG_LOCATIONS):
+            if self.read_save_block_bool(ofs, key=key):
                 return StoryProgress(progress)
             progress -= 1
         return StoryProgress.DEFAULT
@@ -163,18 +161,24 @@ class RaidReader(NXReader):
     def read_my_status(self) -> MyStatus9:
         """Read trainer info"""
         ofs, key = self.MY_STATUS_LOCATION
-        return self.read_save_block_struct(ofs, MyStatus9, key = key)
+        return self.read_save_block_struct(ofs, MyStatus9, key=key)
 
     def _search_save_block(self, base_offset: int, key: int = None) -> tuple[int, int]:
         """Search memory for the correct save block offset"""
         if key is None:
-            return base_offset, self.read_pointer_int(f"{self.SAVE_BLOCK_PTR}+{base_offset:X}", 4)
+            return base_offset, self.read_pointer_int(
+                f"{self.SAVE_BLOCK_PTR}+{base_offset:X}", 4
+            )
         read_key = self.read_pointer_int(f"{self.SAVE_BLOCK_PTR}+{base_offset:X}", 4)
         if read_key != key:
-            print(f"WARNING: {base_offset=:X} contains the key {read_key=:X} and not {key=:X}")
+            print(
+                f"WARNING: {base_offset=:X} contains the key {read_key=:X} and not {key=:X}"
+            )
             print("Searching for correct block")
             direction = 1 if key > read_key else -1
-            for offset in range(base_offset, base_offset + direction * 0x1000, direction * 0x20):
+            for offset in range(
+                base_offset, base_offset + direction * 0x1000, direction * 0x20
+            ):
                 read_key = self.read_pointer_int(f"{self.SAVE_BLOCK_PTR}+{offset:X}", 4)
                 print(f"Testing {offset=:X}, {read_key=:X}")
                 if read_key == key:
@@ -201,56 +205,62 @@ class RaidReader(NXReader):
 
     def read_save_block_int(self, offset: int, key: int = None) -> int:
         """Read decrypted save block u32 at offset"""
-        return int.from_bytes(self.read_save_block(offset, 5, key = key)[1:], 'little')
+        return int.from_bytes(self.read_save_block(offset, 5, key=key)[1:], "little")
 
     def read_save_block_bool(self, offset: int, key: int = None) -> int:
         """Read decrypted save block boolean at offset"""
-        return int.from_bytes(self.read_save_block(offset, 1, key = key), 'little') == 2
+        return int.from_bytes(self.read_save_block(offset, 1, key=key), "little") == 2
 
     def read_save_block(self, offset: int, size: int, key: int = None) -> bytearray:
         """Read decrypted save block at offset"""
         offset, key = self._search_save_block(offset, key)
-        block = bytearray(self.read_pointer(f"[{self.SAVE_BLOCK_PTR}+{offset + 8:X}]", size))
+        block = bytearray(
+            self.read_pointer(f"[{self.SAVE_BLOCK_PTR}+{offset + 8:X}]", size)
+        )
         return self._decrypt_save_block(key, block)
 
     def read_save_block_object(self, offset: int, key: int = None) -> bytearray:
         """Read decrypted save block object at offset"""
         offset, key = self._search_save_block(offset, key)
-        header = bytearray(self.read_pointer(f"[{self.SAVE_BLOCK_PTR}+{offset + 8:X}]", 5))
+        header = bytearray(
+            self.read_pointer(f"[{self.SAVE_BLOCK_PTR}+{offset + 8:X}]", 5)
+        )
         header = self._decrypt_save_block(key, header)
         # discard type byte
-        size = int.from_bytes(header[1:], 'little')
+        size = int.from_bytes(header[1:], "little")
         full_object = bytearray(
-            self.read_pointer(
-                f"[{self.SAVE_BLOCK_PTR}+{offset + 8:X}]",
-                5 + size
-            )
+            self.read_pointer(f"[{self.SAVE_BLOCK_PTR}+{offset + 8:X}]", 5 + size)
         )
         # discard type and size bytes
         return self._decrypt_save_block(key, full_object)[5:]
 
     def read_trainer_icon(self) -> Image.Image:
         """Read trainer icon as PIL image"""
+
         # thanks NPO! https://github.com/NPO-197
         def build_dxt1_header(width, height):
             """Build DXT1 header"""
-            return b'\x44\x44\x53\x20\x7C\x00\x00\x00\x07\x10\x08\x00' \
-                + struct.pack("<II", height, width) \
-                + b'\x00\x7E\x09\x00\x00\x00\x00\x00\x01\x00\x00\x00' \
-                b'\x49\x4D\x41\x47\x45\x4D\x41\x47\x49\x43\x4B\x00' \
-                b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00' \
-                b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00' \
-                b'\x00\x00\x00\x00\x00\x00\x00\x00\x20\x00\x00\x00' \
-                b'\x04\x00\x00\x00\x44\x58\x54\x31\x00\x00\x00\x00' \
-                b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00' \
-                b'\x00\x00\x00\x00\x00\x10\x00\x00\x00\x00\x00\x00' \
-                b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
+            return (
+                b"\x44\x44\x53\x20\x7C\x00\x00\x00\x07\x10\x08\x00"
+                + struct.pack("<II", height, width)
+                + b"\x00\x7E\x09\x00\x00\x00\x00\x00\x01\x00\x00\x00"
+                b"\x49\x4D\x41\x47\x45\x4D\x41\x47\x49\x43\x4B\x00"
+                b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+                b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+                b"\x00\x00\x00\x00\x00\x00\x00\x00\x20\x00\x00\x00"
+                b"\x04\x00\x00\x00\x44\x58\x54\x31\x00\x00\x00\x00"
+                b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+                b"\x00\x00\x00\x00\x00\x10\x00\x00\x00\x00\x00\x00"
+                b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+            )
+
         return Image.open(
             io.BytesIO(
                 build_dxt1_header(
                     self.read_save_block_int(*self.TRAINER_ICON_WIDTH_LOCATION),
-                    self.read_save_block_int(*self.TRAINER_ICON_HEIGHT_LOCATION)
-                ) + self.read_save_block_object(*self.TRAINER_ICON_LOCATION)
+                    self.read_save_block_int(*self.TRAINER_ICON_HEIGHT_LOCATION),
+                )
+                + self.read_save_block_object(*self.TRAINER_ICON_LOCATION)
             )
         )
 
@@ -265,11 +275,7 @@ class RaidReader(NXReader):
             if difficulty == StarLevel.SEVEN_STAR:
                 continue
             print(f"Reading binary for {difficulty=}")
-            binaries.append(
-                RaidEnemyTableArray(
-                    self.read_raid_binary(difficulty)
-                )
-            )
+            binaries.append(RaidEnemyTableArray(self.read_raid_binary(difficulty)))
         print("Done reading raid binaries!")
         return tuple(binaries)
 
@@ -282,7 +288,7 @@ class RaidReader(NXReader):
             self.story_progress,
             self.game_version,
             self.my_status,
-            self.delivery_raid_priority
+            self.delivery_raid_priority,
         )
         return raid_block
 

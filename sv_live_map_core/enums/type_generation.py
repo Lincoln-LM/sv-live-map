@@ -5,8 +5,10 @@ from __future__ import annotations
 from enum import IntEnum
 from typing import Self
 
+
 class TeraTypeGeneration(IntEnum):
     """Enum for pokemon tera type generation"""
+
     NONE = 0
     RANDOM = 1
     NORMAL = 2
@@ -29,10 +31,12 @@ class TeraTypeGeneration(IntEnum):
     FAIRY = 19
 
     def __str__(self) -> str:
-        return self.name.replace('_', ' ').title()
+        return self.name.replace("_", " ").title()
+
 
 class TeraType(IntEnum):
     """Enum for pokemon tera type"""
+
     NORMAL = 0
     FIGHTING = 1
     FLYING = 2
@@ -58,10 +62,12 @@ class TeraType(IntEnum):
         return TeraType(generation - 2)
 
     def __str__(self) -> str:
-        return self.name.replace('_', ' ').title()
+        return self.name.replace("_", " ").title()
+
 
 class PokemonType(IntEnum):
     """Enum for pokemon type"""
+
     NORMAL = 0
     FIGHTING = 1
     FLYING = 2
@@ -82,4 +88,4 @@ class PokemonType(IntEnum):
     FAIRY = 17
 
     def __str__(self) -> str:
-        return self.name.replace('_', ' ').title()
+        return self.name.replace("_", " ").title()

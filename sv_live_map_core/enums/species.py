@@ -3,8 +3,10 @@
 
 from enum import IntEnum
 
+
 class Species(IntEnum):
     """Enum for pokemon species"""
+
     NONE = 0
     BULBASAUR = 1
     IVYSAUR = 2
@@ -1018,4 +1020,4 @@ class Species(IntEnum):
     ANNIHILAPE = 1010
 
     def __str__(self) -> str:
-        return self.name.replace('_', ' ').title()
+        return self.name.replace("_", " ").title()

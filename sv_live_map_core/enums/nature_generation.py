@@ -5,8 +5,10 @@ from __future__ import annotations
 from enum import IntEnum
 from typing import Self
 
+
 class NatureGeneration(IntEnum):
     """Enum for pokemon nature generation"""
+
     NONE = 0
     HARDY = 1
     LONELY = 2
@@ -35,10 +37,12 @@ class NatureGeneration(IntEnum):
     QUIRKY = 25
 
     def __str__(self) -> str:
-        return self.name.replace('_', ' ').title()
+        return self.name.replace("_", " ").title()
+
 
 class Nature(IntEnum):
     """Enum for Pokemon nature"""
+
     HARDY = 0
     LONELY = 1
     BRAVE = 2
@@ -71,4 +75,4 @@ class Nature(IntEnum):
         return Nature(generation - 1)
 
     def __str__(self) -> str:
-        return self.name.replace('_', ' ').title()
+        return self.name.replace("_", " ").title()

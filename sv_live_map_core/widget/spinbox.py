@@ -3,8 +3,10 @@
 from typing import Callable
 import customtkinter
 
+
 class Spinbox(customtkinter.CTkFrame):
     """Spinbox for integers in a range"""
+
     def __init__(
         self,
         *args,
@@ -16,30 +18,24 @@ class Spinbox(customtkinter.CTkFrame):
         command: Callable = None,
         **kwargs
     ):
-        super().__init__(*args, width = width, height = height, **kwargs)
+        super().__init__(*args, width=width, height=height, **kwargs)
 
         self.minimum = minimum
         self.maximum = maximum
         self.command = command
 
-        self.entry = customtkinter.CTkEntry(self, width = width - height * 2, height = height)
-        self.entry.grid(row = 0, column = 1)
+        self.entry = customtkinter.CTkEntry(
+            self, width=width - height * 2, height=height
+        )
+        self.entry.grid(row=0, column=1)
         self.sub_button = customtkinter.CTkButton(
-            self,
-            width = height,
-            height = height,
-            text = "-",
-            command = self.sub_button_command
+            self, width=height, height=height, text="-", command=self.sub_button_command
         )
-        self.sub_button.grid(row = 0, column = 0)
+        self.sub_button.grid(row=0, column=0)
         self.add_button = customtkinter.CTkButton(
-            self,
-            width = height,
-            height = height,
-            text = "+",
-            command = self.add_button_command
+            self, width=height, height=height, text="+", command=self.add_button_command
         )
-        self.add_button.grid(row = 0, column = 2)
+        self.add_button.grid(row=0, column=2)
         self.entry.insert(0, str(default_value))
 
     def add_button_command(self):

@@ -9,22 +9,28 @@ from .flatbuffer_object import (
     FlatBufferObject,
 )
 
+
 class RaidFixedRewardItemArray(FlatBufferObject):
     """Array of RaidFixedRewardItem (root object)"""
+
     def __init__(self, buf: bytearray):
         FlatBufferObject.__init__(self, buf)
-        self.raid_fixed_reward_items: list[RaidFixedRewardItem] = \
-            self.read_init_object_array(RaidFixedRewardItem)
+        self.raid_fixed_reward_items: list[
+            RaidFixedRewardItem
+        ] = self.read_init_object_array(RaidFixedRewardItem)
 
     @property
     def reward_item_dict(self) -> dict[int, tuple[RaidFixedRewardItemInfo]]:
         """Grab reward item table as a dict"""
         return {
-            table.table_name: table.reward_items for table in self.raid_fixed_reward_items
+            table.table_name: table.reward_items
+            for table in self.raid_fixed_reward_items
         }
+
 
 class RaidFixedRewardItem(FlatBufferObject):
     """Table containing RaidFixedRewardItemInfo"""
+
     def __init__(self, buf: bytearray, offset: int):
         FlatBufferObject.__init__(self, buf, offset)
         self.table_name = self.read_init_int(U64)
@@ -65,8 +71,10 @@ class RaidFixedRewardItem(FlatBufferObject):
             self.reward_item_14,
         )
 
+
 class RaidFixedRewardItemInfo(FlatBufferObject):
     """Table describing a guaranteed raid drop item"""
+
     def __init__(self, buf: bytearray, offset: int):
         FlatBufferObject.__init__(self, buf, offset)
         self.category = self.read_init_int_enum(I32, RaidRewardItemCategoryType)

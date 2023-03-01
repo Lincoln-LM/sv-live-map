@@ -1,0 +1,10 @@
+{
+  "Active": 0,
+  "IncludeRewards": 0,
+  "SendExceptions": 0,
+  "SendLogs": 0,
+  "SendRaids": 0,
+  "UseEmbedDisplay": 0,
+  "IDToPing": "",
+  "WebhookURL": ""
+}

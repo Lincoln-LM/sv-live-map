@@ -5,8 +5,10 @@ from __future__ import annotations
 from enum import IntEnum
 from typing import Self
 
+
 class Game(IntEnum):
     """Enum for the game version"""
+
     BOTH = 0
     SCARLET = 1
     VIOLET = 2
@@ -17,10 +19,12 @@ class Game(IntEnum):
         return Game(value - 49)
 
     def __str__(self) -> str:
-        return self.name.replace('_', ' ').title()
+        return self.name.replace("_", " ").title()
+
 
 class Ball(IntEnum):
     """Enum for pokemon balls"""
+
     NONE = 0
     MASTER_BALL = 1
     ULTRA_BALL = 2
@@ -50,18 +54,22 @@ class Ball(IntEnum):
     BEAST_BALL = 26
 
     def __str__(self) -> str:
-        return self.name.replace('_', ' ').title()
+        return self.name.replace("_", " ").title()
+
 
 class MovesetType(IntEnum):
     """Enum for pokemon moveset generation"""
+
     AUTO = 0
     SET = 1
 
     def __str__(self) -> str:
-        return self.name.replace('_', ' ').title()
+        return self.name.replace("_", " ").title()
+
 
 class ExtraActType(IntEnum):
     """Enum for raid boss extra act type"""
+
     NONE = 0
     BOSS_STATUS_RESET = 1
     PLAYER_STATUS_RESET = 2
@@ -69,19 +77,23 @@ class ExtraActType(IntEnum):
     GEM_COUNT = 4
 
     def __str__(self) -> str:
-        return self.name.replace('_', ' ').title()
+        return self.name.replace("_", " ").title()
+
 
 class ExtraTimingType(IntEnum):
     """Enum for raid boss extra timing type"""
+
     NONE = 0
     TIME = 1
     HP = 2
 
     def __str__(self) -> str:
-        return self.name.replace('_', ' ').title()
+        return self.name.replace("_", " ").title()
+
 
 class Language(IntEnum):
     """Enum for save language"""
+
     UNSET = 0
     JAPANESE = 1
     ENGLISH = 2
@@ -95,4 +107,4 @@ class Language(IntEnum):
     CHINESE_TRADITIONAL = 10
 
     def __str__(self) -> str:
-        return self.name.replace('_', '_').title()
+        return self.name.replace("_", "_").title()

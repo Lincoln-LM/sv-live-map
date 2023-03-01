@@ -163,4 +163,6 @@ misc_hidden/
 cached_tables/
 raid_dumps/
 found_screenshots/
+resources/webhook_settings/*.json
+!resources/webhook_settings/default.json
 settings.json

@@ -1,6 +1,7 @@
 import os
 import sys
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from sv_live_map_core.save.raid_block import TeraRaid
 from sv_live_map_core.enums import (
@@ -16,7 +17,7 @@ from sv_live_map_core.enums import (
     Ability,
     AbilityIndex,
     Gender,
-    Nature
+    Nature,
 )
 from sv_live_map_core.util.personal_data_handler import PersonalDataHandler
 

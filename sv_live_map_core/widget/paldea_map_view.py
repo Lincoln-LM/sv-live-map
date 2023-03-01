@@ -10,9 +10,11 @@ import customtkinter
 from PIL import Image, ImageTk
 from .corrected_marker import CorrectedMarker
 
+
 class PaldeaMapView(TkinterMapView):
     # pylint: disable=too-many-ancestors
     """Modified TkinterMapView for use with the paldea map"""
+
     def __init__(
         self,
         *args,
@@ -23,8 +25,8 @@ class PaldeaMapView(TkinterMapView):
         database_path: str = None,
         use_database_only: bool = False,
         max_zoom: int = 5,
-        on_popout = None,
-        **kwargs
+        on_popout=None,
+        **kwargs,
     ):
         super().__init__(
             *args,
@@ -35,7 +37,7 @@ class PaldeaMapView(TkinterMapView):
             database_path=database_path,
             use_database_only=use_database_only,
             max_zoom=max_zoom,
-            **kwargs
+            **kwargs,
         )
 
         self.set_zoom(self.min_zoom)
@@ -43,8 +45,8 @@ class PaldeaMapView(TkinterMapView):
             self,
             # reference already defined button's width to avoid needing to check OS
             (self.width - (20 + self.button_zoom_in.width), 20),
-            text = "⇱",
-            command = self.toggle_pop_out
+            text="⇱",
+            command=self.toggle_pop_out,
         )
         self.is_popped_out = False
         self.old_grid_info = None
@@ -59,7 +61,9 @@ class PaldeaMapView(TkinterMapView):
         new_master = customtkinter.CTkToplevel()
         new_master.title("Paldea Map")
         # copy all relevant attributes
-        clone = PaldeaMapView(new_master, **{key: self.cget(key) for key in self.configure()})
+        clone = PaldeaMapView(
+            new_master, **{key: self.cget(key) for key in self.configure()}
+        )
         new_master.protocol("WM_DELETE_WINDOW", clone.toggle_pop_out)
         clone.is_popped_out = self.is_popped_out
         clone.pop_out_button.text = "⇲" if clone.is_popped_out else "⇱"
@@ -129,10 +133,14 @@ class PaldeaMapView(TkinterMapView):
         if self.lower_right_tile_pos[1] > 2 ** round(self.zoom):
             diff_y -= self.lower_right_tile_pos[1] - (2 ** round(self.zoom))
 
-        self.upper_left_tile_pos = \
-            self.upper_left_tile_pos[0] + diff_x, self.upper_left_tile_pos[1] + diff_y
-        self.lower_right_tile_pos = \
-            self.lower_right_tile_pos[0] + diff_x, self.lower_right_tile_pos[1] + diff_y
+        self.upper_left_tile_pos = (
+            self.upper_left_tile_pos[0] + diff_x,
+            self.upper_left_tile_pos[1] + diff_y,
+        )
+        self.lower_right_tile_pos = (
+            self.lower_right_tile_pos[0] + diff_x,
+            self.lower_right_tile_pos[1] + diff_y,
+        )
 
     def update_dimensions(self, event):
         if self.width != event.width or self.height != event.height:
@@ -144,20 +152,20 @@ class PaldeaMapView(TkinterMapView):
             return self.tile_image_cache[f"z{zoom}x{x}y{y}"]
         return False
 
-    def request_image(self, zoom: int, x: int, y: int, db_cursor = None):
+    def request_image(self, zoom: int, x: int, y: int, db_cursor=None):
         if not self.tile_in_bounds(zoom, x, y):
             return self.empty_tile_image
 
         try:
             req = requests.get(
                 # files are stored with zoom inverted
-                "https://github.com/Lincoln-LM/paldea-map-assets/raw/main/map/" \
+                "https://github.com/Lincoln-LM/paldea-map-assets/raw/main/map/"
                 f"{5 - zoom}_{x}_{y}.png",
-                stream = True,
-                timeout = 5.0
+                stream=True,
+                timeout=5.0,
             )
             img = ImageTk.PhotoImage(Image.open(req.raw))
-            self.tile_image_cache[f'z{zoom}x{x}y{y}'] = img
+            self.tile_image_cache[f"z{zoom}x{x}y{y}"] = img
             return img
         except requests.ConnectionError:
             return self.empty_tile_image
@@ -165,12 +173,14 @@ class PaldeaMapView(TkinterMapView):
     def tile_in_bounds(self, zoom: int, x_pos: int, y_pos: int):
         """Check if a tile is in bounds"""
         return (
-            0 < zoom <= self.max_zoom # ensure zoom is a valid value
-            and 2 ** zoom > max(x_pos, y_pos) # ensure x and y are within zoom scale
-            and min(x_pos, y_pos) >= 0 # ensure x and y are non negative
+            0 < zoom <= self.max_zoom  # ensure zoom is a valid value
+            and 2**zoom > max(x_pos, y_pos)  # ensure x and y are within zoom scale
+            and min(x_pos, y_pos) >= 0  # ensure x and y are non negative
         )
 
-    def set_marker(self, deg_x: float, deg_y: float, text: str = None, **kwargs) -> CorrectedMarker:
+    def set_marker(
+        self, deg_x: float, deg_y: float, text: str = None, **kwargs
+    ) -> CorrectedMarker:
         marker = CorrectedMarker(self, (deg_x, deg_y), text=text, **kwargs)
         marker.draw()
         self.canvas_marker_list.append(marker)
@@ -180,7 +190,5 @@ class PaldeaMapView(TkinterMapView):
         """Convert game coordinates to degrees for map"""
         # TODO: more accurate conversion
         return osm_to_decimal(
-            (game_x + 2.072021484) / 5000,
-            (game_z + 5505.240018) / 5000,
-            0
+            (game_x + 2.072021484) / 5000, (game_z + 5505.240018) / 5000, 0
         )

@@ -5,8 +5,10 @@ from __future__ import annotations
 from enum import IntEnum
 from typing import Self
 
+
 class StoryProgress(IntEnum):
     """Enum for story progress"""
+
     DEFAULT = 0
     THREE_STAR_UNLOCKED = 1
     FOUR_STAR_UNLOCKED = 2
@@ -18,10 +20,12 @@ class StoryProgress(IntEnum):
         return StarLevel(self + StarLevel.TWO_STAR)
 
     def __str__(self) -> str:
-        return self.name.replace('_', ' ').title()
+        return self.name.replace("_", " ").title()
+
 
 class StarLevel(IntEnum):
     """Enum for the basic star levels"""
+
     ONE_STAR = 0
     TWO_STAR = 1
     THREE_STAR = 2
@@ -54,4 +58,4 @@ class StarLevel(IntEnum):
         return self <= story_progress.to_star_level()
 
     def __str__(self) -> str:
-        return self.name.replace('_', ' ').title()
+        return self.name.replace("_", " ").title()

@@ -25,9 +25,13 @@ from ..enums import (
     Item,
     RaidRewardItemSubjectType,
     RaidRewardItemCategoryType,
-    SandwichLevel
+    SandwichLevel,
 )
-from ..fbs.raid_enemy_table_array import RaidEnemyTableArray, RaidEnemyTable, RaidEnemyInfo
+from ..fbs.raid_enemy_table_array import (
+    RaidEnemyTableArray,
+    RaidEnemyTable,
+    RaidEnemyInfo,
+)
 from ..fbs.raid_fixed_reward_item_array import RaidFixedRewardItemArray
 from ..fbs.raid_lottery_reward_item_array import RaidLotteryRewardItemArray
 from ..util.personal_data_handler import PersonalDataHandler
@@ -64,26 +68,29 @@ TOXTRICITY_LOWKEY_NATURES = (
     Nature.CAREFUL,
 )
 
+
 def shiny_xor(pid: int, sidtid: int) -> int:
     """Get shiny XOR"""
     temp = pid ^ sidtid
     return (temp & 0xFFFF) ^ (temp >> 16)
 
+
 def is_shiny(pid: int, sidtid: int) -> bool:
     """Check if a given pid is shiny"""
     return shiny_xor(pid, sidtid) < 0x10
 
+
 def force_shininess(
-    lock_type: ShinyGeneration,
-    fake_pid: int,
-    fake_sidtid: int,
-    sidtid: int
+    lock_type: ShinyGeneration, fake_pid: int, fake_sidtid: int, sidtid: int
 ) -> int:
     """Force a pid to be shiny/non shiny if applicable"""
     # if pokemon is supposed to be shiny for the trainer
     if (
         # naturally rolled shiny
-        (lock_type in (None, ShinyGeneration.RANDOM_SHININESS) and is_shiny(fake_pid, fake_sidtid))
+        (
+            lock_type in (None, ShinyGeneration.RANDOM_SHININESS)
+            and is_shiny(fake_pid, fake_sidtid)
+        )
         # or forced to be shiny
         or lock_type == ShinyGeneration.FORCED_SHINY
     ):
@@ -116,17 +123,16 @@ def calc_difficulty(story_progress: StoryProgress, difficulty_rand: int) -> Star
             return (
                 StarLevel.ONE_STAR
                 if difficulty_rand <= 80
-                else StarLevel.TWO_STAR # elif (difficulty_rand - 80) <= 20
+                else StarLevel.TWO_STAR  # elif (difficulty_rand - 80) <= 20
             )
         case StoryProgress.THREE_STAR_UNLOCKED:
             return (
                 StarLevel.ONE_STAR
                 if difficulty_rand <= 30
                 else (
-                    StarLevel.TWO_STAR # elif (difficulty_rand - 30) <= 40
+                    StarLevel.TWO_STAR  # elif (difficulty_rand - 30) <= 40
                     if difficulty_rand <= 70
-                    else
-                    StarLevel.THREE_STAR # elif (difficulty_rand - 30 - 40) <= 30
+                    else StarLevel.THREE_STAR  # elif (difficulty_rand - 30 - 40) <= 30
                 )
             )
         case StoryProgress.FOUR_STAR_UNLOCKED:
@@ -134,13 +140,12 @@ def calc_difficulty(story_progress: StoryProgress, difficulty_rand: int) -> Star
                 StarLevel.ONE_STAR
                 if difficulty_rand <= 20
                 else (
-                    StarLevel.TWO_STAR # elif (difficulty_rand - 20) <= 20
+                    StarLevel.TWO_STAR  # elif (difficulty_rand - 20) <= 20
                     if difficulty_rand <= 40
                     else (
-                        StarLevel.THREE_STAR # elif (difficulty_rand - 20 - 20) <= 30
+                        StarLevel.THREE_STAR  # elif (difficulty_rand - 20 - 20) <= 30
                         if difficulty_rand <= 70
-                        else
-                        StarLevel.FOUR_STAR
+                        else StarLevel.FOUR_STAR
                     )
                 )
             )
@@ -149,10 +154,9 @@ def calc_difficulty(story_progress: StoryProgress, difficulty_rand: int) -> Star
                 StarLevel.THREE_STAR
                 if difficulty_rand <= 40
                 else (
-                    StarLevel.FOUR_STAR # elif (difficulty_rand - 40) <= 35
+                    StarLevel.FOUR_STAR  # elif (difficulty_rand - 40) <= 35
                     if difficulty_rand <= 75
-                    else
-                    StarLevel.FIVE_STAR # elif (difficulty_rand - 40 - 35) <= 25
+                    else StarLevel.FIVE_STAR  # elif (difficulty_rand - 40 - 35) <= 25
                 )
             )
         case StoryProgress.SIX_STAR_UNLOCKED:
@@ -160,13 +164,13 @@ def calc_difficulty(story_progress: StoryProgress, difficulty_rand: int) -> Star
                 StarLevel.THREE_STAR
                 if difficulty_rand <= 30
                 else (
-                    StarLevel.FOUR_STAR # elif (difficulty_rand - 30) <= 40
+                    StarLevel.FOUR_STAR  # elif (difficulty_rand - 30) <= 40
                     if difficulty_rand <= 70
-                    else
-                    StarLevel.FIVE_STAR # elif (difficulty_rand - 30 - 40) <= 30
+                    else StarLevel.FIVE_STAR  # elif (difficulty_rand - 30 - 40) <= 30
                 )
             )
     return None
+
 
 def calc_reward_item_count(count_rand: int, difficulty: StarLevel):
     """Calculate the amount of lottery raid rewards based on difficulty and rand"""
@@ -191,18 +195,16 @@ def calc_reward_item_count(count_rand: int, difficulty: StarLevel):
             else (
                 base_items + 2
                 if count_rand < 70
-                else (
-                    base_items + 3
-                    if count_rand < 90
-                    else base_items + 4
-                )
+                else (base_items + 3 if count_rand < 90 else base_items + 4)
             )
         )
     )
 
+
 @dataclass
 class TeraRaid:
     """Single Tera Raid Data"""
+
     # pylint: disable=too-many-instance-attributes
     # information directly present in raid block
     is_enabled: U32
@@ -238,7 +240,9 @@ class TeraRaid:
         self.weight: int = None
         self.scale: int = None
 
-        self.rewards: list[tuple[Item, int, RaidRewardItemSubjectType, SandwichLevel]] = None
+        self.rewards: list[
+            tuple[Item, int, RaidRewardItemSubjectType, SandwichLevel]
+        ] = None
 
         # for map display
         self.id_str: str = f"{self.area_id}-{self.den_id}"
@@ -246,7 +250,9 @@ class TeraRaid:
         # tid/sid used for pid generation
         self.my_status: MyStatus9 = None
 
-        self.hide_sensitive_info: bool = False # Default to false. Override later if needed
+        self.hide_sensitive_info: bool = (
+            False  # Default to false. Override later if needed
+        )
 
     def generate_pokemon(self, raid_enemy_info: RaidEnemyInfo):
         """Derive pokemon data from seed and slot"""
@@ -283,7 +289,7 @@ class TeraRaid:
             self.raid_enemy_info.boss_poke_para.rare_type,
             rng.rand(),
             self.sidtid,
-            self.my_status.full_id
+            self.my_status.full_id,
         )
 
     def rand_tera_type(self) -> TeraType:
@@ -294,7 +300,9 @@ class TeraRaid:
                 rng_tera = Xoroshiro128Plus(self.seed)
                 return TeraType(rng_tera.rand(18))
             case _:
-                return TeraType.from_generation(self.raid_enemy_info.boss_poke_para.gem_type)
+                return TeraType.from_generation(
+                    self.raid_enemy_info.boss_poke_para.gem_type
+                )
 
     def rand_ivs(self, rng: Xoroshiro128Plus) -> tuple:
         """Generate ivs"""
@@ -319,7 +327,7 @@ class TeraRaid:
                     self.raid_enemy_info.boss_poke_para.talent_value.def_,
                     self.raid_enemy_info.boss_poke_para.talent_value.spa,
                     self.raid_enemy_info.boss_poke_para.talent_value.spd,
-                    self.raid_enemy_info.boss_poke_para.talent_value.spe
+                    self.raid_enemy_info.boss_poke_para.talent_value.spe,
                 )
 
     def rand_ability(self, rng: Xoroshiro128Plus) -> tuple[AbilityIndex, Ability]:
@@ -332,27 +340,20 @@ class TeraRaid:
                 index = AbilityIndex(rng.rand(3))
             case _:
                 index = raid_fixed_ability.to_ability_index()
-        return (
-            index,
-            PersonalDataHandler.get_ability(
-                self.species,
-                self.form,
-                index
-            )
-        )
+        return (index, PersonalDataHandler.get_ability(self.species, self.form, index))
 
     def rand_gender(self, rng: Xoroshiro128Plus) -> Gender:
         """Generate gender"""
         raid_fixed_gender = self.raid_enemy_info.boss_poke_para.sex
         match raid_fixed_gender:
             case None | GenderGeneration.RANDOM_GENDER:
-                species_fixed_gender = PersonalDataHandler.fixed_gender(self.species, self.form)
+                species_fixed_gender = PersonalDataHandler.fixed_gender(
+                    self.species, self.form
+                )
                 match species_fixed_gender:
                     case GenderGeneration.RANDOM_GENDER:
                         return PersonalDataHandler.get_gender(
-                            self.species,
-                            self.form,
-                            rng.rand(100)
+                            self.species, self.form, rng.rand(100)
                         )
                     case _:
                         return Gender.from_generation(species_fixed_gender)
@@ -366,9 +367,9 @@ class TeraRaid:
             case None | NatureGeneration.NONE:
                 if self.species == Species.TOXTRICITY:
                     match self.form:
-                        case 0: # amped
+                        case 0:  # amped
                             return TOXTRICITY_AMPED_NATURES[rng.rand(13)]
-                        case 1: # lowkey
+                        case 1:  # lowkey
                             return TOXTRICITY_LOWKEY_NATURES[rng.rand(12)]
                 return Nature(rng.rand(25))
             case _:
@@ -382,11 +383,13 @@ class TeraRaid:
     def initialize_data(
         self,
         raid_enemy_table_arrays: tuple[RaidEnemyTableArray],
-        raid_item_table_arrays: tuple[RaidFixedRewardItemArray | RaidLotteryRewardItemArray],
+        raid_item_table_arrays: tuple[
+            RaidFixedRewardItemArray | RaidLotteryRewardItemArray
+        ],
         story_progress: StoryProgress,
         game: Game,
         my_status: MyStatus9,
-        delivery_group_id: int
+        delivery_group_id: int,
     ):
         """Initialize raid with derived information"""
         # based on position in full raid list
@@ -404,16 +407,21 @@ class TeraRaid:
 
         self.difficulty = self.rand_difficulty(story_progress, rng_slot)
 
-        possible_encounter_slots, encounter_slot_total = \
-            self.build_encounter_table(raid_enemy_table_arrays, story_progress, game)
+        possible_encounter_slots, encounter_slot_total = self.build_encounter_table(
+            raid_enemy_table_arrays, story_progress, game
+        )
 
-        self.generate_from_slots(rng_slot, possible_encounter_slots, encounter_slot_total)
+        self.generate_from_slots(
+            rng_slot, possible_encounter_slots, encounter_slot_total
+        )
         self.generate_rewards(rng_reward, raid_item_table_arrays)
 
     def generate_rewards(
         self,
         rng_reward: Xoroshiro128Plus,
-        raid_item_table_arrays: tuple[RaidFixedRewardItemArray | RaidLotteryRewardItemArray]
+        raid_item_table_arrays: tuple[
+            RaidFixedRewardItemArray | RaidLotteryRewardItemArray
+        ],
     ):
         """Generate raid rewards"""
         if self.is_event:
@@ -438,10 +446,7 @@ class TeraRaid:
             elif item_info.category not in (None, RaidRewardItemCategoryType.ITEM):
                 self.rewards.append(
                     (
-                        item_info.category.to_item_id(
-                            self.species,
-                            self.tera_type
-                        ),
+                        item_info.category.to_item_id(self.species, self.tera_type),
                         item_info.num,
                         item_info.subject_type or RaidRewardItemSubjectType.ALL,
                         SandwichLevel.NONE,
@@ -461,28 +466,28 @@ class TeraRaid:
                                 item_info.item_id,
                                 item_info.num,
                                 RaidRewardItemSubjectType.ALL,
-                                SandwichLevel(max(0, 4 - (count - cnt)))
+                                SandwichLevel(max(0, 4 - (count - cnt))),
                             )
                         )
-                    elif item_info.category not in (None, RaidRewardItemCategoryType.ITEM):
+                    elif item_info.category not in (
+                        None,
+                        RaidRewardItemCategoryType.ITEM,
+                    ):
                         self.rewards.append(
                             (
                                 item_info.category.to_item_id(
-                                    self.species,
-                                    self.tera_type
+                                    self.species, self.tera_type
                                 ),
                                 item_info.num,
                                 RaidRewardItemSubjectType.ALL,
-                                SandwichLevel(max(0, 4 - (count - cnt)))
+                                SandwichLevel(max(0, 4 - (count - cnt))),
                             )
                         )
                     break
                 item_rand -= item_info.rate
 
     def rand_difficulty(
-        self,
-        story_progress: StoryProgress,
-        rng_slot: Xoroshiro128Plus
+        self, story_progress: StoryProgress, rng_slot: Xoroshiro128Plus
     ) -> StarLevel:
         """Set difficulty based on raid and progress"""
         if self.content == 1:
@@ -498,7 +503,7 @@ class TeraRaid:
         self,
         rng_slot: Xoroshiro128Plus,
         possible_encounter_slots: list[RaidEnemyTable],
-        encounter_slot_total: int
+        encounter_slot_total: int,
     ):
         """Generate pokemon based on possible slots"""
         encounter_slot_rand = rng_slot.rand(encounter_slot_total)
@@ -512,7 +517,7 @@ class TeraRaid:
         self,
         raid_enemy_table_arrays: list[RaidEnemyTableArray],
         story_progress: StoryProgress,
-        game: Game
+        game: Game,
     ) -> tuple[list[RaidEnemyTable], int]:
         """Build possible encounter table array"""
         raid_enemy_table_array = raid_enemy_table_arrays[self.difficulty]
@@ -528,26 +533,20 @@ class TeraRaid:
         return possible_encounter_tables, encounter_slot_total
 
     def valid_table_event(
-        self,
-        story_progress: StoryProgress,
-        game: Game,
-        table: RaidEnemyTable
+        self, story_progress: StoryProgress, game: Game, table: RaidEnemyTable
     ) -> bool:
         """Check if a RaidEnemyTable is possible to be selected for events"""
         return (
-            table.raid_enemy_info.delivery_group_id == self.delivery_group_id and
-            (
+            table.raid_enemy_info.delivery_group_id == self.delivery_group_id
+            and (
                 table.raid_enemy_info.difficulty is None
                 or table.raid_enemy_info.difficulty.is_unlocked(story_progress)
-            ) and
-            table.raid_enemy_info.rom_ver in (None, game, Game.BOTH)
+            )
+            and table.raid_enemy_info.rom_ver in (None, game, Game.BOTH)
         )
 
     def valid_table(
-        self,
-        story_progress: StoryProgress,
-        game: Game,
-        table: RaidEnemyTable
+        self, story_progress: StoryProgress, game: Game, table: RaidEnemyTable
     ) -> bool:
         """Check if a RaidEnemyTable is possible to be selected"""
         if self.is_event:
@@ -562,22 +561,28 @@ class TeraRaid:
         shiny_str = "Shiny " if self.is_shiny else ""
         event_str = "Event " if self.is_event else ""
         star_str = "★" * (self.difficulty + 1)
-        display = f"{self.species}{form_str}\n" \
-                    f"{shiny_str}{event_str}{star_str}\n" \
-                    f"IVs: {'/'.join(map(str, self.ivs))}\n" \
-                    f"Nature: {self.nature}\n" \
-                    f"Ability: {self.ability}\n" \
-                    f"Gender: {self.gender}\n" \
-                    f"Tera Type: {self.tera_type}\n" \
-                    f"Location: {self.id_str}\n"
+        display = (
+            f"{self.species}{form_str}\n"
+            f"{shiny_str}{event_str}{star_str}\n"
+            f"IVs: {'/'.join(map(str, self.ivs))}\n"
+            f"Nature: {self.nature}\n"
+            f"Ability: {self.ability}\n"
+            f"Gender: {self.gender}\n"
+            f"Tera Type: {self.tera_type}\n"
+            f"Location: {self.id_str}\n"
+        )
         if not self.hide_sensitive_info:
-            display += f"Seed: {self.seed:08X} EC: {self.encryption_constant:08X}\n" \
-                        f"PID: {self.pid:08X} SIDTID: {self.sidtid:08X}\n"
+            display += (
+                f"Seed: {self.seed:08X} EC: {self.encryption_constant:08X}\n"
+                f"PID: {self.pid:08X} SIDTID: {self.sidtid:08X}\n"
+            )
         return display
+
 
 @dataclass
 class RaidBlock:
     """Full Raid Block Data"""
+
     current_seed: U64
     tomorrow_seed: U64
     raids: Annotated[list[TeraRaid], RAID_COUNT]
@@ -585,23 +590,24 @@ class RaidBlock:
     def initialize_data(
         self,
         raid_enemy_table_arrays: tuple[RaidEnemyTableArray],
-        raid_item_table_arrays: tuple[RaidFixedRewardItemArray | RaidLotteryRewardItemArray],
+        raid_item_table_arrays: tuple[
+            RaidFixedRewardItemArray | RaidLotteryRewardItemArray
+        ],
         story_progress: StoryProgress,
         game: Game,
         my_status: MyStatus9,
-        delivery_raid_priority: tuple[int]
+        delivery_raid_priority: tuple[int],
     ) -> None:
         """Initialize each raid with derived information"""
         for i, raid in enumerate(self.raids):
             # check the event delivery group
             den_delivery_group_id = None
-            for delivery_group_id, delivery_group_size in enumerate(delivery_raid_priority):
+            for delivery_group_id, delivery_group_size in enumerate(
+                delivery_raid_priority
+            ):
                 if i < delivery_group_size:
                     if not self.validate_event_slots(
-                        raid_enemy_table_arrays,
-                        story_progress,
-                        game,
-                        delivery_group_id
+                        raid_enemy_table_arrays, story_progress, game, delivery_group_id
                     ):
                         continue
                     den_delivery_group_id = delivery_group_id
@@ -613,7 +619,7 @@ class RaidBlock:
                 story_progress,
                 game,
                 my_status,
-                den_delivery_group_id
+                den_delivery_group_id,
             )
 
     def validate_event_slots(
@@ -621,24 +627,27 @@ class RaidBlock:
         raid_enemy_table_arrays: tuple[RaidEnemyTableArray],
         story_progress: StoryProgress,
         game: Game,
-        delivery_group_id: int
+        delivery_group_id: int,
     ):
         """Check if a delivery group id has spawnable pokemon"""
         dummy_raid = TeraRaid(
-            is_enabled = 1,
-            area_id = 0,
-            display_type = 0,
-            den_id = 0,
-            seed = 0,
-            _unused_14 = 0,
-            content = 0,
-            collected_league_points = 0,
+            is_enabled=1,
+            area_id=0,
+            display_type=0,
+            den_id=0,
+            seed=0,
+            _unused_14=0,
+            content=0,
+            collected_league_points=0,
         )
         dummy_raid.delivery_group_id = delivery_group_id
         dummy_raid.is_event = True
         dummy_raid.difficulty = StarLevel.EVENT
-        total = dummy_raid.build_encounter_table(raid_enemy_table_arrays, story_progress, game)[1]
+        total = dummy_raid.build_encounter_table(
+            raid_enemy_table_arrays, story_progress, game
+        )[1]
         return total != 0
+
 
 def process_raid_block(raid_block: bytes) -> RaidBlock:
     """Process raid block with bytechomp"""
